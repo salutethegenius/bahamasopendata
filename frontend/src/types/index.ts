@@ -1,0 +1,133 @@
+// Budget Types
+export interface BudgetSummary {
+  fiscal_year: string;
+  total_revenue: number;
+  total_expenditure: number;
+  deficit_surplus: number;
+  national_debt: number;
+  debt_to_gdp_ratio: number | null;
+  revenue_change_yoy: number | null;
+  expenditure_change_yoy: number | null;
+  last_updated: string;
+  source_document: string;
+  source_page: number | null;
+}
+
+export interface MonthlyData {
+  month: string;
+  revenue: number;
+  expenditure: number;
+}
+
+// Ministry Types
+export interface Ministry {
+  id: string;
+  name: string;
+  allocation: number;
+  previous_year_allocation: number;
+  change_percent: number;
+  sparkline: number[];
+  sector: string;
+}
+
+export interface MinistryDetail {
+  id: string;
+  name: string;
+  allocation: number;
+  salaries: number;
+  programs: number;
+  capital_projects: number;
+  grants: number;
+  line_items: LineItem[];
+  historical: HistoricalData[];
+  source_document: string;
+  source_page: number;
+}
+
+export interface LineItem {
+  name: string;
+  amount: number;
+}
+
+export interface HistoricalData {
+  year: string;
+  allocation?: number;
+  amount?: number;
+}
+
+// Revenue Types
+export interface RevenueSource {
+  name: string;
+  amount: number;
+  percent_of_total: number;
+  change_yoy: number;
+}
+
+export interface RevenueBreakdown {
+  fiscal_year: string;
+  total_revenue: number;
+  sources: RevenueSource[];
+  last_updated: string;
+  source_document: string;
+}
+
+// Debt Types
+export interface DebtSummary {
+  total_debt: number;
+  domestic_debt: number;
+  external_debt: number;
+  debt_to_gdp_ratio: number;
+  annual_interest_cost: number;
+  change_yoy: number;
+  last_updated: string;
+  source_document: string;
+}
+
+export interface Creditor {
+  name: string;
+  category: string;
+  amount: number;
+  percent_of_total: number;
+}
+
+export interface RepaymentSchedule {
+  year: string;
+  principal: number;
+  interest: number;
+  total: number;
+}
+
+// Ask Types
+export interface Citation {
+  document: string;
+  page: number;
+  snippet: string;
+  url: string | null;
+}
+
+export interface AskResponse {
+  answer: string;
+  numbers: Record<string, number> | null;
+  chart_data: Array<{ year: string; amount: number }> | null;
+  citations: Citation[];
+  confidence: number;
+}
+
+// News Types
+export interface NewsItem {
+  id: number;
+  title: string;
+  source: string;
+  url: string;
+  published_date: string;
+  summary: string;
+  category: string;
+}
+
+// Chart data types
+export interface ChartDataPoint {
+  name: string;
+  value: number;
+  [key: string]: string | number;
+}
+
