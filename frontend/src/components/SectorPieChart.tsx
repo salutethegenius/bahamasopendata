@@ -44,7 +44,7 @@ export default function SectorPieChart({ data, title }: SectorPieChartProps) {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
       )}
       
-      <div className="h-[300px]">
+      <div className="h-[300px] min-h-[300px] w-full min-w-0">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie

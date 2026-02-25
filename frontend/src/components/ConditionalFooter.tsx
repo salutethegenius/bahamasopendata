@@ -23,8 +23,8 @@ export default function ConditionalFooter() {
             </p>
           </div>
           <div className="text-sm text-gray-500 text-center md:text-right">
-            <p>Data sourced from official government documents</p>
-            <p>© 2025 Registered. Development by Kemis Group of Companies Inc.</p>
+            <p>Data sourced from Official Bahamas Publications</p>
+            <p>© 2026 Registered. Development by Kemis Group of Companies Inc.</p>
           </div>
         </div>
       </div>

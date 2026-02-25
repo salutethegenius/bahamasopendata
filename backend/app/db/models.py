@@ -246,4 +246,66 @@ class EconomicIndicator(Base):
         Index("idx_economic_year", "year"),
         Index("idx_economic_type_island_year", "indicator_type", "island", "year"),
     )
+    
 
+class Poll(Base):
+    """Polling questions for public data collection."""
+    __tablename__ = "polls"
+
+    id = Column(Integer, primary_key=True)
+    question = Column(String(500), nullable=False)
+    description = Column(Text)
+    status = Column(String(20), default="draft")  # "draft", "active", "closed"
+    domain = Column(String(50))  # "budget", "health", "income", etc.
+    start_date = Column(Date)
+    end_date = Column(Date)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(
+        DateTime, default=func.now(), onupdate=func.now()
+    )
+
+    options = relationship("PollOption", back_populates="poll", cascade="all, delete-orphan")
+    votes = relationship("PollVote", back_populates="poll", cascade="all, delete-orphan")
+
+
+class PollOption(Base):
+    """Options for a poll."""
+    __tablename__ = "poll_options"
+
+    id = Column(Integer, primary_key=True)
+    poll_id = Column(Integer, ForeignKey("polls.id", ondelete="CASCADE"), nullable=False)
+    option_text = Column(String(255), nullable=False)
+    display_order = Column(Integer, default=0)
+    created_at = Column(DateTime, default=func.now())
+
+    poll = relationship("Poll", back_populates="options")
+    votes = relationship("PollVote", back_populates="option", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        Index("idx_poll_options_poll_id", "poll_id"),
+    )
+
+
+class PollVote(Base):
+    """Individual poll votes."""
+    __tablename__ = "poll_votes"
+
+    id = Column(Integer, primary_key=True)
+    poll_id = Column(Integer, ForeignKey("polls.id", ondelete="CASCADE"), nullable=False)
+    option_id = Column(Integer, ForeignKey("poll_options.id", ondelete="CASCADE"), nullable=False)
+    fingerprint = Column(String(255))  # hashed identifier or client token
+    created_at = Column(DateTime, default=func.now())
+
+    poll = relationship("Poll", back_populates="votes")
+    option = relationship("PollOption", back_populates="votes")
+
+    __table_args__ = (
+        Index("idx_poll_votes_poll_id", "poll_id"),
+        Index("idx_poll_votes_option_id", "option_id"),
+        Index(
+            "uq_poll_vote_fingerprint",
+            "poll_id",
+            "fingerprint",
+            unique=True,
+        ),
+    )

@@ -1,22 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import StatCard from '@/components/StatCard';
 import SectorPieChart from '@/components/SectorPieChart';
 import MinistryCard from '@/components/MinistryCard';
 import AskBar from '@/components/AskBar';
+import CurrentPollWidget from '@/components/CurrentPollWidget';
 import { formatCurrency } from '@/lib/format';
-import { Ministry, AskResponse } from '@/types';
+import {
+  Ministry,
+  AskResponse,
+  RevenueBreakdown,
+  DebtSummary,
+  IncomeComparison,
+} from '@/types';
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   LineChart, Line, CartesianGrid, Legend
 } from 'recharts';
 import { TrendingUp, Calendar, FileText, AlertCircle } from 'lucide-react';
 
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
+
 // Real data from Bahamas Budget 2025/26
-const budgetSummary = {
+const initialBudgetSummary = {
   fiscal_year: "2025/26",
   total_revenue: 3_896_324_553,
   total_expenditure: 3_820_844_050,
@@ -31,7 +41,7 @@ const budgetSummary = {
 };
 
 // Real ministry allocations from Budget Book 2025/26 (Pages 71-72)
-const ministries: Ministry[] = [
+const initialMinistries: Ministry[] = [
   { id: "health", name: "Ministry of Health & Wellness", allocation: 355_119_623, previous_year_allocation: 332_747_117, change_percent: 6.7, sparkline: [288.4, 263.2, 332.7, 355.1], sector: "Health" },
   { id: "finance", name: "Ministry of Finance", allocation: 362_694_099, previous_year_allocation: 346_639_187, change_percent: 4.6, sparkline: [177.5, 178.8, 346.6, 362.7], sector: "Finance" },
   { id: "education", name: "Ministry of Education", allocation: 137_052_342, previous_year_allocation: 123_252_555, change_percent: 11.2, sparkline: [114.7, 91.4, 123.3, 137.1], sector: "Education" },
@@ -39,7 +49,7 @@ const ministries: Ministry[] = [
 ];
 
 // Real sector breakdown from Budget 2025/26
-const sectorData = [
+const initialSectorData = [
   { name: "Public Debt Service", value: 689_545_978, color: "#ef4444" },
   { name: "Health", value: 477_596_494, color: "#FCD116" },
   { name: "Education", value: 353_413_898, color: "#00CED1" },
@@ -50,7 +60,7 @@ const sectorData = [
 ];
 
 // Real historical data from Fiscal Summary (Page 34)
-const historicalData = [
+const initialHistoricalData = [
   { year: "2020/21", revenue: 1.91, expenditure: 3.24, debt: 9.93, debt_gdp: 88.7 },
   { year: "2021/22", revenue: 2.61, expenditure: 3.33, debt: 10.79, debt_gdp: 83.2 },
   { year: "2022/23", revenue: 2.85, expenditure: 3.39, debt: 11.26, debt_gdp: 77.2 },
@@ -90,6 +100,133 @@ const handleAsk = async (question: string): Promise<AskResponse> => {
 
 export default function Home() {
   const router = useRouter();
+
+  const [budgetSummary, setBudgetSummary] = useState(initialBudgetSummary);
+  const [ministries, setMinistries] = useState<Ministry[]>(initialMinistries);
+  const [sectorData, setSectorData] = useState(initialSectorData);
+  const [historicalData, setHistoricalData] =
+    useState(initialHistoricalData);
+  const [revenue, setRevenue] = useState<RevenueBreakdown | null>(null);
+  const [debt, setDebt] = useState<DebtSummary | null>(null);
+  const [incomeComparisons, setIncomeComparisons] = useState<
+    IncomeComparison[] | null
+  >(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [
+          budgetRes,
+          historicalRes,
+          sectorRes,
+          ministriesRes,
+          revenueRes,
+          debtRes,
+          economicRes,
+        ] = await Promise.allSettled([
+          fetch(`${API_BASE}/budget/summary`),
+          fetch(`${API_BASE}/budget/historical`),
+          fetch(`${API_BASE}/budget/sector-breakdown`),
+          fetch(`${API_BASE}/ministries`),
+          fetch(`${API_BASE}/revenue`),
+          fetch(`${API_BASE}/debt`),
+          fetch(`${API_BASE}/economic/comparison`),
+        ]);
+
+        if (
+          budgetRes.status === 'fulfilled' &&
+          budgetRes.value.ok
+        ) {
+          const json = await budgetRes.value.json();
+          setBudgetSummary((prev) => ({
+            ...prev,
+            ...json,
+          }));
+        }
+
+        if (
+          historicalRes.status === 'fulfilled' &&
+          historicalRes.value.ok
+        ) {
+          const json = await historicalRes.value.json();
+          if (Array.isArray(json.years)) {
+            setHistoricalData(
+              json.years.map((y: any) => ({
+                year: y.year,
+                revenue: y.revenue / 1_000_000_000,
+                expenditure: y.expenditure / 1_000_000_000,
+                debt: y.debt / 1_000_000_000,
+                debt_gdp: y.debt_gdp,
+              })),
+            );
+          }
+        }
+
+        if (
+          sectorRes.status === 'fulfilled' &&
+          sectorRes.value.ok
+        ) {
+          const json = await sectorRes.value.json();
+          if (Array.isArray(json.sectors)) {
+            setSectorData(
+              json.sectors.map((s: any) => ({
+                name: s.name,
+                value: s.amount,
+                color: s.color,
+              })),
+            );
+          }
+        }
+
+        if (
+          ministriesRes.status === 'fulfilled' &&
+          ministriesRes.value.ok
+        ) {
+          const json = await ministriesRes.value.json();
+          if (Array.isArray(json)) {
+            setMinistries(json);
+          }
+        }
+
+        if (
+          revenueRes.status === 'fulfilled' &&
+          revenueRes.value.ok
+        ) {
+          const json = await revenueRes.value.json();
+          setRevenue(json);
+        }
+
+        if (debtRes.status === 'fulfilled' && debtRes.value.ok) {
+          const json = await debtRes.value.json();
+          setDebt(json);
+        }
+
+        if (
+          economicRes.status === 'fulfilled' &&
+          economicRes.value.ok
+        ) {
+          const json = await economicRes.value.json();
+          if (Array.isArray(json)) {
+            setIncomeComparisons(json);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load dashboard data', err);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const totalDebt = debt?.total_debt ?? budgetSummary.national_debt;
+  const debtToGdp =
+    debt?.debt_to_gdp_ratio ?? budgetSummary.debt_to_gdp_ratio;
+  const interestCost = debt?.annual_interest_cost ?? 0;
+  const revenueTotal = revenue?.total_revenue ?? null;
+  const interestShare =
+    interestCost && revenueTotal
+      ? (interestCost / revenueTotal) * 100
+      : null;
 
   const handleMinistryClick = (ministryId: string) => {
     // #region agent log
@@ -167,6 +304,11 @@ export default function Home() {
         </motion.div>
       </motion.div>
 
+      {/* Current Poll Teaser */}
+      <div className="mb-8">
+        <CurrentPollWidget />
+      </div>
+
       {/* Key Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
@@ -220,7 +362,7 @@ export default function Home() {
               </span>
             </div>
           </div>
-          <div className="h-[260px]">
+          <div className="h-[260px] min-h-[200px] w-full min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={historicalData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -317,16 +459,31 @@ export default function Home() {
           <div>
             <p className="text-sm text-gray-500 mb-1">Total Debt (End FY2025/26)</p>
             <p className="text-3xl font-bold text-gray-900 tabular-nums">
-              {formatCurrency(11_386_500_000, true)}
+              {formatCurrency(totalDebt, true)}
             </p>
-            <p className="text-sm text-green-600 mt-1">↓ 68.9% of GDP (down from 88.7% in 2021)</p>
+            {debtToGdp ? (
+              <p className="text-sm text-green-600 mt-1">
+                ↓ {debtToGdp.toFixed(1)}% of GDP
+              </p>
+            ) : (
+              <p className="text-sm text-green-600 mt-1">
+                Debt-to-GDP is trending down from pandemic highs.
+              </p>
+            )}
           </div>
           <div>
             <p className="text-sm text-gray-500 mb-1">Interest Payments</p>
             <p className="text-2xl font-bold text-turquoise tabular-nums">
-              {formatCurrency(668_045_978, true)}
+              {formatCurrency(
+                interestCost || 668_045_978,
+                true,
+              )}
             </p>
-            <p className="text-sm text-gray-500 mt-1">17.2% of revenue</p>
+            <p className="text-sm text-gray-500 mt-1">
+              {interestShare
+                ? `${interestShare.toFixed(1)}% of revenue`
+                : 'Share of annual revenue'}
+            </p>
           </div>
           <div>
             <p className="text-sm text-gray-500 mb-1">Target by 2031</p>
@@ -339,15 +496,79 @@ export default function Home() {
         <div className="mt-6">
           <p className="text-xs text-gray-500 mb-2">Debt-to-GDP Ratio Trajectory</p>
           <div className="h-3 bg-gray-100 rounded-full overflow-hidden flex">
-            <div className="bg-turquoise h-full transition-all" style={{ width: '68.9%' }}></div>
+            <div
+              className="bg-turquoise h-full transition-all"
+              style={{
+                width: `${Math.min(debtToGdp || 0, 100)}%`,
+              }}
+            ></div>
           </div>
           <div className="flex justify-between mt-2 text-xs text-gray-500">
             <span>0%</span>
-            <span>68.9% (2025/26)</span>
+            <span>
+              {debtToGdp ? `${debtToGdp.toFixed(1)}%` : 'Current level'}
+            </span>
             <span>100%</span>
           </div>
         </div>
       </motion.div>
+
+      {/* Income & cost of living snapshot */}
+      {incomeComparisons && incomeComparisons.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.35 }}
+          className="bg-white rounded-xl border border-gray-200 p-6 mb-8"
+        >
+          {(() => {
+            const snapshot = incomeComparisons[0];
+            const middle = snapshot.middle_class.month_amount;
+            const working = snapshot.working_class.month_amount;
+            return (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold text-gray-900">
+                    Income &amp; cost of living
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    {snapshot.island.replace('_', ' ')}, {snapshot.year}
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">
+                      Middle class monthly income needed
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900 tabular-nums">
+                      {formatCurrency(middle)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">
+                      Working class monthly income needed
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900 tabular-nums">
+                      {formatCurrency(working)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">
+                      Gap between middle and working class
+                    </p>
+                    <p className="text-2xl font-bold text-turquoise tabular-nums">
+                      {formatCurrency(snapshot.difference_amount)}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {snapshot.difference_percent.toFixed(1)}% higher
+                    </p>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </motion.div>
+      )}
 
       {/* Info Banner */}
       <motion.div

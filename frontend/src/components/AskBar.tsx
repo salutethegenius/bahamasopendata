@@ -228,7 +228,7 @@ export default function AskBar({ onAsk }: AskBarProps) {
                           <BarChart3 className="w-4 h-4 text-turquoise" />
                           <p className="text-sm font-medium text-gray-700">Trend</p>
                         </div>
-                        <div className="h-40">
+                        <div className="h-40 min-h-[120px] w-full min-w-0">
                           <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={response.chart_data}>
                               <XAxis dataKey="year" tick={{ fontSize: 11 }} />

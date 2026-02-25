@@ -3,11 +3,14 @@ export interface BudgetSummary {
   fiscal_year: string;
   total_revenue: number;
   total_expenditure: number;
+  recurrent_expenditure?: number;
+  capital_expenditure?: number;
   deficit_surplus: number;
   national_debt: number;
   debt_to_gdp_ratio: number | null;
-  revenue_change_yoy: number | null;
-  expenditure_change_yoy: number | null;
+  revenue_change_yoy?: number | null;
+  expenditure_change_yoy?: number | null;
+  gdp?: number | null;
   last_updated: string;
   source_document: string;
   source_page: number | null;
@@ -161,4 +164,25 @@ export interface IncomeComparison {
   difference_percent: number;
   difference_amount: number;
 }
+
+// Poll Types
+export interface PollOption {
+  id: number;
+  option_text: string;
+  display_order: number;
+  votes: number;
+}
+
+export interface Poll {
+  id: number;
+  question: string;
+  description?: string | null;
+  status: string;
+  domain?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  total_votes: number;
+  options: PollOption[];
+}
+
 

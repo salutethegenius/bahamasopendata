@@ -6,7 +6,8 @@ from pathlib import Path
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
-    
+    # Polls
+    POLLS_ADMIN_API_KEY: str | None = None  # used to protect /polls admin endpoints
     # App
     APP_NAME: str = "Bahamas Open Data API"
     DEBUG: bool = False

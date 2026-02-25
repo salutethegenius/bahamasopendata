@@ -4,34 +4,59 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { 
-  LayoutDashboard, 
-  Building2, 
-  Wallet, 
+import {
+  LayoutDashboard,
+  Building2,
+  Wallet,
   CreditCard,
   Map,
   Newspaper,
   Download,
   Menu,
   X,
-  DollarSign
+  DollarSign,
+  HeartPulse,
+  BarChart3,
+  ChevronDown,
 } from 'lucide-react';
 import { useState } from 'react';
-import logo from '@/images/logo.jpeg';
 
-const navItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/ministries', label: 'Ministries', icon: Building2 },
-  { href: '/revenue', label: 'Revenue', icon: Wallet },
-  { href: '/debt', label: 'Debt', icon: CreditCard },
-  { href: '/income', label: 'Income', icon: DollarSign },
-  { href: '/map', label: 'Map', icon: Map },
-  { href: '/news', label: 'News', icon: Newspaper },
+const MENU_LOGO_URL = 'https://bahamasopendata.com/_next/static/media/logo.f078841a.jpeg';
+
+type NavItem = {
+  id: string;
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  domain?: string;
+};
+
+const primaryNavItems: NavItem[] = [
+  { id: 'dashboard', href: '/', label: 'Dashboard', icon: LayoutDashboard, domain: 'overview' },
+  { id: 'health', href: '/health', label: 'Health', icon: HeartPulse, domain: 'health' },
+  { id: 'income', href: '/income', label: 'Income', icon: DollarSign, domain: 'income' },
+];
+
+const budgetNavItems: NavItem[] = [
+  { id: 'revenue', href: '/revenue', label: 'Revenue', icon: Wallet, domain: 'revenue' },
+  { id: 'debt', href: '/debt', label: 'Debt', icon: CreditCard, domain: 'debt' },
+  { id: 'map', href: '/map', label: 'Map', icon: Map, domain: 'geography' },
+  { id: 'ministries', href: '/ministries', label: 'Ministries', icon: Building2, domain: 'ministries' },
+];
+
+const tailNavItems: NavItem[] = [
+  { id: 'polls', href: '/polls', label: 'Polls', icon: BarChart3, domain: 'polls' },
+  { id: 'news', href: '/news', label: 'News', icon: Newspaper, domain: 'news' },
 ];
 
 export default function Navigation() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [budgetOpen, setBudgetOpen] = useState(false);
+
+  const isBudgetActive = budgetNavItems.some(
+    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
+  );
 
   return (
     <>
@@ -42,7 +67,7 @@ export default function Navigation() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3">
               <Image
-                src={logo}
+                src={MENU_LOGO_URL}
                 alt="Bahamas Open Data Logo"
                 width={120}
                 height={72}
@@ -56,7 +81,85 @@ export default function Navigation() {
 
             {/* Nav Links */}
             <div className="flex items-center gap-1">
-              {navItems.map((item) => {
+              {primaryNavItems.map((item) => {
+                const isActive = pathname === item.href;
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`
+                      relative px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                      flex items-center gap-2
+                      ${isActive 
+                        ? 'text-turquoise' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                      }
+                    `}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {item.label}
+                    {isActive && (
+                      <motion.div
+                        layoutId="nav-indicator"
+                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-turquoise"
+                      />
+                    )}
+                  </Link>
+                );
+              })}
+
+              {/* National Budget dropdown */}
+              <div
+                className="relative"
+                onMouseEnter={() => setBudgetOpen(true)}
+                onMouseLeave={() => setBudgetOpen(false)}
+              >
+                <button
+                  type="button"
+                  className={`
+                    relative px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                    flex items-center gap-2
+                    ${isBudgetActive || budgetOpen
+                      ? 'text-turquoise'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    }
+                  `}
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  National Budget
+                  <ChevronDown className="w-3 h-3" />
+                  {isBudgetActive && (
+                    <motion.div
+                      layoutId="nav-indicator"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-turquoise"
+                    />
+                  )}
+                </button>
+                {budgetOpen && (
+                  <div className="absolute right-0 mt-2 w-52 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50">
+                    {budgetNavItems.map((item) => {
+                      const isActive = pathname === item.href;
+                      const Icon = item.icon;
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={`
+                            flex items-center gap-2 px-3 py-2 text-sm
+                            ${isActive ? 'text-turquoise bg-turquoise/5' : 'text-gray-700 hover:bg-gray-100'}
+                          `}
+                        >
+                          <Icon className="w-4 h-4" />
+                          {item.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {tailNavItems.map((item) => {
                 const isActive = pathname === item.href;
                 const Icon = item.icon;
                 return (
@@ -102,7 +205,7 @@ export default function Navigation() {
         <div className="flex items-center justify-between h-16 sm:h-18 px-3 sm:px-4 py-2">
           <Link href="/" className="flex items-center gap-2">
             <Image
-              src={logo}
+              src={MENU_LOGO_URL}
               alt="Bahamas Open Data Logo"
               width={100}
               height={60}
@@ -122,44 +225,92 @@ export default function Navigation() {
           </button>
         </div>
 
-        {/* Mobile Menu */}
-        {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white border-b border-gray-200 py-2"
-          >
-            {navItems.map((item) => {
-              const isActive = pathname === item.href;
-              const Icon = item.icon;
-              return (
+            {/* Mobile Menu */}
+            {mobileOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white border-b border-gray-200 py-2"
+              >
+                {primaryNavItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      className={`
+                        flex items-center gap-3 px-4 py-3 text-sm font-medium
+                        ${isActive 
+                          ? 'text-turquoise bg-turquoise/5' 
+                          : 'text-gray-600'
+                        }
+                      `}
+                    >
+                      <Icon className="w-5 h-5" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+
+                <div className="px-4 pt-2 pb-1 text-xs font-semibold text-gray-400 uppercase">
+                  National Budget
+                </div>
+                {budgetNavItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      className={`
+                        flex items-center gap-3 px-6 py-2 text-sm
+                        ${isActive 
+                          ? 'text-turquoise bg-turquoise/5' 
+                          : 'text-gray-600'
+                        }
+                      `}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+
+                {tailNavItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      className={`
+                        flex items-center gap-3 px-4 py-3 text-sm font-medium
+                        ${isActive 
+                          ? 'text-turquoise bg-turquoise/5' 
+                          : 'text-gray-600'
+                        }
+                      `}
+                    >
+                      <Icon className="w-5 h-5" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+
                 <Link
-                  key={item.href}
-                  href={item.href}
+                  href="/export"
                   onClick={() => setMobileOpen(false)}
-                  className={`
-                    flex items-center gap-3 px-4 py-3 text-sm font-medium
-                    ${isActive 
-                      ? 'text-turquoise bg-turquoise/5' 
-                      : 'text-gray-600'
-                    }
-                  `}
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-turquoise"
                 >
-                  <Icon className="w-5 h-5" />
-                  {item.label}
+                  <Download className="w-5 h-5" />
+                  Export Data
                 </Link>
-              );
-            })}
-            <Link
-              href="/export"
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-turquoise"
-            >
-              <Download className="w-5 h-5" />
-              Export Data
-            </Link>
-          </motion.div>
-        )}
+              </motion.div>
+            )}
       </nav>
 
       {/* Spacer */}
