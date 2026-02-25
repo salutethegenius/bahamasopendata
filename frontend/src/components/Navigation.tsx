@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { 
   LayoutDashboard, 
   Building2, 
@@ -12,15 +13,18 @@ import {
   Newspaper,
   Download,
   Menu,
-  X
+  X,
+  DollarSign
 } from 'lucide-react';
 import { useState } from 'react';
+import logo from '@/images/logo.jpeg';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/ministries', label: 'Ministries', icon: Building2 },
   { href: '/revenue', label: 'Revenue', icon: Wallet },
   { href: '/debt', label: 'Debt', icon: CreditCard },
+  { href: '/income', label: 'Income', icon: DollarSign },
   { href: '/map', label: 'Map', icon: Map },
   { href: '/news', label: 'News', icon: Newspaper },
 ];
@@ -34,13 +38,18 @@ export default function Navigation() {
       {/* Desktop Navigation */}
       <nav className="hidden md:flex fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-gray-200 z-50">
         <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-20 lg:h-24">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-turquoise rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">B</span>
-              </div>
-              <span className="font-bold text-xl text-gray-900">
+            <Link href="/" className="flex items-center gap-3">
+              <Image
+                src={logo}
+                alt="Bahamas Open Data Logo"
+                width={120}
+                height={72}
+                className="h-12 sm:h-14 md:h-16 w-auto object-contain"
+                priority
+              />
+              <span className="font-bold text-lg sm:text-xl md:text-2xl text-gray-900">
                 Bahamas<span className="text-turquoise">OpenData</span>
               </span>
             </Link>
@@ -90,12 +99,17 @@ export default function Navigation() {
 
       {/* Mobile Navigation */}
       <nav className="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
-        <div className="flex items-center justify-between h-14 px-4">
+        <div className="flex items-center justify-between h-16 sm:h-18 px-3 sm:px-4 py-2">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-turquoise rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold">B</span>
-            </div>
-            <span className="font-bold text-lg text-gray-900">
+            <Image
+              src={logo}
+              alt="Bahamas Open Data Logo"
+              width={100}
+              height={60}
+              className="h-10 w-auto object-contain"
+              priority
+            />
+            <span className="font-bold text-base sm:text-lg text-gray-900">
               Bahamas<span className="text-turquoise">OpenData</span>
             </span>
           </Link>
@@ -149,7 +163,7 @@ export default function Navigation() {
       </nav>
 
       {/* Spacer */}
-      <div className="h-14 md:h-16" />
+      <div className="h-16 sm:h-18 md:h-20 lg:h-24" />
     </>
   );
 }

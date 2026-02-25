@@ -2,10 +2,62 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Send, X, FileText, BarChart3, Loader2 } from 'lucide-react';
+import { Search, Send, X, FileText, BarChart3, Loader2, ExternalLink } from 'lucide-react';
 import { AskResponse } from '@/types';
 import { formatCurrency } from '@/lib/format';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+
+// Component to format answer text with better typography
+function FormattedAnswer({ text }: { text: string }) {
+  // Split into paragraphs first
+  const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
+  
+  return (
+    <div className="text-gray-900 leading-relaxed space-y-4">
+      {paragraphs.map((paragraph, pIdx) => {
+        // Check if it's a numbered list item
+        const listMatch = paragraph.match(/^(\d+)\.\s+(.+)$/);
+        if (listMatch) {
+          return (
+            <div key={pIdx} className="flex gap-3">
+              <span className="font-bold text-turquoise text-lg flex-shrink-0 w-6">{listMatch[1]}.</span>
+              <div className="flex-1">
+                <FormattedText text={listMatch[2]} />
+              </div>
+            </div>
+          );
+        }
+        
+        // Regular paragraph
+        return (
+          <p key={pIdx} className="text-base">
+            <FormattedText text={paragraph} />
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+// Helper to format inline text (bold, etc.)
+function FormattedText({ text }: { text: string }) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return (
+            <strong key={i} className="font-bold text-gray-900">
+              {part.slice(2, -2)}
+            </strong>
+          );
+        }
+        return <span key={i}>{part}</span>;
+      })}
+    </>
+  );
+}
 
 interface AskBarProps {
   onAsk: (question: string) => Promise<AskResponse>;
@@ -29,11 +81,21 @@ export default function AskBar({ onAsk }: AskBarProps) {
     if (!question.trim() || isLoading) return;
 
     setIsLoading(true);
+    setResponse(null); // Clear previous response
+    
     try {
       const result = await onAsk(question);
       setResponse(result);
     } catch (error) {
       console.error('Failed to get answer:', error);
+      // Set error response so user sees the error
+      setResponse({
+        answer: error instanceof Error ? error.message : 'Failed to get answer. Please try again.',
+        numbers: null,
+        chart_data: null,
+        citations: [],
+        confidence: 0.0,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -48,8 +110,10 @@ export default function AskBar({ onAsk }: AskBarProps) {
   const exampleQuestions = [
     "How much was allocated for education this year?",
     "What is the national debt?",
+    "What is the Bahamas National Health Strategy?",
+    "What are the health strategy goals for 2026-2030?",
     "Compare health vs education spending",
-    "How much VAT was collected?",
+    "What health targets are mentioned in the strategy?",
   ];
 
   return (
@@ -64,7 +128,7 @@ export default function AskBar({ onAsk }: AskBarProps) {
         className="fixed bottom-6 right-6 bg-turquoise text-white p-4 rounded-full shadow-lg z-40 flex items-center gap-2"
       >
         <Search className="w-5 h-5" />
-        <span className="font-medium hidden sm:inline">Ask about the budget</span>
+        <span className="font-medium hidden sm:inline">Ask questions</span>
       </motion.button>
 
       {/* Ask Modal */}
@@ -90,7 +154,7 @@ export default function AskBar({ onAsk }: AskBarProps) {
             >
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Ask about the budget</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Ask about the budget & health strategy</h2>
                 <button
                   onClick={handleClose}
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -104,7 +168,7 @@ export default function AskBar({ onAsk }: AskBarProps) {
                 {!response ? (
                   <div className="space-y-4">
                     <p className="text-gray-600">
-                      Ask me anything about the Bahamas budget, spending, revenue, or debt.
+                      Ask me anything about the Bahamas budget, spending, revenue, debt, or national health strategy.
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {exampleQuestions.map((q, i) => (
@@ -127,25 +191,33 @@ export default function AskBar({ onAsk }: AskBarProps) {
                     </div>
 
                     {/* Answer */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <p className="text-gray-900 leading-relaxed">{response.answer}</p>
+                    <div className="bg-white border border-gray-200 rounded-lg p-6">
+                      <h3 className="text-lg font-bold text-gray-900 mb-4">Answer</h3>
+                      <div className="prose prose-sm max-w-none">
+                        <FormattedAnswer text={response.answer} />
+                      </div>
                     </div>
 
                     {/* Numbers */}
                     {response.numbers && Object.keys(response.numbers).length > 0 && (
-                      <div className="grid grid-cols-2 gap-3">
-                        {Object.entries(response.numbers).map(([key, value]) => (
-                          <div key={key} className="bg-white border border-gray-200 rounded-lg p-3">
-                            <p className="text-xs text-gray-500 capitalize">
-                              {key.replace(/_/g, ' ')}
-                            </p>
-                            <p className="text-lg font-bold text-turquoise tabular-nums">
-                              {typeof value === 'number' && value > 1000
-                                ? formatCurrency(value, true)
-                                : value}
-                            </p>
-                          </div>
-                        ))}
+                      <div className="bg-turquoise/5 border border-turquoise/20 rounded-lg p-4">
+                        <h3 className="text-sm font-bold text-gray-900 mb-3">Key Figures</h3>
+                        <div className="grid grid-cols-2 gap-3">
+                          {Object.entries(response.numbers).map(([key, value]) => (
+                            <div key={key} className="bg-white border border-gray-200 rounded-lg p-3">
+                              <p className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">
+                                {key.replace(/_/g, ' ')}
+                              </p>
+                              <p className="text-xl font-bold text-turquoise tabular-nums">
+                                {typeof value === 'number' && value > 1000
+                                  ? formatCurrency(value, true)
+                                  : typeof value === 'number' && value < 1
+                                  ? `${(value * 100).toFixed(1)}%`
+                                  : value}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
 
@@ -176,18 +248,45 @@ export default function AskBar({ onAsk }: AskBarProps) {
 
                     {/* Citations */}
                     {response.citations.length > 0 && (
-                      <div className="border-t border-gray-200 pt-4">
-                        <p className="text-xs font-medium text-gray-500 mb-2">Sources</p>
-                        {response.citations.map((citation, i) => (
-                          <a
-                            key={i}
-                            href={citation.url || '#'}
-                            className="flex items-center gap-2 text-sm text-gray-600 hover:text-turquoise py-1"
-                          >
-                            <FileText className="w-4 h-4" />
-                            <span>{citation.document}, page {citation.page}</span>
-                          </a>
-                        ))}
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-turquoise" />
+                          Source Documents
+                        </h3>
+                        <div className="space-y-2">
+                          {response.citations.map((citation, i) => {
+                            // Build PDF URL - browsers support #page=N for PDF navigation
+                            const pdfFilename = encodeURIComponent(citation.document);
+                            const pdfPath = `/api/v1/documents/${pdfFilename}#page=${citation.page}`;
+                            return (
+                              <a
+                                key={i}
+                                href={pdfPath}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-200 hover:border-turquoise hover:shadow-sm transition-all group"
+                              >
+                                <FileText className="w-5 h-5 text-turquoise flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <p className="font-semibold text-gray-900 text-sm">
+                                      {citation.document.replace(/_/g, ' ')}
+                                    </p>
+                                    <ExternalLink className="w-3 h-3 text-gray-400" />
+                                  </div>
+                                  <p className="text-xs font-medium text-turquoise mb-2">
+                                    Page {citation.page}
+                                  </p>
+                                  {citation.snippet && (
+                                    <p className="text-xs text-gray-500 italic line-clamp-2 border-l-2 border-turquoise/30 pl-2 py-1">
+                                      "{citation.snippet.substring(0, 150)}{citation.snippet.length > 150 ? '...' : ''}"
+                                    </p>
+                                  )}
+                                </div>
+                              </a>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
 
@@ -223,7 +322,7 @@ export default function AskBar({ onAsk }: AskBarProps) {
                       type="text"
                       value={question}
                       onChange={(e) => setQuestion(e.target.value)}
-                      placeholder="Ask about spending, revenue, or debt..."
+                      placeholder="Ask about spending, revenue, debt, or health strategy..."
                       className="flex-1 px-4 py-3 rounded-full bg-gray-100 border-0 focus:ring-2 focus:ring-turquoise focus:bg-white transition-all"
                     />
                     <button

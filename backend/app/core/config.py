@@ -1,6 +1,7 @@
 """Application configuration using pydantic-settings."""
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+from pathlib import Path
 
 
 class Settings(BaseSettings):
@@ -28,7 +29,8 @@ class Settings(BaseSettings):
     CORS_ORIGINS: list[str] = ["http://localhost:3000", "https://bahamasopendata.com", "https://www.bahamasopendata.com"]
     
     class Config:
-        env_file = ".env"
+        # Use absolute path to .env file in backend directory
+        env_file = str(Path(__file__).parent.parent.parent / ".env")
         case_sensitive = True
 
 

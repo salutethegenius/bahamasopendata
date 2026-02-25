@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 import os
+from app.core.config import settings
 
 router = APIRouter()
 
@@ -39,11 +40,12 @@ async def ask_question(request: AskRequest):
     with citations to the exact source PDF and page.
     """
     # Try to use RAG pipeline if configured
-    if os.getenv("OPENAI_API_KEY") and os.getenv("PINECONE_API_KEY"):
+    if settings.OPENAI_API_KEY and settings.PINECONE_API_KEY:
         try:
             from app.rag.pipeline import get_rag_pipeline
             pipeline = get_rag_pipeline()
             response = await pipeline.ask(request.question, request.fiscal_year)
+            
             return AskResponse(
                 answer=response.answer,
                 numbers=response.numbers,

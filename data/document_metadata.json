@@ -1,0 +1,79 @@
+{
+  "documents": [
+    {
+      "filename": "Bahamas National Health Strategy FINAL _08Dec2025_.pdf",
+      "original_filename": "Bahamas National Health Strategy FINAL (08Dec2025).pdf",
+      "original_url": null,
+      "name": "Bahamas National Health Strategy FINAL (08Dec2025)",
+      "file_hash": "93315f25278876dab25f654ebd09a79e923d4c53cd3ebe4cc6d701760b050eaf",
+      "downloaded_at": "2025-12-15T22:23:34.178564",
+      "file_size": 5354806,
+      "extraction_status": "success",
+      "document_type": "health_strategy",
+      "fiscal_year": null,
+      "upload_source": "manual",
+      "extraction_result": {
+        "status": "success",
+        "pages": 62,
+        "tables": 46,
+        "parsed_budgets": 0,
+        "total_text_chars": 107558
+      },
+      "extracted_at": "2025-12-16T00:59:05.721890",
+      "chunk_count": 62,
+      "embedding_status": "success",
+      "embedding_count": 62,
+      "embedded_at": "2025-12-16T01:02:04.379369"
+    },
+    {
+      "filename": "Bahamas BudgetFINAL_2025-2026_.pdf",
+      "original_filename": "Bahamas BudgetFINAL(2025-2026).pdf",
+      "original_url": null,
+      "name": "Bahamas BudgetFINAL(2025-2026)",
+      "file_hash": "aeb5684cd41a96fe52114d28d676c19ac233315d40cdd679dd4d684a1a40356c",
+      "downloaded_at": "2025-12-16T00:58:39.401608",
+      "file_size": 4407254,
+      "extraction_status": "success",
+      "document_type": "budget_book",
+      "fiscal_year": "2025/26",
+      "upload_source": "manual",
+      "extraction_result": {
+        "status": "success",
+        "pages": 330,
+        "tables": 45,
+        "parsed_budgets": 0,
+        "total_text_chars": 796640
+      },
+      "extracted_at": "2025-12-16T01:01:18.385320",
+      "chunk_count": 329,
+      "embedding_status": "success",
+      "embedding_count": 329,
+      "embedded_at": "2025-12-16T01:02:20.465796"
+    },
+    {
+      "filename": "Budget_Communication_25_26_final_1.pdf",
+      "original_filename": "Budget_Communication_25_26_final_1.pdf",
+      "original_url": null,
+      "name": "Budget_Communication_25_26_final_1",
+      "file_hash": "8a96f05e6ebecd12b41c16a6819020ce0cc9b7a9f1cf47b236d56a3c0712cba6",
+      "downloaded_at": "2025-12-16T00:58:44.246975",
+      "file_size": 394164,
+      "extraction_status": "success",
+      "document_type": "budget_communication",
+      "fiscal_year": "2025/26",
+      "upload_source": "manual",
+      "extraction_result": {
+        "status": "success",
+        "pages": 69,
+        "tables": 0,
+        "parsed_budgets": 0,
+        "total_text_chars": 88585
+      },
+      "extracted_at": "2025-12-16T01:01:30.839979",
+      "chunk_count": 69,
+      "embedding_status": "success",
+      "embedding_count": 69,
+      "embedded_at": "2025-12-16T01:02:24.986813"
+    }
+  ]
+}

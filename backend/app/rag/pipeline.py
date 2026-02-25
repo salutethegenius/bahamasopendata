@@ -71,6 +71,7 @@ class RAGPipeline:
                 "document": match.metadata.get("document", ""),
                 "page_number": match.metadata.get("page_number", 0),
                 "fiscal_year": match.metadata.get("fiscal_year", ""),
+                "document_type": match.metadata.get("document_type", ""),
             })
         
         return documents
@@ -100,7 +101,7 @@ class RAGPipeline:
         
         # System prompt
         system_prompt = """You are a helpful assistant for Bahamas Open Data, the Bahamas civic finance dashboard. 
-Your role is to answer questions about the Bahamas national budget, government spending, revenue, and debt.
+Your role is to answer questions about the Bahamas national budget, government spending, revenue, debt, and national strategies (including health strategy).
 
 Guidelines:
 - Answer based ONLY on the provided context from official documents
@@ -108,7 +109,8 @@ Guidelines:
 - If the answer isn't in the context, say you don't have that information
 - Use a clear, factual, neutral tone - no political commentary
 - Format currency in Bahamian dollars (BSD)
-- When giving numbers, be precise and include the fiscal year
+- When giving numbers, be precise and include the fiscal year or time period
+- For strategy documents, focus on goals, targets, and key initiatives
 
 You must respond in JSON format with these fields:
 {

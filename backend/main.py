@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from app.core.config import settings
-from app.api import budget, ministries, revenue, debt, ask, export
+from app.api import budget, ministries, revenue, debt, ask, export, economic, documents
 
 
 @asynccontextmanager
@@ -40,6 +40,8 @@ app.include_router(revenue.router, prefix=f"{settings.API_V1_PREFIX}/revenue", t
 app.include_router(debt.router, prefix=f"{settings.API_V1_PREFIX}/debt", tags=["Debt"])
 app.include_router(ask.router, prefix=f"{settings.API_V1_PREFIX}/ask", tags=["Ask"])
 app.include_router(export.router, prefix=f"{settings.API_V1_PREFIX}/export", tags=["Export"])
+app.include_router(economic.router, prefix=f"{settings.API_V1_PREFIX}/economic", tags=["Economic"])
+app.include_router(documents.router, prefix=f"{settings.API_V1_PREFIX}/documents", tags=["Documents"])
 
 
 @app.get("/")

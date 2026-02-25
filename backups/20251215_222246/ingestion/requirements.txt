@@ -1,0 +1,30 @@
+# PDF Processing
+pdfplumber==0.10.3
+tabula-py==2.9.0
+pytesseract==0.3.10
+pdf2image==1.17.0
+
+# Web Scraping
+playwright==1.41.0
+httpx==0.26.0
+beautifulsoup4==4.12.3
+
+# Data Processing
+pandas>=2.2.0
+numpy>=1.26.3
+
+# Database
+sqlalchemy==2.0.25
+psycopg2-binary==2.9.9
+
+# OpenAI for embeddings
+openai==1.12.0
+
+# Pinecone
+pinecone-client>=3.1.0
+
+# Utilities
+python-dotenv==1.0.1
+tenacity==8.2.3
+tqdm==4.66.1
+

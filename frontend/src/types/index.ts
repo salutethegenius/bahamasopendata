@@ -131,3 +131,34 @@ export interface ChartDataPoint {
   [key: string]: string | number;
 }
 
+// Economic Indicator Types
+export interface IncomeBreakdown {
+  food?: number | null;
+  housing_utilities?: number | null;
+  nfnh?: number | null; // Non-food, non-housing
+  savings?: number | null;
+}
+
+export interface EconomicIndicator {
+  id?: number | null;
+  indicator_type: string; // "middle_class" | "working_class"
+  island: string; // "new_providence" | "grand_bahama"
+  year: number;
+  month_amount: number;
+  annual_amount: number;
+  breakdown?: IncomeBreakdown | null;
+  source_document?: string | null;
+  source_url?: string | null;
+  author?: string | null;
+  published_date?: string | null;
+}
+
+export interface IncomeComparison {
+  island: string;
+  year: number;
+  middle_class: EconomicIndicator;
+  working_class: EconomicIndicator;
+  difference_percent: number;
+  difference_amount: number;
+}
+

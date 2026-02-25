@@ -98,6 +98,57 @@ def init_pinecone_index(pc: Pinecone) -> any:
     return pc.Index(PINECONE_INDEX)
 
 
+def sanitize_metadata_string(text: str) -> str:
+    """Sanitize string for Pinecone metadata by replacing problematic Unicode characters.
+    
+    Pinecone's HTTP client requires Latin-1 encoding, so we must ensure all strings
+    are ASCII-compatible. This function replaces common Unicode characters with ASCII
+    equivalents and removes any remaining non-ASCII characters.
+    """
+    if not text or text is None:
+        return ""
+    
+    # Ensure it's a string
+    if not isinstance(text, str):
+        text = str(text)
+    
+    # Replace common Unicode characters with ASCII equivalents
+    replacements = {
+        '\u2013': '-',  # en dash
+        '\u2014': '--',  # em dash
+        '\u2018': "'",  # left single quotation mark
+        '\u2019': "'",  # right single quotation mark
+        '\u201C': '"',  # left double quotation mark
+        '\u201D': '"',  # right double quotation mark
+        '\u2026': '...',  # ellipsis
+        '\u00A0': ' ',  # non-breaking space
+        '\u2022': '*',  # bullet point
+        '\u2023': '*',  # triangular bullet
+        '\u25E6': '*',  # white bullet
+        '\u2043': '-',  # hyphen bullet
+        '\u2219': '*',  # bullet operator
+        '\u00B7': '*',  # middle dot
+        '\u00AD': '',   # soft hyphen (remove)
+        '\u2009': ' ',  # thin space
+        '\u200A': ' ',  # hair space
+        '\u200B': '',   # zero-width space (remove)
+        '\u200C': '',   # zero-width non-joiner (remove)
+        '\u200D': '',   # zero-width joiner (remove)
+        '\uFEFF': '',   # zero-width no-break space (remove)
+    }
+    
+    result = text
+    for unicode_char, ascii_char in replacements.items():
+        result = result.replace(unicode_char, ascii_char)
+    
+    # Aggressively remove any remaining non-ASCII characters
+    # This ensures the string can be safely encoded in Latin-1 for HTTP requests
+    # We use 'ignore' to remove problematic characters rather than raising errors
+    result = result.encode('ascii', errors='ignore').decode('ascii')
+    
+    return result
+
+
 def load_chunks(doc_meta: dict) -> list[dict]:
     """Load chunks for a document."""
     filename = doc_meta["filename"]
@@ -142,15 +193,23 @@ def process_document_embeddings(
             
             for j, emb in enumerate(embeddings):
                 chunk = batch[j]
+                # Sanitize all string fields for Pinecone metadata
+                # Truncate content first, then sanitize to ensure we stay within limits
+                raw_content = chunk["content"][:1000]
+                content_snippet = sanitize_metadata_string(raw_content)
+                
+                # Sanitize chunk ID as well (in case it contains special chars)
+                chunk_id = sanitize_metadata_string(chunk["id"])
+                
                 all_embeddings.append({
-                    "id": chunk["id"],
+                    "id": chunk_id,
                     "embedding": emb,
                     "metadata": {
-                        "document": filename,
-                        "page_number": chunk["page_number"],
-                        "content": chunk["content"][:1000],  # Truncate for Pinecone metadata limit
-                        "fiscal_year": doc_meta.get("fiscal_year", ""),
-                        "document_type": doc_meta.get("document_type", ""),
+                        "document": sanitize_metadata_string(filename),
+                        "page_number": int(chunk["page_number"]),  # Ensure it's an int, not string
+                        "content": content_snippet,  # Truncate and sanitize for Pinecone metadata limit
+                        "fiscal_year": sanitize_metadata_string(str(doc_meta.get("fiscal_year", "") or "")),
+                        "document_type": sanitize_metadata_string(str(doc_meta.get("document_type", "") or "")),
                     },
                 })
         except Exception as e:
@@ -185,14 +244,22 @@ def process_document_embeddings(
     ]
     
     # Upsert in batches
+    successful_uploads = 0
+    failed_batches = []
     for i in range(0, len(vectors_to_upsert), 100):
         batch = vectors_to_upsert[i:i + 100]
+        batch_num = (i // 100) + 1
         try:
             pinecone_index.upsert(vectors=batch)
+            successful_uploads += len(batch)
         except Exception as e:
-            print(f"  ⚠ Error upserting batch: {e}")
+            failed_batches.append((batch_num, str(e)))
+            print(f"  ⚠ Error upserting batch {batch_num}: {e}")
     
-    print(f"  ✓ Uploaded {len(all_embeddings)} vectors")
+    if failed_batches:
+        print(f"  ⚠ {len(failed_batches)} batch(es) failed, {successful_uploads}/{len(all_embeddings)} vectors uploaded")
+    else:
+        print(f"  ✓ Successfully uploaded {successful_uploads} vectors")
     
     return {
         "status": "success",

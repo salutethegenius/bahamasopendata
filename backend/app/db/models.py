@@ -18,6 +18,7 @@ class DocumentType(enum.Enum):
     DEBT_REPORT = "debt_report"
     REVENUE_REPORT = "revenue_report"
     AUDITOR_GENERAL = "auditor_general"
+    HEALTH_STRATEGY = "health_strategy"
     OTHER = "other"
 
 
@@ -220,4 +221,29 @@ class UserFeedback(Base):
     status = Column(String(20), default="pending")  # "pending", "reviewed", "resolved"
     created_at = Column(DateTime, default=func.now())
     resolved_at = Column(DateTime)
+
+
+class EconomicIndicator(Base):
+    """Economic indicators including income and cost of living data."""
+    __tablename__ = "economic_indicators"
+    
+    id = Column(Integer, primary_key=True)
+    indicator_type = Column(String(50), nullable=False)  # "middle_class", "working_class"
+    island = Column(String(50), nullable=False)  # "new_providence", "grand_bahama"
+    year = Column(Integer, nullable=False)
+    month_amount = Column(Float, nullable=False)  # Monthly cost in USD
+    annual_amount = Column(Float, nullable=False)  # Annual cost in USD
+    breakdown = Column(JSON)  # JSON with categories: food, housing_utilities, nfnh, savings
+    source_document = Column(String(500))
+    source_url = Column(Text)
+    author = Column(String(255))
+    published_date = Column(Date)
+    created_at = Column(DateTime, default=func.now())
+    
+    __table_args__ = (
+        Index("idx_economic_indicator_type", "indicator_type"),
+        Index("idx_economic_island", "island"),
+        Index("idx_economic_year", "year"),
+        Index("idx_economic_type_island_year", "indicator_type", "island", "year"),
+    )
 

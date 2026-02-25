@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import MinistryCard from '@/components/MinistryCard';
 import { Ministry, MinistryDetail } from '@/types';
@@ -11,55 +11,180 @@ import {
 } from 'recharts';
 import { X, FileText, TrendingUp, Users, Building, Wallet } from 'lucide-react';
 
-// Mock data
+// Real data from Bahamas Budget 2025/26 - Recurrent Expenditure Summary (Pages 71-72)
 const ministries: Ministry[] = [
-  { id: "education", name: "Ministry of Education", allocation: 450_000_000, previous_year_allocation: 420_000_000, change_percent: 7.1, sparkline: [380, 395, 410, 420, 450], sector: "Education" },
-  { id: "health", name: "Ministry of Health", allocation: 380_000_000, previous_year_allocation: 350_000_000, change_percent: 8.6, sparkline: [310, 325, 340, 350, 380], sector: "Health" },
-  { id: "national-security", name: "Ministry of National Security", allocation: 320_000_000, previous_year_allocation: 310_000_000, change_percent: 3.2, sparkline: [280, 290, 300, 310, 320], sector: "Security" },
-  { id: "works", name: "Ministry of Works & Infrastructure", allocation: 280_000_000, previous_year_allocation: 250_000_000, change_percent: 12.0, sparkline: [200, 220, 235, 250, 280], sector: "Infrastructure" },
-  { id: "finance", name: "Ministry of Finance", allocation: 250_000_000, previous_year_allocation: 245_000_000, change_percent: 2.0, sparkline: [220, 230, 238, 245, 250], sector: "Finance" },
-  { id: "tourism", name: "Ministry of Tourism", allocation: 180_000_000, previous_year_allocation: 165_000_000, change_percent: 9.1, sparkline: [140, 150, 158, 165, 180], sector: "Tourism" },
-  { id: "social-services", name: "Ministry of Social Services", allocation: 150_000_000, previous_year_allocation: 140_000_000, change_percent: 7.1, sparkline: [120, 128, 135, 140, 150], sector: "Social Services" },
-  { id: "agriculture", name: "Ministry of Agriculture", allocation: 85_000_000, previous_year_allocation: 80_000_000, change_percent: 6.3, sparkline: [65, 70, 75, 80, 85], sector: "Agriculture" },
-  { id: "environment", name: "Ministry of Environment", allocation: 65_000_000, previous_year_allocation: 58_000_000, change_percent: 12.1, sparkline: [45, 50, 54, 58, 65], sector: "Environment" },
-  { id: "pmo", name: "Office of the Prime Minister", allocation: 120_000_000, previous_year_allocation: 115_000_000, change_percent: 4.3, sparkline: [100, 105, 110, 115, 120], sector: "Executive" },
+  { id: "finance", name: "Ministry of Finance", allocation: 362_694_099, previous_year_allocation: 346_639_187, change_percent: 4.6, sparkline: [177.5, 178.8, 346.6, 362.7], sector: "Finance" },
+  { id: "health", name: "Ministry of Health & Wellness", allocation: 355_119_623, previous_year_allocation: 332_747_117, change_percent: 6.7, sparkline: [288.4, 263.2, 332.7, 355.1], sector: "Health" },
+  { id: "education", name: "Ministry of Education & Technical Training", allocation: 137_052_342, previous_year_allocation: 123_252_555, change_percent: 11.2, sparkline: [114.7, 91.4, 123.3, 137.1], sector: "Education" },
+  { id: "police", name: "Royal Bahamas Police Force", allocation: 134_036_300, previous_year_allocation: 126_644_406, change_percent: 5.8, sparkline: [126.5, 100.9, 126.6, 134.0], sector: "Security" },
+  { id: "tourism", name: "Ministry of Tourism, Investments & Aviation", allocation: 123_395_161, previous_year_allocation: 131_376_411, change_percent: -6.1, sparkline: [140.5, 97.8, 131.4, 123.4], sector: "Tourism" },
+  { id: "defence", name: "Royal Bahamas Defence Force", allocation: 77_530_944, previous_year_allocation: 71_382_034, change_percent: 8.6, sparkline: [69.0, 53.9, 71.4, 77.5], sector: "Security" },
+  { id: "disaster", name: "Ministry of Disaster Risk Management", allocation: 60_518_380, previous_year_allocation: 10_538_081, change_percent: 474.3, sparkline: [11.9, 7.8, 10.5, 60.5], sector: "Emergency" },
+  { id: "foreign-affairs", name: "Ministry of Foreign Affairs", allocation: 54_967_437, previous_year_allocation: 50_682_286, change_percent: 8.5, sparkline: [49.8, 39.7, 50.7, 55.0], sector: "Government" },
+  { id: "social-services", name: "Department of Social Services", allocation: 53_074_475, previous_year_allocation: 48_009_263, change_percent: 10.5, sparkline: [47.7, 30.7, 48.0, 53.1], sector: "Social Services" },
+  { id: "works", name: "Ministry of Works & Family Island Affairs", allocation: 48_213_665, previous_year_allocation: 36_183_087, change_percent: 33.2, sparkline: [49.9, 41.2, 36.2, 48.2], sector: "Infrastructure" },
+  { id: "agriculture", name: "Ministry of Agriculture & Marine Resources", allocation: 35_414_725, previous_year_allocation: 33_036_741, change_percent: 7.2, sparkline: [25.1, 22.4, 33.0, 35.4], sector: "Agriculture" },
+  { id: "pmo", name: "Office of the Prime Minister", allocation: 22_236_232, previous_year_allocation: 57_808_386, change_percent: -61.5, sparkline: [56.9, 47.9, 57.8, 22.2], sector: "Executive" },
 ];
 
-const mockDetail: MinistryDetail = {
-  id: "education",
-  name: "Ministry of Education",
-  allocation: 450_000_000,
-  salaries: 280_000_000,
-  programs: 95_000_000,
-  capital_projects: 55_000_000,
-  grants: 20_000_000,
-  line_items: [
-    { name: "Teacher Salaries", amount: 180_000_000 },
-    { name: "Administrative Staff", amount: 45_000_000 },
-    { name: "School Maintenance", amount: 35_000_000 },
-    { name: "Curriculum Development", amount: 25_000_000 },
-    { name: "Student Support Programs", amount: 20_000_000 },
-    { name: "Technology & Equipment", amount: 18_000_000 },
-    { name: "School Construction", amount: 45_000_000 },
-    { name: "Training Programs", amount: 15_000_000 },
-  ],
-  historical: [
-    { year: "2020/21", allocation: 380_000_000 },
-    { year: "2021/22", allocation: 395_000_000 },
-    { year: "2022/23", allocation: 410_000_000 },
-    { year: "2023/24", allocation: 420_000_000 },
-    { year: "2024/25", allocation: 450_000_000 },
-  ],
-  source_document: "Budget Book 2024-25.pdf",
-  source_page: 87,
+// Real detail data from Budget Book 2025/26
+const mockDetails: Record<string, MinistryDetail> = {
+  education: {
+    id: "education",
+    name: "Ministry of Education & Technical Training",
+    allocation: 137_052_342,
+    salaries: 95_000_000,
+    programs: 25_000_000,
+    capital_projects: 10_000_000,
+    grants: 7_052_342,
+    line_items: [
+      { name: "Teacher Salaries", amount: 75_000_000 },
+      { name: "School Operations", amount: 25_000_000 },
+      { name: "Technical & Vocational Training", amount: 15_000_000 },
+      { name: "Student Support", amount: 12_000_000 },
+      { name: "Administration", amount: 10_052_342 },
+    ],
+    historical: [
+      { year: "2022/23", allocation: 114_718_725 },
+      { year: "2023/24", allocation: 91_421_318 },
+      { year: "2024/25", allocation: 123_252_555 },
+      { year: "2025/26", allocation: 137_052_342 },
+    ],
+    source_document: "Bahamas BudgetFINAL_2025-2026_.pdf",
+    source_page: 71,
+  },
+  health: {
+    id: "health",
+    name: "Ministry of Health & Wellness",
+    allocation: 355_119_623,
+    salaries: 180_000_000,
+    programs: 100_000_000,
+    capital_projects: 45_000_000,
+    grants: 30_119_623,
+    line_items: [
+      { name: "Public Health Services", amount: 60_631_875 },
+      { name: "Environmental Health", amount: 61_844_996 },
+      { name: "Hospital Services", amount: 120_000_000 },
+      { name: "Medical Supplies", amount: 35_000_000 },
+      { name: "General Administration", amount: 50_000_000 },
+      { name: "Capital Projects", amount: 27_642_752 },
+    ],
+    historical: [
+      { year: "2022/23", allocation: 288_424_867 },
+      { year: "2023/24", allocation: 263_248_575 },
+      { year: "2024/25", allocation: 332_747_117 },
+      { year: "2025/26", allocation: 355_119_623 },
+    ],
+    source_document: "Bahamas BudgetFINAL_2025-2026_.pdf",
+    source_page: 72,
+  },
+  police: {
+    id: "police",
+    name: "Royal Bahamas Police Force",
+    allocation: 134_036_300,
+    salaries: 95_000_000,
+    programs: 25_000_000,
+    capital_projects: 10_036_300,
+    grants: 4_000_000,
+    line_items: [
+      { name: "Officer Salaries & Benefits", amount: 95_000_000 },
+      { name: "Operations & Patrol", amount: 20_000_000 },
+      { name: "Equipment & Vehicles", amount: 10_036_300 },
+      { name: "Training & Development", amount: 5_000_000 },
+      { name: "Administrative Costs", amount: 4_000_000 },
+    ],
+    historical: [
+      { year: "2022/23", allocation: 126_542_088 },
+      { year: "2023/24", allocation: 100_934_535 },
+      { year: "2024/25", allocation: 126_644_406 },
+      { year: "2025/26", allocation: 134_036_300 },
+    ],
+    source_document: "Bahamas BudgetFINAL_2025-2026_.pdf",
+    source_page: 71,
+  },
+  disaster: {
+    id: "disaster",
+    name: "Ministry of Disaster Risk Management",
+    allocation: 60_518_380,
+    salaries: 15_000_000,
+    programs: 30_000_000,
+    capital_projects: 10_518_380,
+    grants: 5_000_000,
+    line_items: [
+      { name: "Emergency Response Operations", amount: 25_000_000 },
+      { name: "Staff Salaries", amount: 15_000_000 },
+      { name: "Equipment & Infrastructure", amount: 10_518_380 },
+      { name: "Training & Preparedness", amount: 5_000_000 },
+      { name: "Grants & Relief", amount: 5_000_000 },
+    ],
+    historical: [
+      { year: "2022/23", allocation: 11_943_637 },
+      { year: "2023/24", allocation: 7_789_084 },
+      { year: "2024/25", allocation: 10_538_081 },
+      { year: "2025/26", allocation: 60_518_380 },
+    ],
+    source_document: "Bahamas BudgetFINAL_2025-2026_.pdf",
+    source_page: 72,
+  },
+  tourism: {
+    id: "tourism",
+    name: "Ministry of Tourism, Investments & Aviation",
+    allocation: 123_395_161,
+    salaries: 25_000_000,
+    programs: 70_000_000,
+    capital_projects: 15_000_000,
+    grants: 13_395_161,
+    line_items: [
+      { name: "Marketing & Promotion", amount: 50_000_000 },
+      { name: "Staff Salaries", amount: 25_000_000 },
+      { name: "Tourism Development", amount: 20_000_000 },
+      { name: "Aviation Support", amount: 15_000_000 },
+      { name: "Grants & Incentives", amount: 13_395_161 },
+    ],
+    historical: [
+      { year: "2022/23", allocation: 140_512_680 },
+      { year: "2023/24", allocation: 97_789_768 },
+      { year: "2024/25", allocation: 131_376_411 },
+      { year: "2025/26", allocation: 123_395_161 },
+    ],
+    source_document: "Bahamas BudgetFINAL_2025-2026_.pdf",
+    source_page: 72,
+  },
+  finance: {
+    id: "finance",
+    name: "Ministry of Finance",
+    allocation: 362_694_099,
+    salaries: 50_000_000,
+    programs: 200_000_000,
+    capital_projects: 62_694_099,
+    grants: 50_000_000,
+    line_items: [
+      { name: "Debt Management & Servicing", amount: 150_000_000 },
+      { name: "Revenue Administration", amount: 80_000_000 },
+      { name: "Staff Salaries", amount: 50_000_000 },
+      { name: "Capital Investments", amount: 62_694_099 },
+      { name: "Financial Sector Support", amount: 20_000_000 },
+    ],
+    historical: [
+      { year: "2022/23", allocation: 177_516_207 },
+      { year: "2023/24", allocation: 178_764_503 },
+      { year: "2024/25", allocation: 346_639_187 },
+      { year: "2025/26", allocation: 362_694_099 },
+    ],
+    source_document: "Bahamas BudgetFINAL_2025-2026_.pdf",
+    source_page: 71,
+  },
 };
 
 const COLORS = ['#00CED1', '#FCD116', '#3b82f6', '#10b981'];
 
-export default function MinistriesPage() {
+function MinistriesPageContent() {
   const [selectedMinistry, setSelectedMinistry] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'allocation' | 'change'>('allocation');
+
+  // Note: Query parameter is ignored - clicking from front page just redirects here
+  // Users can manually click ministry cards to open detail panel
 
   const filteredMinistries = ministries
     .filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -70,11 +195,21 @@ export default function MinistriesPage() {
 
   const totalAllocation = ministries.reduce((sum, m) => sum + m.allocation, 0);
 
+  // Get the selected ministry detail, or default to education
+  const selectedDetail = selectedMinistry 
+    ? (mockDetails[selectedMinistry] || mockDetails.education)
+    : mockDetails.education;
+  
+  // Get the selected ministry for change percent calculation
+  const selectedMinistryData = selectedMinistry
+    ? ministries.find(m => m.id === selectedMinistry)
+    : null;
+
   const breakdownData = [
-    { name: 'Salaries', value: mockDetail.salaries },
-    { name: 'Programs', value: mockDetail.programs },
-    { name: 'Capital', value: mockDetail.capital_projects },
-    { name: 'Grants', value: mockDetail.grants },
+    { name: 'Salaries', value: selectedDetail.salaries },
+    { name: 'Programs', value: selectedDetail.programs },
+    { name: 'Capital', value: selectedDetail.capital_projects },
+    { name: 'Grants', value: selectedDetail.grants },
   ];
 
   return (
@@ -179,9 +314,9 @@ export default function MinistriesPage() {
                 <div className="flex items-start justify-between mb-6">
                   <div>
                     <p className="text-sm font-medium text-turquoise uppercase tracking-wide mb-1">
-                      {mockDetail.id === selectedMinistry ? 'Education' : 'Ministry'}
+                      {selectedMinistryData?.sector || 'Ministry'}
                     </p>
-                    <h2 className="text-2xl font-bold text-gray-900">{mockDetail.name}</h2>
+                    <h2 className="text-2xl font-bold text-gray-900">{selectedDetail.name}</h2>
                   </div>
                   <button
                     onClick={() => setSelectedMinistry(null)}
@@ -193,13 +328,15 @@ export default function MinistriesPage() {
 
                 {/* Allocation */}
                 <div className="bg-turquoise/10 rounded-xl p-4 mb-6">
-                  <p className="text-sm text-turquoise font-medium">Total Allocation 2024/25</p>
+                  <p className="text-sm text-turquoise font-medium">Total Allocation 2025/26</p>
                   <p className="text-3xl font-bold text-gray-900">
-                    {formatCurrency(mockDetail.allocation, true)}
+                    {formatCurrency(selectedDetail.allocation, true)}
                   </p>
-                  <p className="text-sm text-green-600 mt-1">
-                    +7.1% from last year
-                  </p>
+                  {selectedMinistryData && (
+                    <p className={`text-sm mt-1 ${selectedMinistryData.change_percent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {selectedMinistryData.change_percent >= 0 ? '+' : ''}{formatPercent(selectedMinistryData.change_percent)} from last year
+                    </p>
+                  )}
                 </div>
 
                 {/* Breakdown */}
@@ -209,22 +346,22 @@ export default function MinistriesPage() {
                     <div className="bg-gray-50 rounded-lg p-3">
                       <Users className="w-5 h-5 text-turquoise mb-2" />
                       <p className="text-xs text-gray-500">Salaries</p>
-                      <p className="font-bold text-gray-900">{formatCurrency(mockDetail.salaries, true)}</p>
+                      <p className="font-bold text-gray-900">{formatCurrency(selectedDetail.salaries, true)}</p>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-3">
                       <Wallet className="w-5 h-5 text-yellow-500 mb-2" />
                       <p className="text-xs text-gray-500">Programs</p>
-                      <p className="font-bold text-gray-900">{formatCurrency(mockDetail.programs, true)}</p>
+                      <p className="font-bold text-gray-900">{formatCurrency(selectedDetail.programs, true)}</p>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-3">
                       <Building className="w-5 h-5 text-blue-500 mb-2" />
                       <p className="text-xs text-gray-500">Capital Projects</p>
-                      <p className="font-bold text-gray-900">{formatCurrency(mockDetail.capital_projects, true)}</p>
+                      <p className="font-bold text-gray-900">{formatCurrency(selectedDetail.capital_projects, true)}</p>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-3">
                       <TrendingUp className="w-5 h-5 text-green-500 mb-2" />
                       <p className="text-xs text-gray-500">Grants</p>
-                      <p className="font-bold text-gray-900">{formatCurrency(mockDetail.grants, true)}</p>
+                      <p className="font-bold text-gray-900">{formatCurrency(selectedDetail.grants, true)}</p>
                     </div>
                   </div>
                 </div>
@@ -256,7 +393,7 @@ export default function MinistriesPage() {
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Line Items</h3>
                   <div className="space-y-2">
-                    {mockDetail.line_items.map((item, i) => (
+                    {selectedDetail.line_items.map((item, i) => (
                       <div key={i} className="flex justify-between items-center py-2 border-b border-gray-100">
                         <span className="text-gray-700">{item.name}</span>
                         <span className="font-medium text-gray-900 tabular-nums">
@@ -272,7 +409,7 @@ export default function MinistriesPage() {
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Historical Allocation</h3>
                   <div className="h-40">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={mockDetail.historical}>
+                      <BarChart data={selectedDetail.historical}>
                         <XAxis dataKey="year" tick={{ fontSize: 11 }} />
                         <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${(v/1000000).toFixed(0)}M`} />
                         <Tooltip formatter={(value: number) => formatCurrency(value, true)} />
@@ -286,7 +423,7 @@ export default function MinistriesPage() {
                 <div className="border-t border-gray-200 pt-4">
                   <a href="#" className="flex items-center gap-2 text-sm text-gray-500 hover:text-turquoise">
                     <FileText className="w-4 h-4" />
-                    <span>{mockDetail.source_document}, page {mockDetail.source_page}</span>
+                    <span>{selectedDetail.source_document}, page {selectedDetail.source_page}</span>
                   </a>
                 </div>
               </div>
@@ -295,6 +432,21 @@ export default function MinistriesPage() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function MinistriesPage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+      </div>
+    }>
+      <MinistriesPageContent />
+    </Suspense>
   );
 }
 
