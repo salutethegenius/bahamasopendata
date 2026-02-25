@@ -1,20 +1,23 @@
 """Bahamas Open Data API - Civic Finance Dashboard Backend."""
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from app.core.config import settings
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from app.api import (
-    budget,
-    ministries,
-    revenue,
-    debt,
     ask,
-    export,
-    economic,
+    budget,
+    debt,
     documents,
+    economic,
+    export,
+    ministries,
     polls,
+    revenue,
 )
+from app.core.config import settings
+from app.db.database import engine
+from app.db.models import Base
 
 
 @asynccontextmanager
@@ -22,6 +25,13 @@ async def lifespan(app: FastAPI):
     """Application lifespan handler."""
     # Startup
     print(f"🇧🇸 {settings.APP_NAME} starting up...")
+
+    # Ensure all database tables exist (idempotent).
+    # This is important on platforms like Railway where we may not have shell access
+    # to run manual migration or create-all commands.
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
     yield
     # Shutdown
     print(f"🇧🇸 {settings.APP_NAME} shutting down...")
