@@ -27,7 +27,12 @@ class Settings(BaseSettings):
     CHAT_MODEL: str = "gpt-4o-mini"
     
     # CORS
-    CORS_ORIGINS: list[str] = ["http://localhost:3000", "https://bahamasopendata.com", "https://www.bahamasopendata.com"]
+    CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://bahamasopendata.com",
+        "https://www.bahamasopendata.com",
+    ]
     
     class Config:
         # Use absolute path to .env file in backend directory

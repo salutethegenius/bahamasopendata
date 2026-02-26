@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Flame, FileText, ChevronRight, AlertCircle } from 'lucide-react';
+import { Flame, FileText, ChevronRight, AlertCircle, BarChart3, TrendingUp } from 'lucide-react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
 
@@ -13,6 +13,9 @@ type ReportSummary = {
   source: string;
   year: string;
   summary: string;
+  stat_count?: number;
+  chart_count?: number;
+  highlight_count?: number;
 };
 
 export default function HotTopicsPage() {
@@ -25,12 +28,24 @@ export default function HotTopicsPage() {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(`${API_BASE}/hot-topics/reports`);
-        if (!res.ok) throw new Error('Failed to load reports');
+        const url = `${API_BASE}/hot-topics/reports`;
+        const res = await fetch(url);
+        if (!res.ok) {
+          const body = await res.text();
+          const msg = body ? `${res.status}: ${body.slice(0, 100)}` : `HTTP ${res.status}`;
+          throw new Error(msg);
+        }
         const data = await res.json();
+        if (!Array.isArray(data)) {
+          throw new Error('Invalid response format');
+        }
         setReports(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load hot topics.');
+        const message =
+          err instanceof Error
+            ? err.message
+            : 'Failed to load hot topics. Is the API running?';
+        setError(message);
       } finally {
         setLoading(false);
       }
@@ -101,10 +116,30 @@ export default function HotTopicsPage() {
                       {report.title}
                     </h2>
                     {report.summary && (
-                      <p className="text-sm text-gray-600 line-clamp-2">{report.summary}</p>
+                      <p className="text-sm text-gray-600 line-clamp-2 mb-2">{report.summary}</p>
                     )}
+                    <div className="flex flex-wrap gap-3 text-xs text-gray-400">
+                      {!!report.highlight_count && (
+                        <span className="flex items-center gap-1">
+                          <Flame className="w-3 h-3" />
+                          {report.highlight_count} highlights
+                        </span>
+                      )}
+                      {!!report.stat_count && (
+                        <span className="flex items-center gap-1">
+                          <TrendingUp className="w-3 h-3" />
+                          {report.stat_count} key figures
+                        </span>
+                      )}
+                      {!!report.chart_count && (
+                        <span className="flex items-center gap-1">
+                          <BarChart3 className="w-3 h-3" />
+                          {report.chart_count} charts
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0 mt-2" />
                 </div>
               </Link>
             </motion.div>

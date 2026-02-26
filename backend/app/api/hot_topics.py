@@ -1,17 +1,20 @@
 """Hot Topics / featured reports API. Serves extracted report data (highlights, key_stats, chart_data)."""
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
-# Where to find *_report.json: repo root data/processed, or backend static fallback
-_BACKEND_ROOT = Path(__file__).parent.parent.parent
+# Resolve paths relative to this module so they work from any cwd (e.g. deployment)
+_API_DIR = Path(__file__).resolve().parent
+_BACKEND_ROOT = _API_DIR.parent.parent
 _REPO_ROOT = _BACKEND_ROOT.parent
 _PROCESSED_DIR = _REPO_ROOT / "data" / "processed"
-_STATIC_REPORTS = Path(__file__).parent / "static" / "reports"
+_STATIC_REPORTS = _API_DIR / "static" / "reports"
 
 
 def _load_report(path: Path) -> dict[str, Any]:
@@ -34,24 +37,35 @@ async def list_reports() -> list[dict[str, Any]]:
     """List available hot topic reports (slug, title, source, year for cards)."""
     seen: set[str] = set()
     reports: list[dict[str, Any]] = []
-    for path in _all_report_paths():
-        try:
-            data = _load_report(path)
-            slug = data.get("slug", path.stem.replace("_report", ""))
-            if slug in seen:
+    try:
+        paths = _all_report_paths()
+        logger.debug("hot-topics: found %d report paths (processed=%s, static=%s)", len(paths), _PROCESSED_DIR, _STATIC_REPORTS)
+        for path in paths:
+            try:
+                data = _load_report(path)
+                slug = data.get("slug", path.stem.replace("_report", ""))
+                if slug in seen:
+                    continue
+                seen.add(slug)
+                summary = data.get("overview") or (data.get("highlights") or [None])[0] or ""
+                reports.append({
+                    "slug": slug,
+                    "title": data.get("title", ""),
+                    "source": data.get("source", ""),
+                    "year": data.get("year", ""),
+                    "summary": summary[:300] + ("..." if len(summary) > 300 else ""),
+                    "stat_count": len(data.get("key_stats") or []),
+                    "chart_count": len(data.get("charts") or []),
+                    "highlight_count": len(data.get("highlights") or []),
+                })
+            except Exception as e:
+                logger.warning("hot-topics: skip report %s: %s", path, e)
                 continue
-            seen.add(slug)
-            reports.append({
-                "slug": slug,
-                "title": data.get("title", ""),
-                "source": data.get("source", ""),
-                "year": data.get("year", ""),
-                "summary": (data.get("highlights") or [None])[0] or "",
-            })
-        except Exception:
-            continue
-    reports.sort(key=lambda r: (r.get("year") or "", r.get("title") or ""), reverse=True)
-    return reports
+        reports.sort(key=lambda r: (r.get("year") or "", r.get("title") or ""), reverse=True)
+        return reports
+    except Exception as e:
+        logger.exception("hot-topics: list_reports failed: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to load reports list")
 
 
 @router.get("/reports/{slug}")

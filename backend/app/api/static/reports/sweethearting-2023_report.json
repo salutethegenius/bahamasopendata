@@ -1,59 +1,140 @@
 {
   "slug": "sweethearting-2023",
   "title": "Sweethearting in Public Procurement (2023)",
-  "source": "Fielding & Balance",
+  "source": "Fielding & Ballance, University of The Bahamas",
   "year": "2023",
+  "journal": "International Journal of Bahamian Studies, Vol. 29 No. 2",
   "pdf_filename": "FieldingandBallanceSweethearting2023FINAL.pdf",
+  "overview": "This paper presents data on \"sweethearting\" — the Bahamian term for male infidelity in intimate-partner relationships — from a study of 1,728 women living in The Bahamas. The study reveals that infidelity is widespread across both married and unmarried relationships, and is strongly associated with elevated rates of domestic violence, sexual abuse, and psychological harm. Infidelity appears to be an entrenched behaviour that has not declined over more than 20 years of research.",
+  "methodology": "Internet-based study using a convenience sample seeded by University of The Bahamas students. Data collected September–October 2022 from 2,868 initial respondents, cleaned to 1,728 adult women (18+) currently in heterosexual relationships.",
   "highlights": [
-    "Approximately 20% to 50% of men in The Bahamas are reported to be unfaithful.",
-    "Unfaithful married men exhibit higher rates of domestic violence and psychological abuse compared to unmarried men.",
-    "12.1% of women reported experiencing unwanted sexual intercourse or physical violence from their partners.",
-    "40.6% of women with unfaithful partners had conceived children with them.",
-    "Women whose partners are unfaithful are more likely to want to leave the relationship."
+    "19.2% of women reported their partner was definitely unfaithful, while 34.4% did not know — suggesting actual infidelity could be as high as 53.6%.",
+    "Marriage vows appear to have no constraining effect: fidelity rates are nearly identical for married (46.7%) and unmarried (46.3%) men.",
+    "Infidelity increases with relationship length — after 10+ years, 28.7% of partners were confirmed unfaithful.",
+    "12.1% of all women reported physical violence from their partner; this rate was significantly higher when the partner was unfaithful.",
+    "Married women with unfaithful partners faced the highest physical violence: only 68.3% had never been hurt, vs. 94.5% of those with faithful partners.",
+    "Sexual abuse (coerced sex, sexual abuse, rape) was 2–3x more prevalent when the male partner was unfaithful.",
+    "23.9% of married women with unfaithful partners experienced coerced sex, compared to 7.5% with faithful partners.",
+    "40.6% of women with unfaithful partners had conceived children with them, vs. 27.4% with faithful partners.",
+    "Only 58.7% of married women with unfaithful partners considered their relationship loving, compared to 94.4% with faithful partners.",
+    "27.2% of married women with unfaithful partners would leave if they could, vs. only 4.7% with faithful partners.",
+    "Psychological abuse scores (PSY) were significantly elevated for women with unfaithful partners: 43.8 vs. 31.7 (married), 38.2 vs. 29.8 (unmarried).",
+    "Behaviours of concern affect not just partners but children — potentially impacting up to 60% of homes."
   ],
   "key_stats": [
     {
-      "label": "Percentage of unfaithful men (reported)",
-      "value": 20,
+      "label": "Study Sample Size",
+      "value": 1728,
+      "unit": "women"
+    },
+    {
+      "label": "Partners Confirmed Unfaithful",
+      "value": 19.2,
       "unit": "%"
     },
     {
-      "label": "Percentage of women reporting physical violence",
+      "label": "Possible Infidelity Rate (incl. 'Don't Know')",
+      "value": 53.6,
+      "unit": "%"
+    },
+    {
+      "label": "Women Reporting Physical Violence",
       "value": 12.1,
       "unit": "%"
     },
     {
-      "label": "Percentage of women with unfaithful partners who conceived children",
+      "label": "Coerced Sex (Married, Unfaithful Partner)",
+      "value": 23.9,
+      "unit": "%"
+    },
+    {
+      "label": "Conceived Children w/ Unfaithful Partner",
       "value": 40.6,
       "unit": "%"
     },
     {
-      "label": "Percentage of married women wanting to leave unfaithful partners",
+      "label": "Would Leave If Could (Married, Unfaithful)",
       "value": 27.2,
       "unit": "%"
     },
     {
-      "label": "Percentage of unmarried women wanting to leave unfaithful partners",
-      "value": 36.6,
+      "label": "Relationship Not Loving (Married, Unfaithful)",
+      "value": 41.3,
       "unit": "%"
     }
   ],
-  "chart_data": [
+  "charts": [
     {
-      "name": "Unfaithful Married Men",
-      "value": 24.8
+      "id": "fidelity-by-marital-status",
+      "title": "Reported Partner Fidelity by Marital Status",
+      "type": "bar",
+      "data": [
+        { "name": "Unfaithful", "Married": 24.8, "Unmarried": 17.1 },
+        { "name": "Faithful", "Married": 46.7, "Unmarried": 46.3 },
+        { "name": "Don't Know", "Married": 28.5, "Unmarried": 36.6 }
+      ]
     },
     {
-      "name": "Unfaithful Unmarried Men",
-      "value": 17.1
+      "id": "physical-violence",
+      "title": "Women Never Subjected to Physical Hurt (%)",
+      "type": "bar",
+      "data": [
+        { "name": "Unfaithful Partner", "Married": 68.3, "Unmarried": 79.1 },
+        { "name": "Faithful Partner", "Married": 94.5, "Unmarried": 94.2 },
+        { "name": "Don't Know", "Married": 82.3, "Unmarried": 87.5 }
+      ]
     },
     {
-      "name": "Faithful Married Men",
-      "value": 46.7
+      "id": "sexual-abuse",
+      "title": "Sexual Abuse Prevalence by Partner Fidelity (%)",
+      "type": "bar",
+      "data": [
+        { "name": "Coerced Sex (Married)", "Unfaithful": 23.9, "Faithful": 7.5 },
+        { "name": "Coerced Sex (Unmarried)", "Unfaithful": 9.6, "Faithful": 4.2 },
+        { "name": "Sexual Abuse (Married)", "Unfaithful": 21.2, "Faithful": 7.0 },
+        { "name": "Sexual Abuse (Unmarried)", "Unfaithful": 13.9, "Faithful": 5.1 },
+        { "name": "Raped (Married)", "Unfaithful": 13.3, "Faithful": 3.8 },
+        { "name": "Raped (Unmarried)", "Unfaithful": 10.5, "Faithful": 3.5 }
+      ]
     },
     {
-      "name": "Faithful Unmarried Men",
-      "value": 46.3
+      "id": "loving-relationship",
+      "title": "Women Perceiving a Loving Relationship (%)",
+      "type": "bar",
+      "data": [
+        { "name": "Unfaithful Partner", "Married": 58.7, "Unmarried": 58.0 },
+        { "name": "Faithful Partner", "Married": 94.4, "Unmarried": 89.6 },
+        { "name": "Don't Know", "Married": 65.6, "Unmarried": 72.6 }
+      ]
+    },
+    {
+      "id": "want-to-leave",
+      "title": "Women Who Would Leave If They Could (%)",
+      "type": "bar",
+      "data": [
+        { "name": "Unfaithful Partner", "Married": 27.2, "Unmarried": 36.6 },
+        { "name": "Faithful Partner", "Married": 4.7, "Unmarried": 10.7 },
+        { "name": "Don't Know", "Married": 22.5, "Unmarried": 23.7 }
+      ]
+    },
+    {
+      "id": "psych-abuse-scores",
+      "title": "Psychological Abuse (PSY) & Domestic Violence (HITS) Scores",
+      "type": "bar",
+      "data": [
+        { "name": "HITS – Unfaithful", "Married": 7.5, "Unmarried": 6.3 },
+        { "name": "HITS – Faithful", "Married": 5.4, "Unmarried": 4.9 },
+        { "name": "PSY – Unfaithful", "Married": 43.8, "Unmarried": 38.2 },
+        { "name": "PSY – Faithful", "Married": 31.7, "Unmarried": 29.8 }
+      ]
     }
+  ],
+  "chart_data": [
+    { "name": "Unfaithful (Married)", "value": 24.8 },
+    { "name": "Unfaithful (Unmarried)", "value": 17.1 },
+    { "name": "Faithful (Married)", "value": 46.7 },
+    { "name": "Faithful (Unmarried)", "value": 46.3 },
+    { "name": "Don't Know (Married)", "value": 28.5 },
+    { "name": "Don't Know (Unmarried)", "value": 36.6 }
   ]
 }
