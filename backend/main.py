@@ -1,4 +1,6 @@
 """Bahamas Open Data API - Civic Finance Dashboard Backend."""
+import asyncio
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -19,21 +21,30 @@ from app.core.config import settings
 from app.db.database import engine
 from app.db.models import Base
 
+logger = logging.getLogger(__name__)
+
+MAX_DB_RETRIES = 5
+RETRY_DELAY_SECONDS = 3
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan handler."""
-    # Startup
     print(f"🇧🇸 {settings.APP_NAME} starting up...")
 
-    # Ensure all database tables exist (idempotent).
-    # This is important on platforms like Railway where we may not have shell access
-    # to run manual migration or create-all commands.
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    for attempt in range(1, MAX_DB_RETRIES + 1):
+        try:
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+            break
+        except Exception as exc:
+            if attempt == MAX_DB_RETRIES:
+                logger.error("Database unavailable after %d attempts, starting without table sync: %s", MAX_DB_RETRIES, exc)
+            else:
+                logger.warning("Database connection attempt %d/%d failed: %s – retrying in %ds", attempt, MAX_DB_RETRIES, exc, RETRY_DELAY_SECONDS)
+                await asyncio.sleep(RETRY_DELAY_SECONDS)
 
     yield
-    # Shutdown
     print(f"🇧🇸 {settings.APP_NAME} shutting down...")
 
 
