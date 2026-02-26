@@ -13,6 +13,7 @@ from app.api import (
     documents,
     economic,
     export,
+    hot_topics,
     ministries,
     polls,
     revenue,
@@ -101,6 +102,7 @@ app.include_router(ask.router, prefix=f"{settings.API_V1_PREFIX}/ask", tags=["As
 app.include_router(export.router, prefix=f"{settings.API_V1_PREFIX}/export", tags=["Export"])
 app.include_router(economic.router, prefix=f"{settings.API_V1_PREFIX}/economic", tags=["Economic"])
 app.include_router(documents.router, prefix=f"{settings.API_V1_PREFIX}/documents", tags=["Documents"])
+app.include_router(hot_topics.router, prefix=f"{settings.API_V1_PREFIX}/hot-topics", tags=["Hot Topics"])
 app.include_router(polls.router, prefix=f"{settings.API_V1_PREFIX}/polls", tags=["Polls"])
 
 

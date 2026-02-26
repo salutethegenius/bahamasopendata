@@ -17,6 +17,7 @@ import {
   HeartPulse,
   BarChart3,
   ChevronDown,
+  Flame,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -44,6 +45,7 @@ const budgetNavItems: NavItem[] = [
 const tailNavItems: NavItem[] = [
   { id: 'polls', href: '/polls', label: 'Polls', icon: BarChart3, domain: 'polls' },
   { id: 'news', href: '/news', label: 'News', icon: Newspaper, domain: 'news' },
+  { id: 'hot', href: '/hot', label: 'Hot topics', icon: Flame, domain: 'hot' },
 ];
 
 export default function Navigation() {
@@ -149,7 +151,7 @@ export default function Navigation() {
               </div>
 
               {tailNavItems.map((item) => {
-                const isActive = pathname === item.href;
+                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
                 const Icon = item.icon;
                 return (
                   <Link
@@ -261,7 +263,7 @@ export default function Navigation() {
                 })}
 
                 {tailNavItems.map((item) => {
-                  const isActive = pathname === item.href;
+                  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
                   const Icon = item.icon;
                   return (
                     <Link

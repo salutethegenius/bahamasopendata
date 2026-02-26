@@ -1,0 +1,59 @@
+{
+  "slug": "sweethearting-2023",
+  "title": "Sweethearting in Public Procurement (2023)",
+  "source": "Fielding & Balance",
+  "year": "2023",
+  "pdf_filename": "FieldingandBallanceSweethearting2023FINAL.pdf",
+  "highlights": [
+    "Approximately 20% to 50% of men in The Bahamas are reported to be unfaithful.",
+    "Unfaithful married men exhibit higher rates of domestic violence and psychological abuse compared to unmarried men.",
+    "12.1% of women reported experiencing unwanted sexual intercourse or physical violence from their partners.",
+    "40.6% of women with unfaithful partners had conceived children with them.",
+    "Women whose partners are unfaithful are more likely to want to leave the relationship."
+  ],
+  "key_stats": [
+    {
+      "label": "Percentage of unfaithful men (reported)",
+      "value": 20,
+      "unit": "%"
+    },
+    {
+      "label": "Percentage of women reporting physical violence",
+      "value": 12.1,
+      "unit": "%"
+    },
+    {
+      "label": "Percentage of women with unfaithful partners who conceived children",
+      "value": 40.6,
+      "unit": "%"
+    },
+    {
+      "label": "Percentage of married women wanting to leave unfaithful partners",
+      "value": 27.2,
+      "unit": "%"
+    },
+    {
+      "label": "Percentage of unmarried women wanting to leave unfaithful partners",
+      "value": 36.6,
+      "unit": "%"
+    }
+  ],
+  "chart_data": [
+    {
+      "name": "Unfaithful Married Men",
+      "value": 24.8
+    },
+    {
+      "name": "Unfaithful Unmarried Men",
+      "value": 17.1
+    },
+    {
+      "name": "Faithful Married Men",
+      "value": 46.7
+    },
+    {
+      "name": "Faithful Unmarried Men",
+      "value": 46.3
+    }
+  ]
+}
