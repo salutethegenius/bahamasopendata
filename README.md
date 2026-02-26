@@ -252,15 +252,15 @@ git push heroku main
 4. In **Variables**, set: `OPENAI_API_KEY`, `PINECONE_API_KEY`, `PINECONE_INDEX_NAME`, `PINECONE_ENVIRONMENT`, `POLLS_ADMIN_API_KEY`.
 5. Deploy; tables are created on startup. Start command is in `backend/Procfile` (`uvicorn` on `$PORT`).
 
-### Frontend → Vercel
+### Frontend → Railway (or Vercel)
 
-```bash
-cd frontend
-vercel --prod
+The frontend **must** know the backend URL. Set this **before** (or with) the first deploy; then **redeploy** so the value is baked into the build.
 
-# Set environment variable in Vercel dashboard:
-# NEXT_PUBLIC_API_URL = https://api.bahamasopendata.com/api/v1
-```
+1. In Railway (or Vercel), open your **frontend** service.
+2. Go to **Variables** and add:
+   - **`NEXT_PUBLIC_API_URL`** = `https://<your-backend-public-url>/api/v1`
+3. Use your **backend’s real URL** (e.g. Railway backend URL like `https://something.up.railway.app`). Do **not** use a custom domain here until its DNS and SSL point to your backend, or you’ll get “Failed to fetch” / TLS errors.
+4. **Redeploy** the frontend (new build required for `NEXT_PUBLIC_*` to take effect).
 
 ---
 

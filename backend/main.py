@@ -17,9 +17,11 @@ from app.api import (
     polls,
     revenue,
 )
+from sqlalchemy import select
+
 from app.core.config import settings
-from app.db.database import engine
-from app.db.models import Base
+from app.db.database import AsyncSessionLocal, engine
+from app.db.models import Base, Poll, PollOption
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +45,32 @@ async def lifespan(app: FastAPI):
             else:
                 logger.warning("Database connection attempt %d/%d failed: %s – retrying in %ds", attempt, MAX_DB_RETRIES, exc, RETRY_DELAY_SECONDS)
                 await asyncio.sleep(RETRY_DELAY_SECONDS)
+
+    # Seed default polls if the table is empty (e.g. fresh deploy / new DB)
+    try:
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(select(Poll))
+            if result.scalars().first() is None:
+                poll1 = Poll(
+                    question="What should be the top priority for the next national budget?",
+                    description="Share your view on where government should focus spending.",
+                    status="active",
+                    domain="budget",
+                )
+                session.add(poll1)
+                await session.flush()
+                for i, text in enumerate([
+                    "Healthcare and public health",
+                    "Education and training",
+                    "Infrastructure (roads, utilities)",
+                    "Economic development and jobs",
+                    "Public safety and national security",
+                ]):
+                    session.add(PollOption(poll_id=poll1.id, option_text=text, display_order=i))
+                await session.commit()
+                logger.info("Seeded default poll (active).")
+    except Exception as exc:
+        logger.warning("Could not seed default polls: %s", exc)
 
     yield
     print(f"🇧🇸 {settings.APP_NAME} shutting down...")
