@@ -1,15 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "bahamasopendata.com",
-        pathname: "/_next/static/media/**",
-      },
-    ],
-  },
+  // Logo is served from public/logo.svg (no remote image fetch)
 };
 
 export default nextConfig;

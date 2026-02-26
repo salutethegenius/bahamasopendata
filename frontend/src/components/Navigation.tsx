@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import Image from 'next/image';
 import {
   LayoutDashboard,
   Building2,
@@ -20,8 +19,6 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { useState } from 'react';
-
-const MENU_LOGO_URL = 'https://bahamasopendata.com/_next/static/media/logo.f078841a.jpeg';
 
 type NavItem = {
   id: string;
@@ -66,14 +63,6 @@ export default function Navigation() {
           <div className="flex items-center justify-between h-20 lg:h-24">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3">
-              <Image
-                src={MENU_LOGO_URL}
-                alt="Bahamas Open Data Logo"
-                width={120}
-                height={72}
-                className="h-12 sm:h-14 md:h-16 w-auto object-contain"
-                priority
-              />
               <span className="font-bold text-lg sm:text-xl md:text-2xl text-gray-900">
                 Bahamas<span className="text-turquoise">OpenData</span>
               </span>
@@ -204,14 +193,6 @@ export default function Navigation() {
       <nav className="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
         <div className="flex items-center justify-between h-16 sm:h-18 px-3 sm:px-4 py-2">
           <Link href="/" className="flex items-center gap-2">
-            <Image
-              src={MENU_LOGO_URL}
-              alt="Bahamas Open Data Logo"
-              width={100}
-              height={60}
-              className="h-10 w-auto object-contain"
-              priority
-            />
             <span className="font-bold text-base sm:text-lg text-gray-900">
               Bahamas<span className="text-turquoise">OpenData</span>
             </span>

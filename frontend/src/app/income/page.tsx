@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import { FileText, MapPin, ExternalLink } from 'lucide-react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8007';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
 const COLORS = ['#00CED1', '#FCD116', '#3b82f6', '#10b981', '#f59e0b'];
 
 function getYearFromDate(dateString: string | null | undefined): string {
@@ -36,8 +36,8 @@ export default function IncomePage() {
     async function fetchData() {
       try {
         const [indicatorsRes, comparisonsRes] = await Promise.all([
-          fetch(`${API_BASE}/api/v1/economic/indicators`),
-          fetch(`${API_BASE}/api/v1/economic/comparison`)
+          fetch(`${API_BASE}/economic/indicators`),
+          fetch(`${API_BASE}/economic/comparison`)
         ]);
         
         let indicatorsData: EconomicIndicator[] = [];
