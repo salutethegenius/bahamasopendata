@@ -243,6 +243,15 @@ heroku config:set PINECONE_INDEX_NAME=bahamas-open-data
 git push heroku main
 ```
 
+### Backend → Railway (monorepo)
+
+1. **New Project** → Deploy from GitHub → select this repo.
+2. **Set Root Directory** (required): Service → **Settings** → **Source** → **Root Directory** = `backend`.  
+   (Railway builds from repo root by default; the API lives in `backend/`, so Railpack must see only that folder.)
+3. Add **PostgreSQL** to the project; Railway sets `DATABASE_URL` automatically.
+4. In **Variables**, set: `OPENAI_API_KEY`, `PINECONE_API_KEY`, `PINECONE_INDEX_NAME`, `PINECONE_ENVIRONMENT`, `POLLS_ADMIN_API_KEY`.
+5. Deploy; tables are created on startup. Start command is in `backend/Procfile` (`uvicorn` on `$PORT`).
+
 ### Frontend → Vercel
 
 ```bash
