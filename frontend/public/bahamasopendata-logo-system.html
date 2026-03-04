@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BahamasOpenData — Identity System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&family=Cormorant+Garant:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  --ocean:      #0A2342;
+  --ocean-mid:  #0D2D54;
+  --ocean-l:    #153D6E;
+  --teal:       #0096A0;
+  --teal-l:     #00B4C0;
+  --teal-pale:  #E0F5F7;
+  --teal-wash:  #F0FAFB;
+  --coral:      #E8633A;
+  --coral-pale: #FDEEE8;
+  --sand:       #F5F0E8;
+  --sand-dark:  #EAE3D6;
+  --stone:      #6B7C93;
+  --white:      #FFFFFF;
+  --rule:       rgba(10,35,66,0.07);
+  --rule-l:     rgba(255,255,255,0.07);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  font-family:'Sora',sans-serif;
+  background:#E8ECF0;
+  color:var(--ocean);
+}
+
+/* ─── COVER ─── */
+.cover{
+  background:var(--ocean);
+  padding:88px 72px 84px;
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:48px;
+  align-items:end;
+  position:relative;
+  overflow:hidden;
+  border-bottom:3px solid var(--teal);
+}
+
+/* Wave texture */
+.cover::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background-image:
+    radial-gradient(ellipse 800px 400px at 110% 120%, rgba(0,150,160,0.12) 0%, transparent 60%),
+    repeating-linear-gradient(0deg,transparent,transparent 36px,rgba(255,255,255,0.018) 36px,rgba(255,255,255,0.018) 37px);
+  pointer-events:none;
+}
+
+.cover-tag{
+  font-family:'DM Mono',monospace;
+  font-size:10px;letter-spacing:0.22em;
+  color:var(--teal-l);text-transform:uppercase;
+  margin-bottom:28px;position:relative;
+  display:flex;align-items:center;gap:14px;
+}
+.cover-tag::before{
+  content:'';display:block;
+  width:32px;height:1px;background:var(--teal-l);
+}
+
+.cover h1{
+  font-size:84px;font-weight:800;
+  color:var(--white);line-height:0.9;
+  letter-spacing:-0.03em;position:relative;
+}
+.cover h1 em{
+  display:block;
+  font-style:normal;
+  color:var(--teal-l);
+  font-weight:300;
+  font-size:72px;
+  letter-spacing:-0.02em;
+}
+
+.cover-sub{
+  font-family:'DM Mono',monospace;
+  font-size:10.5px;color:rgba(255,255,255,0.25);
+  letter-spacing:0.08em;margin-top:24px;
+  line-height:2.1;position:relative;
+}
+
+.cover-meta{
+  text-align:right;
+  font-family:'DM Mono',monospace;
+  font-size:10px;color:rgba(255,255,255,0.18);
+  letter-spacing:0.1em;line-height:2.6;
+  position:relative;
+}
+.cover-meta strong{
+  color:var(--teal-l);font-weight:500;
+  display:block;font-size:11px;
+}
+
+/* ─── SHARED ─── */
+.section{padding:80px 72px;border-bottom:1px solid var(--rule);}
+.s-white{background:var(--white);}
+.s-sand{background:var(--sand);}
+.s-ocean{background:var(--ocean);}
+.s-ocean2{background:var(--ocean-mid);}
+.s-teal-wash{background:var(--teal-wash);}
+.s-off{background:#E8ECF0;}
+
+.eyebrow{
+  font-family:'DM Mono',monospace;
+  font-size:9.5px;letter-spacing:0.22em;
+  text-transform:uppercase;color:var(--teal);
+  margin-bottom:10px;
+  display:flex;align-items:center;gap:10px;
+}
+.eyebrow::before{
+  content:'';display:block;
+  width:28px;height:1px;background:var(--teal);
+}
+.s-ocean .eyebrow,.s-ocean2 .eyebrow{color:var(--teal-l);}
+.s-ocean .eyebrow::before,.s-ocean2 .eyebrow::before{background:var(--teal-l);}
+
+.section-title{
+  font-family:'Sora',sans-serif;
+  font-size:38px;font-weight:700;
+  color:var(--ocean);
+  letter-spacing:-0.03em;line-height:1.1;
+  margin-bottom:52px;
+  padding-bottom:24px;
+  border-bottom:1px solid var(--rule);
+}
+.s-ocean .section-title,.s-ocean2 .section-title{
+  color:var(--white);
+  border-bottom-color:var(--rule-l);
+}
+
+/* ─── GRIDS ─── */
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin-bottom:3px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:3px;}
+
+.cell{
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:56px 32px 44px;
+  position:relative;min-height:200px;
+}
+.c-white{background:var(--white);}
+.c-sand{background:var(--sand);}
+.c-sand2{background:var(--sand-dark);}
+.c-ocean{background:var(--ocean);}
+.c-ocean2{background:var(--ocean-mid);}
+.c-teal{background:var(--teal);}
+.c-teal-pale{background:var(--teal-pale);}
+.c-teal-wash{background:var(--teal-wash);}
+.c-off{background:#E8ECF0;}
+.c-coral{background:var(--coral);}
+
+.tag{
+  position:absolute;bottom:13px;left:18px;
+  font-family:'DM Mono',monospace;font-size:8.5px;
+  letter-spacing:0.13em;text-transform:uppercase;opacity:0.3;
+}
+.tag-d{color:var(--white);}
+.tag-l{color:var(--ocean);}
+
+/* ─── SPEC LIST ─── */
+.spec-list{
+  list-style:none;
+  border-top:1px solid var(--rule);
+  padding-top:18px;margin-top:18px;
+}
+.s-ocean .spec-list,.s-ocean2 .spec-list{border-top-color:var(--rule-l);}
+.spec-list li{
+  font-family:'DM Mono',monospace;font-size:10.5px;
+  color:var(--teal);letter-spacing:0.04em;
+  padding:5px 0;display:flex;gap:10px;line-height:1.5;
+}
+.spec-list li::before{content:'→';flex-shrink:0;}
+.s-ocean .spec-list li,.s-ocean2 .spec-list li{color:var(--teal-l);}
+
+.annot{
+  display:grid;grid-template-columns:1fr 300px;
+  gap:64px;align-items:start;margin-top:48px;
+}
+.annot-body h3{
+  font-family:'Sora',sans-serif;
+  font-size:22px;font-weight:700;
+  color:var(--ocean);margin-bottom:14px;
+  letter-spacing:-0.02em;
+}
+.s-ocean .annot-body h3,.s-ocean2 .annot-body h3{color:var(--white);}
+.annot-body p{
+  font-size:13.5px;line-height:1.8;
+  color:var(--stone);margin-bottom:14px;
+}
+.s-ocean .annot-body p,.s-ocean2 .annot-body p{color:rgba(255,255,255,0.45);}
+
+/* ─── SWATCHES ─── */
+.swatch-row{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;}
+.swatch{height:100px;display:flex;align-items:flex-end;padding:12px;}
+.sw-info{
+  font-family:'DM Mono',monospace;
+  font-size:9px;letter-spacing:0.06em;line-height:2;
+}
+
+/* ─── FAVICON STRIP ─── */
+.fav-strip{
+  display:flex;gap:32px;align-items:flex-end;
+  padding:48px;background:var(--ocean-mid);
+  flex-wrap:wrap;
+}
+.fav-item{display:flex;flex-direction:column;align-items:center;gap:10px;}
+.fav-lbl{
+  font-family:'DM Mono',monospace;
+  font-size:8.5px;color:rgba(255,255,255,0.25);letter-spacing:0.1em;
+}
+.fav-div{width:1px;height:56px;background:rgba(255,255,255,0.07);align-self:center;}
+.fav-sec{
+  font-family:'DM Mono',monospace;font-size:9px;
+  color:var(--teal-l);letter-spacing:0.15em;
+  text-transform:uppercase;writing-mode:vertical-rl;
+  transform:rotate(180deg);align-self:center;
+}
+
+/* ─── TEAL RULE ─── */
+.teal-rule{height:1px;background:var(--teal);opacity:0.2;}
+
+/* ─── FOOTER ─── */
+.footer{
+  background:var(--ocean);padding:40px 72px;
+  display:flex;justify-content:space-between;align-items:center;
+  border-top:1px solid rgba(0,150,160,0.2);
+}
+.footer-l{
+  font-family:'DM Mono',monospace;font-size:10px;
+  color:rgba(255,255,255,0.18);letter-spacing:0.09em;line-height:2.1;
+}
+.footer-r{
+  font-family:'Sora',sans-serif;font-size:13px;
+  font-weight:600;color:var(--teal-l);letter-spacing:0.02em;opacity:0.65;
+}
+
+/* ─── TYPOGRAPHY SHOWCASE ─── */
+.type-pair{
+  font-family:'DM Mono',monospace;
+  font-size:9.5px;color:var(--teal);
+  letter-spacing:0.18em;text-transform:uppercase;margin-bottom:12px;
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════ COVER ══════════ -->
+<div class="cover">
+  <div>
+    <div class="cover-tag">BahamasOpenData.com · Identity System · v1.0</div>
+    <h1>Open<em>Data</em></h1>
+    <div class="cover-sub">
+      Three Mark Concepts · Archipelago Network · Full System<br>
+      Colour Architecture · Typography · Favicon Scale Tests<br>
+      Civic Data Platform · Nassau, The Bahamas
+    </div>
+  </div>
+  <div class="cover-meta">
+    <strong>Concept 01</strong>
+    Archipelago Network<br>Primary · Recommended<br>
+    <br>
+    <strong>Concept 02</strong>
+    The Open Grid<br>Data table geometry<br>
+    <br>
+    <strong>Concept 03</strong>
+    The Aperture<br>Minimal · Icon-first
+  </div>
+</div>
+
+<div class="teal-rule"></div>
+
+<!-- ══════════ RATIONALE ══════════ -->
+<div class="section s-teal-wash" style="padding:52px 72px;">
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:56px;">
+    <div>
+      <div class="eyebrow" style="margin-bottom:16px;">The Strategic Position</div>
+      <p style="font-size:13px;color:var(--stone);line-height:1.85;">
+        BahamasOpenData is not a government agency and not a tech startup. It lives in between — civic infrastructure with the accessibility of a public utility. The mark must carry institutional weight without looking bureaucratic.
+      </p>
+    </div>
+    <div>
+      <div class="eyebrow" style="margin-bottom:16px;">The One Ownable Thing</div>
+      <p style="font-size:13px;color:var(--stone);line-height:1.85;">
+        The Bahamas is an archipelago of 700 islands. A data platform built specifically for this geography can use that geography as its symbol. Nodes + connections = islands + data relationships. No other open data platform in the world can make this mark.
+      </p>
+    </div>
+    <div>
+      <div class="eyebrow" style="margin-bottom:16px;">The Typography Logic</div>
+      <p style="font-size:13px;color:var(--stone);line-height:1.85;">
+        Sora — rounded, geometric, highly legible at all sizes. Not a legacy serif, not a startup grotesque. A font that reads as infrastructure you can trust. Paired with DM Mono for data labels, dataset metadata, API references, and all technical surfaces.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="teal-rule"></div>
+
+
+<!-- ══════════ CONCEPT 01: ARCHIPELAGO NETWORK ══════════ -->
+<div class="section s-white">
+  <div class="eyebrow">Concept 01 — Primary Recommendation</div>
+  <div class="section-title">The Archipelago Network</div>
+
+  <div class="grid-3">
+
+    <!-- Light -->
+    <div class="cell c-sand" style="min-height:240px;">
+      <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Connection lines first (behind nodes) -->
+        <!-- Major island connections — mimic Bahamas chain NW to SE -->
+        <line x1="18" y1="28" x2="34" y2="22" stroke="#0A2342" stroke-width="1" opacity="0.15"/>
+        <line x1="34" y1="22" x2="52" y2="18" stroke="#0A2342" stroke-width="1" opacity="0.15"/>
+        <line x1="52" y1="18" x2="68" y2="26" stroke="#0096A0" stroke-width="1.5" opacity="0.5"/>
+        <line x1="68" y1="26" x2="80" y2="38" stroke="#0096A0" stroke-width="1.5" opacity="0.5"/>
+        <line x1="52" y1="18" x2="60" y2="42" stroke="#0A2342" stroke-width="1" opacity="0.15"/>
+        <line x1="60" y1="42" x2="72" y2="58" stroke="#0096A0" stroke-width="1.5" opacity="0.4"/>
+        <line x1="34" y1="22" x2="28" y2="48" stroke="#0A2342" stroke-width="1" opacity="0.12"/>
+        <line x1="28" y1="48" x2="18" y2="62" stroke="#0A2342" stroke-width="1" opacity="0.1"/>
+        <line x1="60" y1="42" x2="48" y2="54" stroke="#0096A0" stroke-width="1.5" opacity="0.35"/>
+        <line x1="48" y1="54" x2="36" y2="68" stroke="#0096A0" stroke-width="1" opacity="0.3"/>
+        <line x1="72" y1="58" x2="62" y2="72" stroke="#0096A0" stroke-width="1" opacity="0.3"/>
+        <line x1="80" y1="38" x2="82" y2="54" stroke="#0096A0" stroke-width="1" opacity="0.25"/>
+
+        <!-- Island nodes — scaled by "importance" -->
+        <!-- Grand Bahama (large, top left area) -->
+        <circle cx="18" cy="28" r="5.5" fill="#0A2342"/>
+        <!-- Abaco -->
+        <circle cx="34" cy="22" r="4" fill="#0A2342"/>
+        <!-- Nassau / New Providence — LARGEST, most connected = data hub -->
+        <circle cx="52" cy="18" r="8" fill="#0096A0"/>
+        <circle cx="52" cy="18" r="12" fill="none" stroke="#0096A0" stroke-width="1.5" opacity="0.25"/>
+        <!-- Eleuthera -->
+        <circle cx="68" cy="26" r="3.5" fill="#0096A0" opacity="0.7"/>
+        <!-- Exumas -->
+        <circle cx="60" cy="42" r="3" fill="#0096A0" opacity="0.6"/>
+        <!-- Andros -->
+        <circle cx="28" cy="48" r="4.5" fill="#0A2342" opacity="0.7"/>
+        <!-- Cat Island -->
+        <circle cx="48" cy="54" r="3" fill="#0096A0" opacity="0.5"/>
+        <!-- Long Island -->
+        <circle cx="72" cy="58" r="3" fill="#0096A0" opacity="0.5"/>
+        <!-- San Salvador -->
+        <circle cx="80" cy="38" r="2.5" fill="#0A2342" opacity="0.5"/>
+        <!-- Bimini -->
+        <circle cx="18" cy="62" r="2" fill="#0A2342" opacity="0.3"/>
+        <!-- Crooked/Acklins -->
+        <circle cx="36" cy="68" r="2.5" fill="#0096A0" opacity="0.35"/>
+        <!-- Inagua -->
+        <circle cx="62" cy="72" r="2" fill="#0096A0" opacity="0.3"/>
+        <!-- Mayaguana -->
+        <circle cx="82" cy="54" r="2" fill="#0096A0" opacity="0.25"/>
+      </svg>
+      <div class="tag tag-l">Mark Only · Sand</div>
+    </div>
+
+    <!-- Dark -->
+    <div class="cell c-ocean">
+      <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="18" y1="28" x2="34" y2="22" stroke="white" stroke-width="1" opacity="0.1"/>
+        <line x1="34" y1="22" x2="52" y2="18" stroke="white" stroke-width="1" opacity="0.1"/>
+        <line x1="52" y1="18" x2="68" y2="26" stroke="#00B4C0" stroke-width="1.5" opacity="0.55"/>
+        <line x1="68" y1="26" x2="80" y2="38" stroke="#00B4C0" stroke-width="1.5" opacity="0.55"/>
+        <line x1="52" y1="18" x2="60" y2="42" stroke="white" stroke-width="1" opacity="0.12"/>
+        <line x1="60" y1="42" x2="72" y2="58" stroke="#00B4C0" stroke-width="1.5" opacity="0.45"/>
+        <line x1="34" y1="22" x2="28" y2="48" stroke="white" stroke-width="1" opacity="0.1"/>
+        <line x1="28" y1="48" x2="18" y2="62" stroke="white" stroke-width="1" opacity="0.08"/>
+        <line x1="60" y1="42" x2="48" y2="54" stroke="#00B4C0" stroke-width="1.5" opacity="0.4"/>
+        <line x1="48" y1="54" x2="36" y2="68" stroke="#00B4C0" stroke-width="1" opacity="0.3"/>
+        <line x1="72" y1="58" x2="62" y2="72" stroke="#00B4C0" stroke-width="1" opacity="0.3"/>
+        <line x1="80" y1="38" x2="82" y2="54" stroke="#00B4C0" stroke-width="1" opacity="0.25"/>
+        <circle cx="18" cy="28" r="5.5" fill="white" opacity="0.7"/>
+        <circle cx="34" cy="22" r="4" fill="white" opacity="0.55"/>
+        <circle cx="52" cy="18" r="8" fill="#00B4C0"/>
+        <circle cx="52" cy="18" r="12" fill="none" stroke="#00B4C0" stroke-width="1.5" opacity="0.3"/>
+        <circle cx="68" cy="26" r="3.5" fill="#00B4C0" opacity="0.75"/>
+        <circle cx="60" cy="42" r="3" fill="#00B4C0" opacity="0.65"/>
+        <circle cx="28" cy="48" r="4.5" fill="white" opacity="0.5"/>
+        <circle cx="48" cy="54" r="3" fill="#00B4C0" opacity="0.55"/>
+        <circle cx="72" cy="58" r="3" fill="#00B4C0" opacity="0.55"/>
+        <circle cx="80" cy="38" r="2.5" fill="white" opacity="0.4"/>
+        <circle cx="18" cy="62" r="2" fill="white" opacity="0.25"/>
+        <circle cx="36" cy="68" r="2.5" fill="#00B4C0" opacity="0.38"/>
+        <circle cx="62" cy="72" r="2" fill="#00B4C0" opacity="0.3"/>
+        <circle cx="82" cy="54" r="2" fill="#00B4C0" opacity="0.25"/>
+      </svg>
+      <div class="tag tag-d">Mark Only · Dark</div>
+    </div>
+
+    <!-- Teal bg -->
+    <div class="cell c-teal">
+      <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="18" y1="28" x2="34" y2="22" stroke="white" stroke-width="1" opacity="0.2"/>
+        <line x1="34" y1="22" x2="52" y2="18" stroke="white" stroke-width="1" opacity="0.2"/>
+        <line x1="52" y1="18" x2="68" y2="26" stroke="white" stroke-width="1.5" opacity="0.6"/>
+        <line x1="68" y1="26" x2="80" y2="38" stroke="white" stroke-width="1.5" opacity="0.6"/>
+        <line x1="52" y1="18" x2="60" y2="42" stroke="white" stroke-width="1" opacity="0.25"/>
+        <line x1="60" y1="42" x2="72" y2="58" stroke="white" stroke-width="1.5" opacity="0.45"/>
+        <line x1="34" y1="22" x2="28" y2="48" stroke="white" stroke-width="1" opacity="0.18"/>
+        <line x1="28" y1="48" x2="18" y2="62" stroke="white" stroke-width="1" opacity="0.12"/>
+        <line x1="60" y1="42" x2="48" y2="54" stroke="white" stroke-width="1.5" opacity="0.4"/>
+        <line x1="72" y1="58" x2="62" y2="72" stroke="white" stroke-width="1" opacity="0.3"/>
+        <line x1="80" y1="38" x2="82" y2="54" stroke="white" stroke-width="1" opacity="0.25"/>
+        <circle cx="18" cy="28" r="5.5" fill="white" opacity="0.6"/>
+        <circle cx="34" cy="22" r="4" fill="white" opacity="0.5"/>
+        <circle cx="52" cy="18" r="8" fill="white"/>
+        <circle cx="52" cy="18" r="12" fill="none" stroke="white" stroke-width="1.5" opacity="0.25"/>
+        <circle cx="68" cy="26" r="3.5" fill="white" opacity="0.7"/>
+        <circle cx="60" cy="42" r="3" fill="white" opacity="0.6"/>
+        <circle cx="28" cy="48" r="4.5" fill="white" opacity="0.45"/>
+        <circle cx="48" cy="54" r="3" fill="white" opacity="0.5"/>
+        <circle cx="72" cy="58" r="3" fill="white" opacity="0.5"/>
+        <circle cx="80" cy="38" r="2.5" fill="white" opacity="0.35"/>
+        <circle cx="62" cy="72" r="2" fill="white" opacity="0.3"/>
+        <circle cx="82" cy="54" r="2" fill="white" opacity="0.25"/>
+      </svg>
+      <div class="tag tag-d">On Teal</div>
+    </div>
+  </div>
+
+  <!-- Full lockups -->
+  <div class="grid-2" style="margin-bottom:3px;">
+    <!-- Light horizontal lockup -->
+    <div class="cell c-white" style="padding:36px 40px;min-height:160px;align-items:flex-start;">
+      <svg width="420" height="80" viewBox="0 0 420 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Compact mark -->
+        <line x1="8" y1="18" x2="16" y2="14" stroke="#0A2342" stroke-width="0.8" opacity="0.15"/>
+        <line x1="16" y1="14" x2="26" y2="10" stroke="#0A2342" stroke-width="0.8" opacity="0.15"/>
+        <line x1="26" y1="10" x2="36" y2="14" stroke="#0096A0" stroke-width="1.2" opacity="0.6"/>
+        <line x1="36" y1="14" x2="42" y2="22" stroke="#0096A0" stroke-width="1.2" opacity="0.6"/>
+        <line x1="26" y1="10" x2="30" y2="24" stroke="#0096A0" stroke-width="1" opacity="0.4"/>
+        <line x1="30" y1="24" x2="36" y2="36" stroke="#0096A0" stroke-width="1" opacity="0.4"/>
+        <line x1="16" y1="14" x2="14" y2="28" stroke="#0A2342" stroke-width="0.8" opacity="0.12"/>
+        <line x1="14" y1="28" x2="10" y2="38" stroke="#0A2342" stroke-width="0.8" opacity="0.1"/>
+        <line x1="30" y1="24" x2="24" y2="32" stroke="#0096A0" stroke-width="1" opacity="0.35"/>
+        <line x1="42" y1="22" x2="44" y2="32" stroke="#0096A0" stroke-width="0.8" opacity="0.25"/>
+        <!-- Nodes -->
+        <circle cx="8" cy="18" r="3" fill="#0A2342"/>
+        <circle cx="16" cy="14" r="2.2" fill="#0A2342"/>
+        <circle cx="26" cy="10" r="4.5" fill="#0096A0"/>
+        <circle cx="26" cy="10" r="7" fill="none" stroke="#0096A0" stroke-width="1" opacity="0.25"/>
+        <circle cx="36" cy="14" r="2" fill="#0096A0" opacity="0.7"/>
+        <circle cx="30" cy="24" r="1.8" fill="#0096A0" opacity="0.6"/>
+        <circle cx="14" cy="28" r="2.5" fill="#0A2342" opacity="0.6"/>
+        <circle cx="24" cy="32" r="1.8" fill="#0096A0" opacity="0.5"/>
+        <circle cx="36" cy="36" r="1.8" fill="#0096A0" opacity="0.45"/>
+        <circle cx="42" cy="22" r="1.5" fill="#0A2342" opacity="0.4"/>
+        <circle cx="10" cy="38" r="1.2" fill="#0A2342" opacity="0.25"/>
+        <circle cx="44" cy="32" r="1.2" fill="#0096A0" opacity="0.25"/>
+        <!-- Wordmark -->
+        <text x="62" y="34" font-family="'Sora',sans-serif" font-size="28" font-weight="700" fill="#0A2342" letter-spacing="-0.8">Bahamas</text>
+        <text x="62" y="56" font-family="'Sora',sans-serif" font-size="20" font-weight="300" fill="#0096A0" letter-spacing="-0.3">Open<tspan font-weight="600" fill="#0A2342">Data</tspan></text>
+        <!-- Domain -->
+        <text x="250" y="68" font-family="'DM Mono',monospace" font-size="8" fill="#6B7C93" letter-spacing="0.8">bahamasopendata.com</text>
+      </svg>
+      <div class="tag tag-l">Full Lockup · Light</div>
+    </div>
+
+    <!-- Dark horizontal lockup -->
+    <div class="cell c-ocean" style="padding:36px 40px;min-height:160px;align-items:flex-start;">
+      <svg width="420" height="80" viewBox="0 0 420 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="8" y1="18" x2="16" y2="14" stroke="white" stroke-width="0.8" opacity="0.12"/>
+        <line x1="16" y1="14" x2="26" y2="10" stroke="white" stroke-width="0.8" opacity="0.12"/>
+        <line x1="26" y1="10" x2="36" y2="14" stroke="#00B4C0" stroke-width="1.2" opacity="0.65"/>
+        <line x1="36" y1="14" x2="42" y2="22" stroke="#00B4C0" stroke-width="1.2" opacity="0.65"/>
+        <line x1="26" y1="10" x2="30" y2="24" stroke="#00B4C0" stroke-width="1" opacity="0.45"/>
+        <line x1="30" y1="24" x2="36" y2="36" stroke="#00B4C0" stroke-width="1" opacity="0.45"/>
+        <line x1="16" y1="14" x2="14" y2="28" stroke="white" stroke-width="0.8" opacity="0.1"/>
+        <line x1="30" y1="24" x2="24" y2="32" stroke="#00B4C0" stroke-width="1" opacity="0.38"/>
+        <circle cx="8" cy="18" r="3" fill="white" opacity="0.6"/>
+        <circle cx="16" cy="14" r="2.2" fill="white" opacity="0.45"/>
+        <circle cx="26" cy="10" r="4.5" fill="#00B4C0"/>
+        <circle cx="26" cy="10" r="7" fill="none" stroke="#00B4C0" stroke-width="1" opacity="0.3"/>
+        <circle cx="36" cy="14" r="2" fill="#00B4C0" opacity="0.75"/>
+        <circle cx="30" cy="24" r="1.8" fill="#00B4C0" opacity="0.65"/>
+        <circle cx="14" cy="28" r="2.5" fill="white" opacity="0.4"/>
+        <circle cx="24" cy="32" r="1.8" fill="#00B4C0" opacity="0.5"/>
+        <circle cx="36" cy="36" r="1.8" fill="#00B4C0" opacity="0.45"/>
+        <circle cx="42" cy="22" r="1.5" fill="white" opacity="0.3"/>
+        <text x="62" y="34" font-family="'Sora',sans-serif" font-size="28" font-weight="700" fill="white" letter-spacing="-0.8">Bahamas</text>
+        <text x="62" y="56" font-family="'Sora',sans-serif" font-size="20" font-weight="300" fill="#00B4C0" letter-spacing="-0.3">Open<tspan font-weight="600" fill="white">Data</tspan></text>
+        <text x="250" y="68" font-family="'DM Mono',monospace" font-size="8" fill="rgba(255,255,255,0.2)" letter-spacing="0.8">bahamasopendata.com</text>
+      </svg>
+      <div class="tag tag-d">Full Lockup · Dark</div>
+    </div>
+  </div>
+
+  <!-- Stacked + hero -->
+  <div class="grid-3" style="margin-bottom:0;">
+    <!-- Stacked -->
+    <div class="cell c-sand" style="min-height:220px;">
+      <svg width="180" height="140" viewBox="0 0 180 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Centered mark -->
+        <line x1="55" y1="22" x2="68" y2="16" stroke="#0A2342" stroke-width="1" opacity="0.15"/>
+        <line x1="68" y1="16" x2="84" y2="10" stroke="#0A2342" stroke-width="1" opacity="0.15"/>
+        <line x1="84" y1="10" x2="100" y2="16" stroke="#0096A0" stroke-width="1.5" opacity="0.6"/>
+        <line x1="100" y1="16" x2="112" y2="26" stroke="#0096A0" stroke-width="1.5" opacity="0.6"/>
+        <line x1="84" y1="10" x2="90" y2="30" stroke="#0096A0" stroke-width="1.2" opacity="0.4"/>
+        <line x1="90" y1="30" x2="100" y2="44" stroke="#0096A0" stroke-width="1.2" opacity="0.4"/>
+        <line x1="68" y1="16" x2="64" y2="36" stroke="#0A2342" stroke-width="1" opacity="0.12"/>
+        <line x1="90" y1="30" x2="78" y2="42" stroke="#0096A0" stroke-width="1.2" opacity="0.35"/>
+        <line x1="100" y1="44" x2="90" y2="56" stroke="#0096A0" stroke-width="1" opacity="0.3"/>
+        <line x1="112" y1="26" x2="116" y2="40" stroke="#0096A0" stroke-width="1" opacity="0.25"/>
+        <circle cx="55" cy="22" r="4" fill="#0A2342"/>
+        <circle cx="68" cy="16" r="3" fill="#0A2342"/>
+        <circle cx="84" cy="10" r="6.5" fill="#0096A0"/>
+        <circle cx="84" cy="10" r="10" fill="none" stroke="#0096A0" stroke-width="1.5" opacity="0.25"/>
+        <circle cx="100" cy="16" r="2.8" fill="#0096A0" opacity="0.7"/>
+        <circle cx="90" cy="30" r="2.5" fill="#0096A0" opacity="0.65"/>
+        <circle cx="64" cy="36" r="3.2" fill="#0A2342" opacity="0.55"/>
+        <circle cx="78" cy="42" r="2.2" fill="#0096A0" opacity="0.5"/>
+        <circle cx="100" cy="44" r="2.2" fill="#0096A0" opacity="0.45"/>
+        <circle cx="112" cy="26" r="2" fill="#0A2342" opacity="0.35"/>
+        <circle cx="90" cy="56" r="1.8" fill="#0096A0" opacity="0.3"/>
+        <circle cx="116" cy="40" r="1.8" fill="#0096A0" opacity="0.25"/>
+        <!-- Wordmark stacked -->
+        <text x="90" y="82" font-family="'Sora',sans-serif" font-size="22" font-weight="700" fill="#0A2342" text-anchor="middle" letter-spacing="-0.5">Bahamas</text>
+        <line x1="36" y1="89" x2="144" y2="89" stroke="#0096A0" stroke-width="0.75" opacity="0.3"/>
+        <text x="90" y="104" font-family="'Sora',sans-serif" font-size="16" font-weight="300" fill="#0096A0" text-anchor="middle" letter-spacing="-0.3">Open<tspan font-weight="600" fill="#0A2342">Data</tspan></text>
+        <text x="90" y="120" font-family="'DM Mono',monospace" font-size="7.5" fill="#6B7C93" text-anchor="middle" letter-spacing="1">bahamasopendata.com</text>
+      </svg>
+      <div class="tag tag-l">Stacked · Light</div>
+    </div>
+
+    <!-- Dark stacked -->
+    <div class="cell c-ocean" style="min-height:220px;">
+      <svg width="180" height="140" viewBox="0 0 180 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="55" y1="22" x2="68" y2="16" stroke="white" stroke-width="1" opacity="0.1"/>
+        <line x1="68" y1="16" x2="84" y2="10" stroke="white" stroke-width="1" opacity="0.1"/>
+        <line x1="84" y1="10" x2="100" y2="16" stroke="#00B4C0" stroke-width="1.5" opacity="0.65"/>
+        <line x1="100" y1="16" x2="112" y2="26" stroke="#00B4C0" stroke-width="1.5" opacity="0.65"/>
+        <line x1="84" y1="10" x2="90" y2="30" stroke="#00B4C0" stroke-width="1.2" opacity="0.45"/>
+        <line x1="90" y1="30" x2="100" y2="44" stroke="#00B4C0" stroke-width="1.2" opacity="0.45"/>
+        <line x1="68" y1="16" x2="64" y2="36" stroke="white" stroke-width="1" opacity="0.1"/>
+        <line x1="90" y1="30" x2="78" y2="42" stroke="#00B4C0" stroke-width="1.2" opacity="0.38"/>
+        <circle cx="55" cy="22" r="4" fill="white" opacity="0.65"/>
+        <circle cx="68" cy="16" r="3" fill="white" opacity="0.5"/>
+        <circle cx="84" cy="10" r="6.5" fill="#00B4C0"/>
+        <circle cx="84" cy="10" r="10" fill="none" stroke="#00B4C0" stroke-width="1.5" opacity="0.3"/>
+        <circle cx="100" cy="16" r="2.8" fill="#00B4C0" opacity="0.75"/>
+        <circle cx="90" cy="30" r="2.5" fill="#00B4C0" opacity="0.65"/>
+        <circle cx="64" cy="36" r="3.2" fill="white" opacity="0.45"/>
+        <circle cx="78" cy="42" r="2.2" fill="#00B4C0" opacity="0.55"/>
+        <circle cx="100" cy="44" r="2.2" fill="#00B4C0" opacity="0.5"/>
+        <circle cx="112" cy="26" r="2" fill="white" opacity="0.3"/>
+        <text x="90" y="82" font-family="'Sora',sans-serif" font-size="22" font-weight="700" fill="white" text-anchor="middle" letter-spacing="-0.5">Bahamas</text>
+        <line x1="36" y1="89" x2="144" y2="89" stroke="#00B4C0" stroke-width="0.75" opacity="0.3"/>
+        <text x="90" y="104" font-family="'Sora',sans-serif" font-size="16" font-weight="300" fill="#00B4C0" text-anchor="middle" letter-spacing="-0.3">Open<tspan font-weight="600" fill="white">Data</tspan></text>
+        <text x="90" y="120" font-family="'DM Mono',monospace" font-size="7.5" fill="rgba(255,255,255,0.22)" text-anchor="middle" letter-spacing="1">bahamasopendata.com</text>
+      </svg>
+      <div class="tag tag-d">Stacked · Dark</div>
+    </div>
+
+    <!-- Concept note -->
+    <div class="cell c-teal-wash" style="min-height:220px;align-items:flex-start;padding:36px 32px;">
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--teal);line-height:2;letter-spacing:0.04em;">
+        <span style="color:var(--ocean);font-weight:700;font-family:'Sora',sans-serif;font-size:14px;display:block;margin-bottom:16px;letter-spacing:-0.2px;">The mark explained</span>
+        Largest node = Nassau<br>
+        Data hub of the platform<br>
+        ─<br>
+        Teal lines = active data<br>
+        connections between islands<br>
+        ─<br>
+        Ocean lines = passive /<br>
+        supporting relationships<br>
+        ─<br>
+        Halo ring on Nassau node<br>
+        = radiating open access
+      </div>
+      <div class="tag tag-l">Legend</div>
+    </div>
+  </div>
+
+  <!-- Hero lockup full width -->
+  <div style="background:var(--ocean);padding:48px 56px;margin-top:3px;">
+    <svg width="580" height="72" viewBox="0 0 580 72" fill="none">
+      <!-- Large mark -->
+      <line x1="10" y1="26" x2="22" y2="18" stroke="white" stroke-width="1" opacity="0.1"/>
+      <line x1="22" y1="18" x2="38" y2="10" stroke="white" stroke-width="1" opacity="0.1"/>
+      <line x1="38" y1="10" x2="56" y2="18" stroke="#00B4C0" stroke-width="2" opacity="0.65"/>
+      <line x1="56" y1="18" x2="66" y2="32" stroke="#00B4C0" stroke-width="2" opacity="0.65"/>
+      <line x1="38" y1="10" x2="44" y2="30" stroke="#00B4C0" stroke-width="1.5" opacity="0.45"/>
+      <line x1="44" y1="30" x2="54" y2="46" stroke="#00B4C0" stroke-width="1.5" opacity="0.4"/>
+      <line x1="22" y1="18" x2="18" y2="40" stroke="white" stroke-width="1" opacity="0.1"/>
+      <line x1="44" y1="30" x2="32" y2="44" stroke="#00B4C0" stroke-width="1.5" opacity="0.35"/>
+      <circle cx="10" cy="26" r="4.5" fill="white" opacity="0.55"/>
+      <circle cx="22" cy="18" r="3.5" fill="white" opacity="0.4"/>
+      <circle cx="38" cy="10" r="7" fill="#00B4C0"/>
+      <circle cx="38" cy="10" r="11" fill="none" stroke="#00B4C0" stroke-width="1.5" opacity="0.3"/>
+      <circle cx="56" cy="18" r="3" fill="#00B4C0" opacity="0.75"/>
+      <circle cx="44" cy="30" r="2.5" fill="#00B4C0" opacity="0.65"/>
+      <circle cx="18" cy="40" r="3.5" fill="white" opacity="0.35"/>
+      <circle cx="32" cy="44" r="2.2" fill="#00B4C0" opacity="0.5"/>
+      <circle cx="54" cy="46" r="2.2" fill="#00B4C0" opacity="0.45"/>
+      <circle cx="66" cy="32" r="2" fill="white" opacity="0.3"/>
+      <!-- Wordmark -->
+      <text x="88" y="40" font-family="'Sora',sans-serif" font-size="38" font-weight="700" fill="white" letter-spacing="-1.2">Bahamas</text>
+      <text x="88" y="62" font-family="'Sora',sans-serif" font-size="24" font-weight="300" fill="#00B4C0" letter-spacing="-0.5">Open<tspan font-weight="700" fill="rgba(255,255,255,0.7)">Data</tspan></text>
+      <text x="322" y="62" font-family="'DM Mono',monospace" font-size="9" fill="rgba(255,255,255,0.18)" letter-spacing="1.2">bahamasopendata.com</text>
+    </svg>
+  </div>
+
+  <div class="annot">
+    <div></div>
+    <div class="annot-body">
+      <h3>The Archipelago Network</h3>
+      <p>The node positions are not random — they approximate the geographic scatter of the major Bahamian islands from northwest to southeast. Nassau (New Providence) is the largest node with a halo ring, marking it as the data hub and capital simultaneously.</p>
+      <p>Teal connections represent active, rich data relationships. Ocean-navy connections represent passive or supporting links. The density of the eastern chain reads as data density — more connections = richer coverage.</p>
+      <ul class="spec-list">
+        <li>Nassau node: largest, with connection halo ring</li>
+        <li>Teal connections: primary data network</li>
+        <li>Navy connections: secondary/supporting</li>
+        <li>"Bahamas" — Sora 700, ocean, dominant</li>
+        <li>"Open" — Sora 300 italic weight, teal</li>
+        <li>"Data" — Sora 600, ocean — the noun it delivers</li>
+        <li>Domain line: DM Mono, only at ≥240px width</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="teal-rule"></div>
+
+
+<!-- ══════════ CONCEPT 02: THE OPEN GRID ══════════ -->
+<div class="section s-sand">
+  <div class="eyebrow">Concept 02 — Data Table Geometry</div>
+  <div class="section-title">The Open Grid</div>
+
+  <div class="grid-3">
+    <div class="cell c-white">
+      <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- 4×4 grid, top row opens/breaks free to the right -->
+        <!-- Grid columns: x=10,28,46,64  rows: y=20,34,48,62 -->
+        <!-- Vertical lines -->
+        <line x1="10" y1="20" x2="10" y2="62" stroke="#0A2342" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+        <line x1="28" y1="20" x2="28" y2="62" stroke="#0A2342" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+        <line x1="46" y1="20" x2="46" y2="62" stroke="#0A2342" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+        <line x1="64" y1="20" x2="64" y2="62" stroke="#0A2342" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+        <!-- Horizontal lines — bottom 3 are full -->
+        <line x1="10" y1="34" x2="64" y2="34" stroke="#0A2342" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+        <line x1="10" y1="48" x2="64" y2="48" stroke="#0A2342" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+        <line x1="10" y1="62" x2="64" y2="62" stroke="#0A2342" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+        <!-- TOP ROW: breaks open — teal, extends beyond grid -->
+        <line x1="10" y1="20" x2="76" y2="20" stroke="#0096A0" stroke-width="3" stroke-linecap="round"/>
+        <!-- Opened cells in top row — filled teal dots  -->
+        <circle cx="10" cy="20" r="3.5" fill="#0096A0"/>
+        <circle cx="28" cy="20" r="3.5" fill="#0096A0"/>
+        <circle cx="46" cy="20" r="3.5" fill="#0096A0"/>
+        <circle cx="64" cy="20" r="3.5" fill="#0096A0"/>
+        <!-- The open indicator — arrow tip at end of extended line -->
+        <circle cx="76" cy="20" r="3" fill="none" stroke="#0096A0" stroke-width="2"/>
+        <circle cx="76" cy="20" r="1.5" fill="#0096A0"/>
+        <!-- Intercell dots (data points) in lower grid -->
+        <circle cx="19" cy="27" r="1.5" fill="#0A2342" opacity="0.2"/>
+        <circle cx="37" cy="27" r="1.5" fill="#0096A0" opacity="0.3"/>
+        <circle cx="55" cy="27" r="1.5" fill="#0096A0" opacity="0.25"/>
+        <circle cx="19" cy="41" r="1.5" fill="#0096A0" opacity="0.25"/>
+        <circle cx="37" cy="41" r="2" fill="#0096A0" opacity="0.4"/>
+        <circle cx="55" cy="41" r="1.5" fill="#0A2342" opacity="0.2"/>
+        <circle cx="19" cy="55" r="1.5" fill="#0A2342" opacity="0.2"/>
+        <circle cx="37" cy="55" r="1.5" fill="#0096A0" opacity="0.3"/>
+        <circle cx="55" cy="55" r="2" fill="#0096A0" opacity="0.35"/>
+      </svg>
+      <div class="tag tag-l">Open Grid · Light</div>
+    </div>
+
+    <div class="cell c-ocean">
+      <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="10" y1="34" x2="64" y2="34" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.25"/>
+        <line x1="10" y1="48" x2="64" y2="48" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.25"/>
+        <line x1="10" y1="62" x2="64" y2="62" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.25"/>
+        <line x1="10" y1="20" x2="10" y2="62" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.25"/>
+        <line x1="28" y1="20" x2="28" y2="62" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.25"/>
+        <line x1="46" y1="20" x2="46" y2="62" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.25"/>
+        <line x1="64" y1="20" x2="64" y2="62" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.25"/>
+        <line x1="10" y1="20" x2="76" y2="20" stroke="#00B4C0" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="10" cy="20" r="3.5" fill="#00B4C0"/>
+        <circle cx="28" cy="20" r="3.5" fill="#00B4C0"/>
+        <circle cx="46" cy="20" r="3.5" fill="#00B4C0"/>
+        <circle cx="64" cy="20" r="3.5" fill="#00B4C0"/>
+        <circle cx="76" cy="20" r="3" fill="none" stroke="#00B4C0" stroke-width="2"/>
+        <circle cx="76" cy="20" r="1.5" fill="#00B4C0"/>
+        <circle cx="37" cy="27" r="1.5" fill="#00B4C0" opacity="0.35"/>
+        <circle cx="37" cy="41" r="2" fill="#00B4C0" opacity="0.45"/>
+        <circle cx="55" cy="55" r="2" fill="#00B4C0" opacity="0.4"/>
+      </svg>
+      <div class="tag tag-d">Open Grid · Dark</div>
+    </div>
+
+    <div class="cell c-teal">
+      <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="10" y1="34" x2="64" y2="34" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+        <line x1="10" y1="48" x2="64" y2="48" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+        <line x1="10" y1="62" x2="64" y2="62" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+        <line x1="10" y1="20" x2="10" y2="62" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+        <line x1="28" y1="20" x2="28" y2="62" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+        <line x1="46" y1="20" x2="46" y2="62" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+        <line x1="64" y1="20" x2="64" y2="62" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+        <line x1="10" y1="20" x2="76" y2="20" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="10" cy="20" r="3.5" fill="white"/>
+        <circle cx="28" cy="20" r="3.5" fill="white"/>
+        <circle cx="46" cy="20" r="3.5" fill="white"/>
+        <circle cx="64" cy="20" r="3.5" fill="white"/>
+        <circle cx="76" cy="20" r="3" fill="none" stroke="white" stroke-width="2"/>
+        <circle cx="76" cy="20" r="1.5" fill="white"/>
+      </svg>
+      <div class="tag tag-d">On Teal</div>
+    </div>
+  </div>
+
+  <!-- Lockup row -->
+  <div class="grid-2" style="margin-bottom:0;">
+    <div class="cell c-white" style="align-items:flex-start;padding:36px 40px;min-height:140px;">
+      <svg width="360" height="56" viewBox="0 0 360 56" fill="none">
+        <!-- Compact grid mark -->
+        <line x1="4" y1="18" x2="36" y2="18" stroke="#0096A0" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="4" y1="28" x2="32" y2="28" stroke="#0A2342" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+        <line x1="4" y1="38" x2="32" y2="38" stroke="#0A2342" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+        <line x1="4" y1="18" x2="4" y2="38" stroke="#0A2342" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+        <line x1="14" y1="18" x2="14" y2="38" stroke="#0A2342" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+        <line x1="24" y1="18" x2="24" y2="38" stroke="#0A2342" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+        <line x1="32" y1="18" x2="32" y2="38" stroke="#0A2342" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+        <circle cx="4" cy="18" r="2.5" fill="#0096A0"/>
+        <circle cx="14" cy="18" r="2.5" fill="#0096A0"/>
+        <circle cx="24" cy="18" r="2.5" fill="#0096A0"/>
+        <circle cx="32" cy="18" r="2.5" fill="#0096A0"/>
+        <circle cx="36" cy="18" r="2" fill="none" stroke="#0096A0" stroke-width="1.5"/>
+        <circle cx="36" cy="18" r="1" fill="#0096A0"/>
+        <!-- Wordmark -->
+        <text x="50" y="30" font-family="'Sora',sans-serif" font-size="26" font-weight="700" fill="#0A2342" letter-spacing="-0.7">Bahamas</text>
+        <text x="50" y="48" font-family="'Sora',sans-serif" font-size="18" font-weight="300" fill="#0096A0" letter-spacing="-0.3">Open<tspan font-weight="600" fill="#0A2342">Data</tspan></text>
+      </svg>
+      <div class="tag tag-l">Open Grid Lockup · Light</div>
+    </div>
+
+    <div class="cell c-ocean2" style="align-items:flex-start;padding:36px 40px;min-height:140px;">
+      <svg width="360" height="56" viewBox="0 0 360 56" fill="none">
+        <line x1="4" y1="18" x2="36" y2="18" stroke="#00B4C0" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="4" y1="28" x2="32" y2="28" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.2"/>
+        <line x1="4" y1="38" x2="32" y2="38" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.2"/>
+        <line x1="4" y1="18" x2="4" y2="38" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.2"/>
+        <line x1="14" y1="18" x2="14" y2="38" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.2"/>
+        <line x1="24" y1="18" x2="24" y2="38" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.2"/>
+        <line x1="32" y1="18" x2="32" y2="38" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.2"/>
+        <circle cx="4" cy="18" r="2.5" fill="#00B4C0"/>
+        <circle cx="14" cy="18" r="2.5" fill="#00B4C0"/>
+        <circle cx="24" cy="18" r="2.5" fill="#00B4C0"/>
+        <circle cx="32" cy="18" r="2.5" fill="#00B4C0"/>
+        <circle cx="36" cy="18" r="2" fill="none" stroke="#00B4C0" stroke-width="1.5"/>
+        <circle cx="36" cy="18" r="1" fill="#00B4C0"/>
+        <text x="50" y="30" font-family="'Sora',sans-serif" font-size="26" font-weight="700" fill="white" letter-spacing="-0.7">Bahamas</text>
+        <text x="50" y="48" font-family="'Sora',sans-serif" font-size="18" font-weight="300" fill="#00B4C0" letter-spacing="-0.3">Open<tspan font-weight="600" fill="white">Data</tspan></text>
+      </svg>
+      <div class="tag tag-d">Open Grid Lockup · Dark</div>
+    </div>
+  </div>
+
+  <div class="annot">
+    <div></div>
+    <div class="annot-body">
+      <h3>The Open Grid</h3>
+      <p>A data table with its top row broken free — teal, extended, escaping the closed grid. The lower rows remain locked in ocean navy, representing data still in government silos. The top row is what BahamasOpenData does: takes it out.</p>
+      <p>The open ring at the terminus of the teal line is the aperture motif — the data is accessible now, the gap is the openness itself.</p>
+      <ul class="spec-list">
+        <li>Grid: 4 columns × 4 rows, uniform spacing</li>
+        <li>Top row: teal, extended 16px beyond grid boundary</li>
+        <li>Open ring: 3px stroke circle + filled center dot</li>
+        <li>Lower grid: 40% opacity navy — closed/siloed state</li>
+        <li>Works at favicon scale — grid reduces to 3×3</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="teal-rule"></div>
+
+
+<!-- ══════════ CONCEPT 03: THE APERTURE ══════════ -->
+<div class="section s-ocean">
+  <div class="eyebrow">Concept 03 — Minimal · Icon-First</div>
+  <div class="section-title">The Aperture</div>
+
+  <div class="grid-3">
+    <div class="cell c-sand">
+      <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Outer arc — does not close. Gap at top-right = the opening -->
+        <!-- Arc from ~40° to ~320° -->
+        <path d="M 68 26 A 30 30 0 1 0 54 68" stroke="#0A2342" stroke-width="5" stroke-linecap="round" fill="none"/>
+        <!-- Inner ring — same gap -->
+        <path d="M 63 30 A 22 22 0 1 0 51 65" stroke="#0A2342" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.2"/>
+        <!-- Teal data dots scattered inside -->
+        <circle cx="40" cy="36" r="4" fill="#0096A0"/>
+        <circle cx="30" cy="46" r="2.5" fill="#0096A0" opacity="0.6"/>
+        <circle cx="50" cy="46" r="3" fill="#0096A0" opacity="0.7"/>
+        <circle cx="40" cy="54" r="2" fill="#0096A0" opacity="0.5"/>
+        <circle cx="34" cy="38" r="1.5" fill="#0A2342" opacity="0.3"/>
+        <circle cx="48" cy="38" r="1.5" fill="#0096A0" opacity="0.4"/>
+        <!-- The gap endpoint markers — teal dots at the opening -->
+        <circle cx="68" cy="26" r="4.5" fill="#0096A0"/>
+        <circle cx="54" cy="68" r="4.5" fill="#0096A0"/>
+        <!-- Connecting line between the two open points -->
+        <line x1="68" y1="26" x2="54" y2="68" stroke="#0096A0" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.4"/>
+      </svg>
+      <div class="tag tag-l">Aperture · Light</div>
+    </div>
+
+    <div class="cell c-ocean2">
+      <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M 68 26 A 30 30 0 1 0 54 68" stroke="white" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.7"/>
+        <path d="M 63 30 A 22 22 0 1 0 51 65" stroke="white" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.12"/>
+        <circle cx="40" cy="36" r="4" fill="#00B4C0"/>
+        <circle cx="30" cy="46" r="2.5" fill="#00B4C0" opacity="0.65"/>
+        <circle cx="50" cy="46" r="3" fill="#00B4C0" opacity="0.75"/>
+        <circle cx="40" cy="54" r="2" fill="#00B4C0" opacity="0.55"/>
+        <circle cx="48" cy="38" r="1.5" fill="#00B4C0" opacity="0.45"/>
+        <circle cx="68" cy="26" r="4.5" fill="#00B4C0"/>
+        <circle cx="54" cy="68" r="4.5" fill="#00B4C0"/>
+        <line x1="68" y1="26" x2="54" y2="68" stroke="#00B4C0" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.35"/>
+      </svg>
+      <div class="tag tag-d">Aperture · Dark</div>
+    </div>
+
+    <div class="cell c-teal">
+      <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M 68 26 A 30 30 0 1 0 54 68" stroke="white" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.9"/>
+        <path d="M 63 30 A 22 22 0 1 0 51 65" stroke="white" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.2"/>
+        <circle cx="40" cy="36" r="4" fill="white"/>
+        <circle cx="30" cy="46" r="2.5" fill="white" opacity="0.7"/>
+        <circle cx="50" cy="46" r="3" fill="white" opacity="0.75"/>
+        <circle cx="40" cy="54" r="2" fill="white" opacity="0.6"/>
+        <circle cx="68" cy="26" r="4.5" fill="white"/>
+        <circle cx="54" cy="68" r="4.5" fill="white"/>
+        <line x1="68" y1="26" x2="54" y2="68" stroke="white" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.35"/>
+      </svg>
+      <div class="tag tag-d">On Teal</div>
+    </div>
+  </div>
+
+  <!-- Lockups -->
+  <div class="grid-2" style="margin-bottom:0;">
+    <div class="cell c-white" style="align-items:flex-start;padding:36px 40px;min-height:140px;">
+      <svg width="360" height="56" viewBox="0 0 360 56" fill="none">
+        <!-- Compact aperture -->
+        <path d="M 42 12 A 22 22 0 1 0 32 46" stroke="#0A2342" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+        <circle cx="20" cy="28" r="3" fill="#0096A0"/>
+        <circle cx="28" cy="22" r="2" fill="#0096A0" opacity="0.6"/>
+        <circle cx="28" cy="34" r="2" fill="#0096A0" opacity="0.55"/>
+        <circle cx="42" cy="12" r="3.5" fill="#0096A0"/>
+        <circle cx="32" cy="46" r="3.5" fill="#0096A0"/>
+        <line x1="42" y1="12" x2="32" y2="46" stroke="#0096A0" stroke-width="1.2" stroke-dasharray="2.5 2.5" opacity="0.4"/>
+        <!-- Wordmark -->
+        <text x="58" y="28" font-family="'Sora',sans-serif" font-size="24" font-weight="700" fill="#0A2342" letter-spacing="-0.5">Bahamas</text>
+        <text x="58" y="47" font-family="'Sora',sans-serif" font-size="16" font-weight="300" fill="#0096A0" letter-spacing="-0.3">Open<tspan font-weight="600" fill="#0A2342">Data</tspan></text>
+      </svg>
+      <div class="tag tag-l">Aperture Lockup · Light</div>
+    </div>
+
+    <div class="cell c-ocean2" style="align-items:flex-start;padding:36px 40px;min-height:140px;">
+      <svg width="360" height="56" viewBox="0 0 360 56" fill="none">
+        <path d="M 42 12 A 22 22 0 1 0 32 46" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.75"/>
+        <circle cx="20" cy="28" r="3" fill="#00B4C0"/>
+        <circle cx="28" cy="22" r="2" fill="#00B4C0" opacity="0.65"/>
+        <circle cx="28" cy="34" r="2" fill="#00B4C0" opacity="0.6"/>
+        <circle cx="42" cy="12" r="3.5" fill="#00B4C0"/>
+        <circle cx="32" cy="46" r="3.5" fill="#00B4C0"/>
+        <line x1="42" y1="12" x2="32" y2="46" stroke="#00B4C0" stroke-width="1.2" stroke-dasharray="2.5 2.5" opacity="0.38"/>
+        <text x="58" y="28" font-family="'Sora',sans-serif" font-size="24" font-weight="700" fill="white" letter-spacing="-0.5">Bahamas</text>
+        <text x="58" y="47" font-family="'Sora',sans-serif" font-size="16" font-weight="300" fill="#00B4C0" letter-spacing="-0.3">Open<tspan font-weight="600" fill="white">Data</tspan></text>
+      </svg>
+      <div class="tag tag-d">Aperture Lockup · Dark</div>
+    </div>
+  </div>
+
+  <div class="annot">
+    <div></div>
+    <div class="annot-body">
+      <h3>The Aperture</h3>
+      <p>A circle that doesn't close — the gap is the openness, rendered as geometry. The two teal endpoint dots mark where the ring opens, connected by a dashed line that implies the data channel that's been created. Data points cluster inside.</p>
+      <p>The cleanest mark of the three — easiest to render at 16px, strongest as an app icon. Weakest at telling the Bahamian geography story. Best used as the icon/favicon complement to the Archipelago primary.</p>
+      <ul class="spec-list">
+        <li>Outer arc: 300°, leaves 60° gap at top-right</li>
+        <li>Gap endpoints: teal filled circles, equal size</li>
+        <li>Dashed connector: 3px dash, 3px gap, 40% opacity</li>
+        <li>Interior dots: teal scatter — the data inside the system</li>
+        <li>Inner ring: 20% opacity — depth only</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="teal-rule"></div>
+
+
+<!-- ══════════ WORDMARK SYSTEM ══════════ -->
+<div class="section s-white">
+  <div class="eyebrow">Typography System</div>
+  <div class="section-title">Wordmark Construction</div>
+
+  <!-- Large display -->
+  <div style="background:var(--sand);padding:64px 56px;margin-bottom:3px;">
+    <svg width="560" height="80" viewBox="0 0 560 80" fill="none">
+      <text x="0" y="62" font-family="'Sora',sans-serif" font-size="72" font-weight="700" fill="#0A2342" letter-spacing="-2">Bahamas</text>
+      <text x="420" y="56" font-family="'Sora',sans-serif" font-size="48" font-weight="300" fill="#0096A0" letter-spacing="-1">Open</text>
+      <!-- Note: "OpenData" split across line in stacked version -->
+    </svg>
+  </div>
+
+  <div style="background:var(--sand-dark);padding:36px 56px;margin-bottom:3px;">
+    <svg width="560" height="48" viewBox="0 0 560 48" fill="none">
+      <text x="0" y="36" font-family="'Sora',sans-serif" font-size="42" font-weight="700" fill="#0A2342" letter-spacing="-1.2">Bahamas<tspan font-weight="300" fill="#0096A0"> Open</tspan><tspan font-weight="700" fill="#0A2342">Data</tspan></text>
+    </svg>
+  </div>
+
+  <div class="grid-3" style="margin-top:3px;margin-bottom:0;">
+    <div style="background:var(--teal-wash);padding:28px 32px;">
+      <div class="type-pair">Bahamas</div>
+      <p style="font-size:12.5px;color:var(--stone);line-height:1.8;">Sora 700. Ocean. The geography first — the country this data belongs to. Heavy, authoritative, never italic. It's the noun that owns everything that follows.</p>
+    </div>
+    <div style="background:var(--teal-wash);padding:28px 32px;">
+      <div class="type-pair" style="color:var(--teal);">Open</div>
+      <p style="font-size:12.5px;color:var(--stone);line-height:1.8;">Sora 300. Teal. The thinnest weight in the family — openness communicated through lightness itself. The word is the value, the weight is the expression of it. Never bold. Never navy.</p>
+    </div>
+    <div style="background:var(--teal-wash);padding:28px 32px;">
+      <div class="type-pair">Data</div>
+      <p style="font-size:12.5px;color:var(--stone);line-height:1.8;">Sora 600–700. Ocean. The product. Returns to weight after the openness of "Open" — the data is real, structured, reliable. The weight contrast between "Open" and "Data" is intentional tension.</p>
+    </div>
+  </div>
+</div>
+
+<div class="teal-rule"></div>
+
+
+<!-- ══════════ COLOUR SYSTEM ══════════ -->
+<div class="section s-ocean">
+  <div class="eyebrow">Brand Foundation</div>
+  <div class="section-title">Colour System</div>
+
+  <div class="swatch-row" style="margin-bottom:3px;">
+    <div class="swatch" style="background:#0A2342;">
+      <div class="sw-info" style="color:rgba(255,255,255,0.65);">
+        Ocean Deep<br><span style="opacity:.45">#0A2342</span><br><span style="opacity:.45">Authority</span>
+      </div>
+    </div>
+    <div class="swatch" style="background:#0096A0;">
+      <div class="sw-info" style="color:rgba(255,255,255,0.85);">
+        Bahamian Teal<br><span style="opacity:.55">#0096A0</span><br><span style="opacity:.55">Openness</span>
+      </div>
+    </div>
+    <div class="swatch" style="background:#00B4C0;">
+      <div class="sw-info" style="color:rgba(255,255,255,0.85);">
+        Teal Light<br><span style="opacity:.55">#00B4C0</span><br><span style="opacity:.55">On dark bg</span>
+      </div>
+    </div>
+    <div class="swatch" style="background:#E8633A;">
+      <div class="sw-info" style="color:rgba(255,255,255,0.85);">
+        Coral Accent<br><span style="opacity:.55">#E8633A</span><br><span style="opacity:.55">Alerts · CTAs</span>
+      </div>
+    </div>
+    <div class="swatch" style="background:#F5F0E8;border:1px solid rgba(0,0,0,0.06);">
+      <div class="sw-info" style="color:rgba(10,35,66,0.5);">
+        Sand<br><span style="opacity:.6">#F5F0E8</span><br><span style="opacity:.6">Light bg</span>
+      </div>
+    </div>
+    <div class="swatch" style="background:#E0F5F7;border:1px solid rgba(0,0,0,0.05);">
+      <div class="sw-info" style="color:rgba(10,35,66,0.5);">
+        Teal Pale<br><span style="opacity:.6">#E0F5F7</span><br><span style="opacity:.6">Highlights</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:rgba(0,150,160,0.08);border:1px solid rgba(0,150,160,0.2);padding:32px 40px;margin-top:3px;">
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.2em;color:var(--teal-l);text-transform:uppercase;margin-bottom:14px;">Colour logic</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;">
+      <p style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.8;">Ocean deep is the Bahamian sea at night — the deep-water authority of a serious data infrastructure. It grounds every surface that needs weight: headers, marks, body text, authority states.</p>
+      <p style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.8;">Bahamian teal is the shallow-water turquoise that is literally the identifying colour of these islands from satellite. It signals openness, accessibility, and the specific geography this platform exists to serve. No other data platform has this colour as a legitimate claim.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════ FAVICON TESTS ══════════ -->
+<div class="section s-ocean2" style="border-bottom:none;">
+  <div class="eyebrow">Digital Execution</div>
+  <div class="section-title">Favicon & App Icon Scale Tests</div>
+
+  <div class="fav-strip">
+    <div class="fav-sec">Archipelago</div>
+
+    <!-- 64px -->
+    <div class="fav-item">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <rect width="64" height="64" rx="14" fill="#0A2342"/>
+        <!-- Simplified 8-node archipelago at 64px -->
+        <line x1="10" y1="20" x2="18" y2="14" stroke="#153D6E" stroke-width="1.2"/>
+        <line x1="18" y1="14" x2="30" y2="10" stroke="#153D6E" stroke-width="1.2"/>
+        <line x1="30" y1="10" x2="42" y2="16" stroke="#00B4C0" stroke-width="1.8" opacity="0.8"/>
+        <line x1="42" y1="16" x2="52" y2="26" stroke="#00B4C0" stroke-width="1.8" opacity="0.8"/>
+        <line x1="30" y1="10" x2="36" y2="28" stroke="#00B4C0" stroke-width="1.5" opacity="0.55"/>
+        <line x1="36" y1="28" x2="44" y2="42" stroke="#00B4C0" stroke-width="1.5" opacity="0.5"/>
+        <line x1="18" y1="14" x2="14" y2="32" stroke="#153D6E" stroke-width="1.2"/>
+        <line x1="36" y1="28" x2="26" y2="40" stroke="#00B4C0" stroke-width="1.2" opacity="0.45"/>
+        <circle cx="10" cy="20" r="3.5" fill="white" opacity="0.5"/>
+        <circle cx="18" cy="14" r="2.5" fill="white" opacity="0.4"/>
+        <circle cx="30" cy="10" r="5.5" fill="#00B4C0"/>
+        <circle cx="30" cy="10" r="8.5" fill="none" stroke="#00B4C0" stroke-width="1.2" opacity="0.3"/>
+        <circle cx="42" cy="16" r="2.5" fill="#00B4C0" opacity="0.7"/>
+        <circle cx="36" cy="28" r="2" fill="#00B4C0" opacity="0.65"/>
+        <circle cx="14" cy="32" r="3" fill="white" opacity="0.35"/>
+        <circle cx="26" cy="40" r="1.8" fill="#00B4C0" opacity="0.5"/>
+        <circle cx="44" cy="42" r="1.8" fill="#00B4C0" opacity="0.45"/>
+        <circle cx="52" cy="26" r="1.5" fill="white" opacity="0.3"/>
+      </svg>
+      <div class="fav-lbl">64px</div>
+    </div>
+
+    <!-- 48px -->
+    <div class="fav-item">
+      <svg width="48" height="48" viewBox="0 0 64 64" fill="none">
+        <rect width="64" height="64" rx="14" fill="#0A2342"/>
+        <line x1="10" y1="20" x2="30" y2="10" stroke="#153D6E" stroke-width="1.2"/>
+        <line x1="30" y1="10" x2="42" y2="16" stroke="#00B4C0" stroke-width="2" opacity="0.8"/>
+        <line x1="42" y1="16" x2="52" y2="26" stroke="#00B4C0" stroke-width="2" opacity="0.8"/>
+        <line x1="30" y1="10" x2="36" y2="28" stroke="#00B4C0" stroke-width="1.5" opacity="0.55"/>
+        <line x1="36" y1="28" x2="44" y2="42" stroke="#00B4C0" stroke-width="1.5" opacity="0.5"/>
+        <circle cx="10" cy="20" r="3" fill="white" opacity="0.45"/>
+        <circle cx="30" cy="10" r="5.5" fill="#00B4C0"/>
+        <circle cx="30" cy="10" r="8.5" fill="none" stroke="#00B4C0" stroke-width="1.2" opacity="0.3"/>
+        <circle cx="42" cy="16" r="2.5" fill="#00B4C0" opacity="0.7"/>
+        <circle cx="36" cy="28" r="2" fill="#00B4C0" opacity="0.65"/>
+        <circle cx="44" cy="42" r="1.8" fill="#00B4C0" opacity="0.45"/>
+        <circle cx="52" cy="26" r="1.5" fill="white" opacity="0.3"/>
+      </svg>
+      <div class="fav-lbl">48px</div>
+    </div>
+
+    <!-- 32px -->
+    <div class="fav-item">
+      <svg width="32" height="32" viewBox="0 0 64 64" fill="none">
+        <rect width="64" height="64" rx="14" fill="#0A2342"/>
+        <line x1="12" y1="22" x2="30" y2="10" stroke="#153D6E" stroke-width="1.5"/>
+        <line x1="30" y1="10" x2="48" y2="18" stroke="#00B4C0" stroke-width="2.5" opacity="0.85"/>
+        <line x1="30" y1="10" x2="38" y2="32" stroke="#00B4C0" stroke-width="2" opacity="0.6"/>
+        <line x1="38" y1="32" x2="50" y2="48" stroke="#00B4C0" stroke-width="2" opacity="0.5"/>
+        <circle cx="12" cy="22" r="3.5" fill="white" opacity="0.4"/>
+        <circle cx="30" cy="10" r="6" fill="#00B4C0"/>
+        <circle cx="30" cy="10" r="9" fill="none" stroke="#00B4C0" stroke-width="1.5" opacity="0.3"/>
+        <circle cx="48" cy="18" r="3" fill="#00B4C0" opacity="0.7"/>
+        <circle cx="38" cy="32" r="2.5" fill="#00B4C0" opacity="0.6"/>
+        <circle cx="50" cy="48" r="2" fill="#00B4C0" opacity="0.45"/>
+      </svg>
+      <div class="fav-lbl">32px</div>
+    </div>
+
+    <!-- 16px -->
+    <div class="fav-item">
+      <svg width="16" height="16" viewBox="0 0 64 64" fill="none">
+        <rect width="64" height="64" rx="12" fill="#0A2342"/>
+        <!-- At 16px: hub node + 3 connections only -->
+        <line x1="10" y1="24" x2="30" y2="10" stroke="#153D6E" stroke-width="2"/>
+        <line x1="30" y1="10" x2="52" y2="20" stroke="#00B4C0" stroke-width="3" opacity="0.9"/>
+        <line x1="30" y1="10" x2="40" y2="38" stroke="#00B4C0" stroke-width="3" opacity="0.7"/>
+        <circle cx="10" cy="24" r="4" fill="white" opacity="0.4"/>
+        <circle cx="30" cy="10" r="7" fill="#00B4C0"/>
+        <circle cx="52" cy="20" r="3.5" fill="#00B4C0" opacity="0.7"/>
+        <circle cx="40" cy="38" r="3" fill="#00B4C0" opacity="0.55"/>
+      </svg>
+      <div class="fav-lbl">16px</div>
+    </div>
+
+    <div class="fav-div"></div>
+    <div class="fav-sec">Open Grid</div>
+
+    <div class="fav-item">
+      <svg width="48" height="48" viewBox="0 0 64 64" fill="none">
+        <rect width="64" height="64" rx="14" fill="#0A2342"/>
+        <line x1="12" y1="26" x2="52" y2="26" stroke="#00B4C0" stroke-width="4" stroke-linecap="round"/>
+        <line x1="12" y1="38" x2="48" y2="38" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.25"/>
+        <line x1="12" y1="50" x2="48" y2="50" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.25"/>
+        <line x1="12" y1="26" x2="12" y2="50" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.25"/>
+        <line x1="24" y1="26" x2="24" y2="50" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.25"/>
+        <line x1="36" y1="26" x2="36" y2="50" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.25"/>
+        <line x1="48" y1="26" x2="48" y2="50" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.25"/>
+        <circle cx="12" cy="26" r="3.5" fill="#00B4C0"/>
+        <circle cx="24" cy="26" r="3.5" fill="#00B4C0"/>
+        <circle cx="36" cy="26" r="3.5" fill="#00B4C0"/>
+        <circle cx="48" cy="26" r="3.5" fill="#00B4C0"/>
+        <circle cx="52" cy="26" r="3" fill="none" stroke="#00B4C0" stroke-width="2"/>
+        <circle cx="52" cy="26" r="1.5" fill="#00B4C0"/>
+      </svg>
+      <div class="fav-lbl">48px</div>
+    </div>
+
+    <div class="fav-item">
+      <svg width="16" height="16" viewBox="0 0 64 64" fill="none">
+        <rect width="64" height="64" rx="12" fill="#0A2342"/>
+        <line x1="10" y1="28" x2="56" y2="28" stroke="#00B4C0" stroke-width="5" stroke-linecap="round"/>
+        <line x1="10" y1="42" x2="50" y2="42" stroke="white" stroke-width="3" stroke-linecap="round" opacity="0.2"/>
+        <line x1="10" y1="54" x2="50" y2="54" stroke="white" stroke-width="3" stroke-linecap="round" opacity="0.2"/>
+        <line x1="10" y1="28" x2="10" y2="54" stroke="white" stroke-width="3" stroke-linecap="round" opacity="0.2"/>
+        <line x1="28" y1="28" x2="28" y2="54" stroke="white" stroke-width="3" stroke-linecap="round" opacity="0.2"/>
+        <line x1="46" y1="28" x2="46" y2="54" stroke="white" stroke-width="3" stroke-linecap="round" opacity="0.2"/>
+        <circle cx="10" cy="28" r="5" fill="#00B4C0"/>
+        <circle cx="28" cy="28" r="5" fill="#00B4C0"/>
+        <circle cx="46" cy="28" r="5" fill="#00B4C0"/>
+      </svg>
+      <div class="fav-lbl">16px</div>
+    </div>
+  </div>
+
+  <div style="background:rgba(0,150,160,0.07);border:1px solid rgba(0,150,160,0.18);padding:24px 40px;margin-top:3px;font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:0.05em;line-height:2;">
+    At 16px: Archipelago reduces to hub node + 3 spokes — still reads as a data network. Open Grid reduces to 3 dots on a teal line — still reads as open data. Both hold. Archipelago is the primary; Open Grid is the recommended favicon / app icon alternative.
+  </div>
+</div>
+
+
+<!-- ══════════ RECOMMENDATION ══════════ -->
+<div class="section s-white" style="border-bottom:none;">
+  <div class="eyebrow">Strategic Recommendation</div>
+  <div class="section-title">The System</div>
+
+  <div style="background:var(--ocean);padding:48px 56px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;border-left:4px solid var(--teal);">
+    <div>
+      <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--teal-l);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:14px;">Primary Recommendation</div>
+      <h3 style="font-family:'Sora',sans-serif;font-size:26px;font-weight:700;color:white;margin-bottom:18px;letter-spacing:-0.02em;">Concept 01 — Archipelago Network</h3>
+      <p style="font-size:13.5px;color:rgba(255,255,255,0.55);line-height:1.8;margin-bottom:18px;">The island chain as a data network is irreplaceable. No open data platform anywhere in the world has access to this geography as a mark. The moment anyone in the Bahamas sees it, they recognize both the country and the concept simultaneously.</p>
+      <p style="font-size:13.5px;color:rgba(255,255,255,0.55);line-height:1.8;">Use Concept 02 (Open Grid) as the favicon and app icon — it reduces more cleanly at 16px and reinforces the data-table reference at digital scale.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:20px;">
+      <svg width="280" height="60" viewBox="0 0 420 80" fill="none">
+        <line x1="10" y1="26" x2="22" y2="18" stroke="white" stroke-width="1" opacity="0.1"/>
+        <line x1="22" y1="18" x2="38" y2="10" stroke="white" stroke-width="1" opacity="0.1"/>
+        <line x1="38" y1="10" x2="56" y2="18" stroke="#00B4C0" stroke-width="2" opacity="0.65"/>
+        <line x1="56" y1="18" x2="66" y2="32" stroke="#00B4C0" stroke-width="2" opacity="0.65"/>
+        <line x1="38" y1="10" x2="44" y2="30" stroke="#00B4C0" stroke-width="1.5" opacity="0.45"/>
+        <line x1="44" y1="30" x2="54" y2="46" stroke="#00B4C0" stroke-width="1.5" opacity="0.4"/>
+        <line x1="22" y1="18" x2="18" y2="40" stroke="white" stroke-width="1" opacity="0.1"/>
+        <line x1="44" y1="30" x2="32" y2="44" stroke="#00B4C0" stroke-width="1.5" opacity="0.35"/>
+        <circle cx="10" cy="26" r="4.5" fill="white" opacity="0.5"/>
+        <circle cx="22" cy="18" r="3.5" fill="white" opacity="0.38"/>
+        <circle cx="38" cy="10" r="7" fill="#00B4C0"/>
+        <circle cx="38" cy="10" r="11" fill="none" stroke="#00B4C0" stroke-width="1.5" opacity="0.3"/>
+        <circle cx="56" cy="18" r="3" fill="#00B4C0" opacity="0.75"/>
+        <circle cx="44" cy="30" r="2.5" fill="#00B4C0" opacity="0.65"/>
+        <circle cx="18" cy="40" r="3.5" fill="white" opacity="0.32"/>
+        <circle cx="32" cy="44" r="2.2" fill="#00B4C0" opacity="0.5"/>
+        <circle cx="54" cy="46" r="2.2" fill="#00B4C0" opacity="0.45"/>
+        <circle cx="66" cy="32" r="2" fill="white" opacity="0.28"/>
+        <text x="86" y="38" font-family="'Sora',sans-serif" font-size="36" font-weight="700" fill="white" letter-spacing="-1">Bahamas<tspan font-weight="300" fill="#00B4C0"> Open</tspan><tspan font-weight="700" fill="rgba(255,255,255,0.7)">Data</tspan></text>
+      </svg>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <div style="text-align:center;font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);letter-spacing:0.08em;line-height:1.9;padding:12px;background:rgba(255,255,255,0.04);">OWNABLE</div>
+        <div style="text-align:center;font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);letter-spacing:0.08em;line-height:1.9;padding:12px;background:rgba(255,255,255,0.04);">BAHAMIAN</div>
+        <div style="text-align:center;font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);letter-spacing:0.08em;line-height:1.9;padding:12px;background:rgba(255,255,255,0.04);">SCALABLE</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════ FOOTER ══════════ -->
+<div class="footer">
+  <div class="footer-l">
+    BahamasOpenData.com · Identity System v1.0<br>
+    Civic Data Platform · Nassau, The Bahamas<br>
+    Three Concepts · Full Colour & Typography System
+  </div>
+  <div class="footer-r">bahamasopendata.com</div>
+</div>
+
+</body>
+</html>

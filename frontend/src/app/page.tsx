@@ -1,26 +1,39 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import StatCard from '@/components/StatCard';
 import SectorPieChart from '@/components/SectorPieChart';
 import MinistryCard from '@/components/MinistryCard';
 import AskBar from '@/components/AskBar';
-import CurrentPollWidget from '@/components/CurrentPollWidget';
-import { formatCurrency } from '@/lib/format';
+import DashboardSectionCard from '@/components/DashboardSectionCard';
+import { formatCurrency, formatPercent } from '@/lib/format';
 import {
   Ministry,
   AskResponse,
   RevenueBreakdown,
   DebtSummary,
   IncomeComparison,
+  Poll,
 } from '@/types';
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   LineChart, Line, CartesianGrid, Legend
 } from 'recharts';
-import { TrendingUp, Calendar, FileText, AlertCircle } from 'lucide-react';
+import { TrendingUp, Calendar, FileText, AlertCircle, HeartPulse, DollarSign, BarChart3, Newspaper, Flame, Building2 } from 'lucide-react';
+import { newsItems } from '@/data/news';
+
+type HotTopicSummary = {
+  slug: string;
+  title: string;
+  source: string;
+  year: string;
+  summary: string;
+  stat_count?: number;
+  chart_count?: number;
+  highlight_count?: number;
+};
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
@@ -111,6 +124,8 @@ export default function Home() {
   const [incomeComparisons, setIncomeComparisons] = useState<
     IncomeComparison[] | null
   >(null);
+  const [activePoll, setActivePoll] = useState<Poll | null>(null);
+  const [hotTopics, setHotTopics] = useState<HotTopicSummary[] | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -123,6 +138,8 @@ export default function Home() {
           revenueRes,
           debtRes,
           economicRes,
+          pollsRes,
+          hotTopicsRes,
         ] = await Promise.allSettled([
           fetch(`${API_BASE}/budget/summary`),
           fetch(`${API_BASE}/budget/historical`),
@@ -131,6 +148,8 @@ export default function Home() {
           fetch(`${API_BASE}/revenue`),
           fetch(`${API_BASE}/debt`),
           fetch(`${API_BASE}/economic/comparison`),
+          fetch(`${API_BASE}/polls/active`),
+          fetch(`${API_BASE}/hot-topics/reports`),
         ]);
 
         if (
@@ -210,6 +229,24 @@ export default function Home() {
             setIncomeComparisons(json);
           }
         }
+
+        if (
+          pollsRes.status === 'fulfilled' &&
+          pollsRes.value.ok
+        ) {
+          const json = await pollsRes.value.json();
+          setActivePoll(json);
+        }
+
+        if (
+          hotTopicsRes.status === 'fulfilled' &&
+          hotTopicsRes.value.ok
+        ) {
+          const json = await hotTopicsRes.value.json();
+          if (Array.isArray(json)) {
+            setHotTopics(json);
+          }
+        }
       } catch (err) {
         console.error('Failed to load dashboard data', err);
       }
@@ -227,6 +264,37 @@ export default function Home() {
     interestCost && revenueTotal
       ? (interestCost / revenueTotal) * 100
       : null;
+
+  const healthMinistry = useMemo(
+    () =>
+      ministries.find(
+        (m) => m.id === 'health' || m.sector.toLowerCase() === 'health',
+      ),
+    [ministries],
+  );
+
+  const healthShare = useMemo(() => {
+    if (!sectorData || sectorData.length === 0) return null;
+    const total = sectorData.reduce((sum, s) => sum + s.value, 0);
+    if (!total) return null;
+    const healthSector = sectorData.find(
+      (s) => s.name.toLowerCase() === 'health',
+    );
+    if (!healthSector) return null;
+    return healthSector.value / total;
+  }, [sectorData]);
+
+  const incomeSnapshot = useMemo(
+    () => (incomeComparisons && incomeComparisons.length > 0 ? incomeComparisons[0] : null),
+    [incomeComparisons],
+  );
+
+  const latestNews = useMemo(
+    () => newsItems.slice(0, 3),
+    [],
+  );
+
+  const firstHotTopic = hotTopics && hotTopics.length > 0 ? hotTopics[0] : null;
 
   const handleMinistryClick = (ministryId: string) => {
     // #region agent log
@@ -304,11 +372,6 @@ export default function Home() {
         </motion.div>
       </motion.div>
 
-      {/* Current Poll Teaser */}
-      <div className="mb-8">
-        <CurrentPollWidget />
-      </div>
-
       {/* Key Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
@@ -317,24 +380,28 @@ export default function Home() {
           subtitle="Fiscal Year 2025/26"
           sourceDocument={budgetSummary.source_document}
           sourcePage={budgetSummary.source_page}
+          onClick={() => router.push('/ministries')}
         />
         <StatCard
           title="Revenue"
           value={budgetSummary.total_revenue}
           subtitle="Projected for FY2025/26"
           sourceDocument={budgetSummary.source_document}
+          onClick={() => router.push('/revenue')}
         />
         <StatCard
           title="National Debt"
           value={budgetSummary.national_debt}
           subtitle={`${budgetSummary.debt_to_gdp_ratio}% of GDP (down from 88.7%)`}
           sourceDocument={budgetSummary.source_document}
+          onClick={() => router.push('/debt')}
         />
         <StatCard
           title="Budget Surplus"
           value={budgetSummary.deficit_surplus}
           subtitle="First surplus since Independence! 🎉"
           sourceDocument={budgetSummary.source_document}
+          onClick={() => router.push('/revenue')}
         />
       </div>
 
@@ -397,178 +464,134 @@ export default function Home() {
         </motion.div>
       </div>
 
-      {/* Ministry Tiles */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="mb-8"
-      >
+      {/* Explore the Data */}
+      <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-900">Top Ministries</h2>
-          <a href="/ministries" className="text-turquoise text-sm font-medium hover:underline">
-            View all ministries →
-          </a>
+          <h2 className="text-xl font-bold text-gray-900">Explore the data</h2>
+          <p className="text-xs text-gray-500">
+            Jump into health, income, polls, news, hot topics, and ministries.
+          </p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {ministries.map((ministry, index) => (
-            <MinistryCard
-              key={ministry.id}
-              ministry={ministry}
-              index={index}
-              onClick={() => handleMinistryClick(ministry.id)}
-            />
-          ))}
-        </div>
-      </motion.div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Health */}
+          <DashboardSectionCard
+            href="/health"
+            title="Health & wellness"
+            subtitle="Hospitals, clinics, and public health."
+            icon={HeartPulse}
+            primaryStatLabel="Allocation 2025/26"
+            primaryStatValue={
+              healthMinistry
+                ? formatCurrency(healthMinistry.allocation)
+                : '—'
+            }
+            secondaryStatLabel={healthShare ? 'Share of national budget' : undefined}
+            secondaryStatValue={
+              healthShare ? formatPercent(healthShare) : undefined
+            }
+          />
 
-      {/* Budget Priorities - SOAR Framework */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.25 }}
-        className="bg-white rounded-xl border border-gray-200 p-6 mb-8"
-      >
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Budget Priorities: SOAR Framework</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {budgetPriorities.map((priority, idx) => (
-            <div key={idx} className="text-center p-4 bg-gray-50 rounded-lg">
-              <span className="text-3xl mb-2 block">{priority.icon}</span>
-              <h3 className="font-semibold text-gray-900">{priority.name}</h3>
-              <p className="text-xs text-gray-500 mt-1">{priority.description}</p>
-            </div>
-          ))}
-        </div>
-        <p className="text-xs text-gray-400 mt-4 text-center">Source: Budget Communication 2025/26, Page 7</p>
-      </motion.div>
+          {/* Income */}
+          <DashboardSectionCard
+            href="/income"
+            title="Income & cost of living"
+            subtitle="What households need to get by."
+            icon={DollarSign}
+            primaryStatLabel="Middle class monthly income"
+            primaryStatValue={
+              incomeSnapshot
+                ? formatCurrency(incomeSnapshot.middle_class.month_amount)
+                : '—'
+            }
+            secondaryStatLabel={
+              incomeSnapshot ? 'Gap vs working class' : undefined
+            }
+            secondaryStatValue={
+              incomeSnapshot
+                ? `${formatCurrency(incomeSnapshot.difference_amount)} · ${incomeSnapshot.difference_percent.toFixed(1)}% higher`
+                : undefined
+            }
+          />
 
-      {/* Debt Overview */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="bg-white rounded-xl border border-gray-200 p-6 mb-8"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900">Debt Overview</h2>
-          <a href="/debt" className="text-turquoise text-sm font-medium hover:underline">
-            View full breakdown →
-          </a>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <p className="text-sm text-gray-500 mb-1">Total Debt (End FY2025/26)</p>
-            <p className="text-3xl font-bold text-gray-900 tabular-nums">
-              {formatCurrency(totalDebt, true)}
-            </p>
-            {debtToGdp ? (
-              <p className="text-sm text-green-600 mt-1">
-                ↓ {debtToGdp.toFixed(1)}% of GDP
-              </p>
-            ) : (
-              <p className="text-sm text-green-600 mt-1">
-                Debt-to-GDP is trending down from pandemic highs.
-              </p>
-            )}
-          </div>
-          <div>
-            <p className="text-sm text-gray-500 mb-1">Interest Payments</p>
-            <p className="text-2xl font-bold text-turquoise tabular-nums">
-              {formatCurrency(
-                interestCost || 668_045_978,
-                true,
-              )}
-            </p>
-            <p className="text-sm text-gray-500 mt-1">
-              {interestShare
-                ? `${interestShare.toFixed(1)}% of revenue`
-                : 'Share of annual revenue'}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500 mb-1">Target by 2031</p>
-            <p className="text-2xl font-bold text-yellow-600 tabular-nums">
-              50% of GDP
-            </p>
-            <p className="text-sm text-gray-500 mt-1">Investment-grade goal by FY2028/29</p>
-          </div>
-        </div>
-        <div className="mt-6">
-          <p className="text-xs text-gray-500 mb-2">Debt-to-GDP Ratio Trajectory</p>
-          <div className="h-3 bg-gray-100 rounded-full overflow-hidden flex">
-            <div
-              className="bg-turquoise h-full transition-all"
-              style={{
-                width: `${Math.min(debtToGdp || 0, 100)}%`,
-              }}
-            ></div>
-          </div>
-          <div className="flex justify-between mt-2 text-xs text-gray-500">
-            <span>0%</span>
-            <span>
-              {debtToGdp ? `${debtToGdp.toFixed(1)}%` : 'Current level'}
-            </span>
-            <span>100%</span>
-          </div>
-        </div>
-      </motion.div>
+          {/* Polls */}
+          <DashboardSectionCard
+            href="/polls"
+            title="Public polls"
+            subtitle="What Bahamians are saying right now."
+            icon={BarChart3}
+            primaryStatLabel="Current question"
+            primaryStatValue={
+              activePoll?.question
+                ? activePoll.question
+                : 'No active poll at the moment.'
+            }
+            secondaryStatLabel={
+              activePoll && typeof activePoll.total_votes === 'number'
+                ? 'Responses so far'
+                : undefined
+            }
+            secondaryStatValue={
+              activePoll && typeof activePoll.total_votes === 'number'
+                ? `${activePoll.total_votes.toLocaleString()} responses`
+                : undefined
+            }
+          />
 
-      {/* Income & cost of living snapshot */}
-      {incomeComparisons && incomeComparisons.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.35 }}
-          className="bg-white rounded-xl border border-gray-200 p-6 mb-8"
-        >
-          {(() => {
-            const snapshot = incomeComparisons[0];
-            const middle = snapshot.middle_class.month_amount;
-            const working = snapshot.working_class.month_amount;
-            return (
-              <>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-gray-900">
-                    Income &amp; cost of living
-                  </h2>
-                  <p className="text-sm text-gray-500">
-                    {snapshot.island.replace('_', ' ')}, {snapshot.year}
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">
-                      Middle class monthly income needed
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900 tabular-nums">
-                      {formatCurrency(middle)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">
-                      Working class monthly income needed
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900 tabular-nums">
-                      {formatCurrency(working)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">
-                      Gap between middle and working class
-                    </p>
-                    <p className="text-2xl font-bold text-turquoise tabular-nums">
-                      {formatCurrency(snapshot.difference_amount)}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {snapshot.difference_percent.toFixed(1)}% higher
-                    </p>
-                  </div>
-                </div>
-              </>
-            );
-          })()}
-        </motion.div>
-      )}
+          {/* News */}
+          <DashboardSectionCard
+            href="/news"
+            title="News & updates"
+            subtitle="Official budget and economic announcements."
+            icon={Newspaper}
+            primaryStatLabel="Latest headline"
+            primaryStatValue={
+              latestNews.length > 0 ? latestNews[0].title : 'No news yet.'
+            }
+            secondaryStatLabel={
+              latestNews.length > 1 ? 'More updates available' : undefined
+            }
+            secondaryStatValue={
+              latestNews.length > 1
+                ? `${latestNews.length} featured updates`
+                : undefined
+            }
+          />
+
+          {/* Hot topics */}
+          <DashboardSectionCard
+            href="/hot"
+            title="Hot topics"
+            subtitle="High-impact reports on accountability and governance."
+            icon={Flame}
+            primaryStatLabel="Reports available"
+            primaryStatValue={
+              hotTopics
+                ? `${hotTopics.length} report${hotTopics.length === 1 ? '' : 's'}`
+                : 'Loading…'
+            }
+            secondaryStatLabel={firstHotTopic ? 'Featured report' : undefined}
+            secondaryStatValue={firstHotTopic?.title}
+          />
+
+          {/* Ministries */}
+          <DashboardSectionCard
+            href="/ministries"
+            title="Ministries overview"
+            subtitle="See which ministries receive the most funding."
+            icon={Building2}
+            primaryStatLabel="Number of ministries"
+            primaryStatValue={ministries.length}
+            secondaryStatLabel="Top ministry"
+            secondaryStatValue={
+              ministries.length > 0
+                ? ministries
+                    .slice()
+                    .sort((a, b) => b.allocation - a.allocation)[0].name
+                : undefined
+            }
+          />
+        </div>
+      </div>
 
       {/* Info Banner */}
       <motion.div

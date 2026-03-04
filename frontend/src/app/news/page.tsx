@@ -4,99 +4,12 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { formatDate } from '@/lib/format';
 import { 
-  Newspaper, 
-  FileText, 
-  AlertCircle, 
-  TrendingUp, 
-  Building2,
+  Newspaper,
   Calendar,
   ExternalLink,
   Filter
 } from 'lucide-react';
-
-// Mock news data
-const newsItems = [
-  {
-    id: 1,
-    title: "2024/25 Budget Communication Delivered to Parliament",
-    source: "Ministry of Finance",
-    category: "Budget",
-    date: "2024-06-12",
-    summary: "Prime Minister and Minister of Finance delivered the annual budget communication outlining $3.2 billion in planned expenditure for the coming fiscal year.",
-    url: "https://www.bahamasbudget.gov.bs/",
-    icon: FileText,
-  },
-  {
-    id: 2,
-    title: "Mid-Year Budget Review Shows Revenue Above Projections",
-    source: "Ministry of Finance",
-    category: "Revenue",
-    date: "2024-12-01",
-    summary: "Government revenue collection for the first six months of FY2024/25 exceeded projections by 3.2%, driven primarily by strong VAT and tourism tax receipts.",
-    url: "#",
-    icon: TrendingUp,
-  },
-  {
-    id: 3,
-    title: "Auditor General Report on Public Accounts 2022/23",
-    source: "Auditor General",
-    category: "Audit",
-    date: "2024-10-15",
-    summary: "The Auditor General's annual report highlights areas for improvement in public financial management across several ministries.",
-    url: "#",
-    icon: AlertCircle,
-  },
-  {
-    id: 4,
-    title: "Central Bank Quarterly Economic Review Q3 2024",
-    source: "Central Bank of The Bahamas",
-    category: "Economic",
-    date: "2024-11-20",
-    summary: "The quarterly review indicates continued economic recovery with tourism arrivals reaching pre-pandemic levels and positive growth in key sectors.",
-    url: "https://www.centralbankbahamas.com/",
-    icon: TrendingUp,
-  },
-  {
-    id: 5,
-    title: "Government Debt Falls Below 83% of GDP",
-    source: "Ministry of Finance",
-    category: "Debt",
-    date: "2024-09-28",
-    summary: "National debt-to-GDP ratio continues its downward trend, falling to 82.5% as economic growth outpaces new borrowing.",
-    url: "#",
-    icon: TrendingUp,
-  },
-  {
-    id: 6,
-    title: "New Public Financial Management Act Takes Effect",
-    source: "Ministry of Finance",
-    category: "Policy",
-    date: "2024-07-01",
-    summary: "The new legislation introduces stronger fiscal responsibility requirements and improved transparency in government financial reporting.",
-    url: "#",
-    icon: Building2,
-  },
-  {
-    id: 7,
-    title: "Hurricane Preparedness Allocation Increased",
-    source: "Cabinet Office",
-    category: "Budget",
-    date: "2024-08-15",
-    summary: "Government increases the National Disaster Fund allocation by $25 million ahead of the 2024 hurricane season.",
-    url: "#",
-    icon: AlertCircle,
-  },
-  {
-    id: 8,
-    title: "VAT Collection Reaches Record Monthly High",
-    source: "Department of Inland Revenue",
-    category: "Revenue",
-    date: "2024-11-05",
-    summary: "October 2024 VAT collections reached $105 million, the highest single-month collection since the tax was introduced.",
-    url: "#",
-    icon: TrendingUp,
-  },
-];
+import { newsItems } from '@/data/news';
 
 const categories = ["All", "Budget", "Revenue", "Debt", "Audit", "Economic", "Policy"];
 

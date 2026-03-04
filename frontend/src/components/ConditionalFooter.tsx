@@ -4,12 +4,7 @@ import { usePathname } from 'next/navigation';
 
 export default function ConditionalFooter() {
   const pathname = usePathname();
-  
-  // Hide footer on home page (maintenance mode)
-  if (pathname === '/') {
-    return null;
-  }
-  
+
   return (
     <footer className="bg-white border-t border-gray-200 py-8 mt-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
