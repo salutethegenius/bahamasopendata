@@ -45,6 +45,25 @@
   --chart-6: #8b5cf6;
   --chart-7: #ec4899;
   --chart-8: #14b8a6;
+
+  /* V2 marketing palette (from static prototype) */
+  --ocean: #0A2342;
+  --ocean-mid: #0D2D54;
+  --ocean-l: #153D6E;
+  --teal: #0096A0;
+  --teal-l: #00B4C0;
+  --teal-pale: #E0F5F7;
+  --teal-wash: #F0FAFB;
+  --coral: #E8633A;
+  --coral-pale: #FDEEE8;
+  --coral-l: #F08060;
+  --sand: #F5F0E8;
+  --sand-dark: #EAE3D6;
+  --white: #FFFFFF;
+  --stone: #6B7C93;
+  --ink-light: #374151;
+  --border: rgba(10, 35, 66, 0.08);
+  --border-l: rgba(255, 255, 255, 0.08);
 }
 
 @theme inline {

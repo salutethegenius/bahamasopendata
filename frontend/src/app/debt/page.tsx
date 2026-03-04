@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import StatCard from '@/components/StatCard';
 import { formatCurrency, formatPercent } from '@/lib/format';
+import styles from '@/app/v2/v2.module.css';
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend,
@@ -60,6 +61,7 @@ export default function DebtPage() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
+        <div className={styles['section-eyebrow']}>Debt &amp; borrowing</div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           National <span className="text-turquoise">Debt</span>
         </h1>

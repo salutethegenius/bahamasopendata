@@ -3,13 +3,14 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { formatDate } from '@/lib/format';
-import { 
+import {
   Newspaper,
   Calendar,
   ExternalLink,
   Filter
 } from 'lucide-react';
 import { newsItems } from '@/data/news';
+import styles from '@/app/v2/v2.module.css';
 
 const categories = ["All", "Budget", "Revenue", "Debt", "Audit", "Economic", "Policy"];
 
@@ -37,6 +38,7 @@ export default function NewsPage() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
+        <div className={styles['section-eyebrow']}>Budget &amp; economic news</div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           News & <span className="text-turquoise">Updates</span>
         </h1>
