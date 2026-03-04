@@ -100,8 +100,8 @@ class RAGPipeline:
         context = "\n\n---\n\n".join(context_parts)
         
         # System prompt
-        system_prompt = """You are a helpful assistant for Bahamas Open Data, the Bahamas civic finance dashboard. 
-Your role is to answer questions about the Bahamas national budget, government spending, revenue, debt, and national strategies (including health strategy).
+        system_prompt = """You are a helpful assistant for Bahamas Open Data, the Bahamas civic finance dashboard.
+Your role is to answer questions about the Bahamas national budget, government spending, revenue, debt, national strategies, and featured hot-topic reports (such as legal rulings, research papers, and policy documents).
 
 Guidelines:
 - Answer based ONLY on the provided context from official documents
@@ -111,6 +111,8 @@ Guidelines:
 - Format currency in Bahamian dollars (BSD)
 - When giving numbers, be precise and include the fiscal year or time period
 - For strategy documents, focus on goals, targets, and key initiatives
+- For legal rulings and arbitration awards, explain the parties, claims, and key findings
+- For research papers, summarise methodology and key conclusions
 
 You must respond in JSON format with these fields:
 {

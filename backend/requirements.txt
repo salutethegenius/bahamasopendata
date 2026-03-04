@@ -10,7 +10,7 @@ psycopg2-binary==2.9.9
 alembic==1.13.1
 
 # Vector DB
-pinecone-client>=3.1.0
+pinecone>=5.0.0
 
 # OpenAI
 openai==1.12.0

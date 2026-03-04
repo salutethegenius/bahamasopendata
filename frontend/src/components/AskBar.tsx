@@ -2,10 +2,19 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Send, X, FileText, BarChart3, Loader2, ExternalLink } from 'lucide-react';
+import { Search, Send, X, FileText, BarChart3, Loader2, ExternalLink, Flame } from 'lucide-react';
 import { AskResponse } from '@/types';
 import { formatCurrency } from '@/lib/format';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
+
+type HotTopic = {
+  slug: string;
+  title: string;
+  source: string;
+  year: string;
+};
 
 // Component to format answer text with better typography
 function FormattedAnswer({ text }: { text: string }) {
@@ -68,12 +77,25 @@ export default function AskBar({ onAsk }: AskBarProps) {
   const [question, setQuestion] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState<AskResponse | null>(null);
+  const [hotTopics, setHotTopics] = useState<HotTopic[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus();
     }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    fetch(`${API_BASE}/hot-topics/reports`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: HotTopic[]) => {
+        if (!cancelled && Array.isArray(data)) setHotTopics(data);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
   }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -154,7 +176,7 @@ export default function AskBar({ onAsk }: AskBarProps) {
             >
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Ask about the budget & health strategy</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Ask about Bahamas public data</h2>
                 <button
                   onClick={handleClose}
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -166,20 +188,52 @@ export default function AskBar({ onAsk }: AskBarProps) {
               {/* Content */}
               <div className="flex-1 overflow-y-auto p-4">
                 {!response ? (
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     <p className="text-gray-600">
-                      Ask me anything about the Bahamas budget, spending, revenue, debt, or national health strategy.
+                      Ask me anything about the Bahamas budget, spending, revenue, debt, health strategy, or hot topic reports.
                     </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {exampleQuestions.map((q, i) => (
-                        <button
-                          key={i}
-                          onClick={() => setQuestion(q)}
-                          className="text-left p-3 rounded-lg bg-gray-50 hover:bg-turquoise/10 text-sm text-gray-700 hover:text-turquoise transition-colors"
-                        >
-                          {q}
-                        </button>
-                      ))}
+
+                    {hotTopics.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Flame className="w-4 h-4 text-orange-500" />
+                          <h3 className="text-sm font-semibold text-gray-700">Hot Topics</h3>
+                        </div>
+                        <div className="grid grid-cols-1 gap-1.5">
+                          {hotTopics.map((topic) => (
+                            <button
+                              key={topic.slug}
+                              onClick={() =>
+                                setQuestion(`Tell me about: ${topic.title}`)
+                              }
+                              className="text-left p-3 rounded-lg bg-orange-50 hover:bg-orange-100 text-sm text-gray-700 hover:text-orange-700 transition-colors flex items-start gap-3"
+                            >
+                              <FileText className="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0" />
+                              <div className="min-w-0">
+                                <span className="font-medium">{topic.title}</span>
+                                <span className="text-xs text-gray-400 ml-2">
+                                  {topic.source}{topic.year ? ` · ${topic.year}` : ''}
+                                </span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-700 mb-2">Example questions</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {exampleQuestions.map((q, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setQuestion(q)}
+                            className="text-left p-3 rounded-lg bg-gray-50 hover:bg-turquoise/10 text-sm text-gray-700 hover:text-turquoise transition-colors"
+                          >
+                            {q}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -322,7 +376,7 @@ export default function AskBar({ onAsk }: AskBarProps) {
                       type="text"
                       value={question}
                       onChange={(e) => setQuestion(e.target.value)}
-                      placeholder="Ask about spending, revenue, debt, or health strategy..."
+                      placeholder="Ask about spending, revenue, debt, health, or hot topics..."
                       className="flex-1 px-4 py-3 rounded-full bg-gray-100 border-0 focus:ring-2 focus:ring-turquoise focus:bg-white transition-all"
                     />
                     <button
