@@ -364,8 +364,8 @@ export default function HotTopicReportPage() {
         </motion.section>
       )}
 
-      {/* Sample info */}
-      {report.methodology && (
+      {/* Source info */}
+      {(report.source || report.journal) && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -374,9 +374,10 @@ export default function HotTopicReportPage() {
         >
           <Users className="w-4 h-4 mt-0.5 flex-shrink-0" />
           <p>
-            Based on a study of <strong className="text-gray-700">1,728 women</strong> in The
-            Bahamas. Data collected September–October 2022. Published in the{' '}
-            {report.journal || 'International Journal of Bahamian Studies'}.
+            Source: <strong className="text-gray-700">{report.source}</strong>
+            {report.year && <>, {report.year}</>}
+            {report.journal && <>. Published in the <em>{report.journal}</em></>}
+            .
           </p>
         </motion.div>
       )}

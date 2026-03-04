@@ -1,0 +1,109 @@
+{
+  "slug": "gbpa-arbitration-award-2026",
+  "title": "Government of The Bahamas v. GBPA – Partial Final Award (2026)",
+  "source": "International Centre for Settlement of Investment Disputes (ICSID)",
+  "year": "2026",
+  "pdf_filename": "20260227_Government-of-The-Bahamas-v-GBPA-Partial-Final-Award_vF-Signed.pdf",
+  "overview": "This Partial Final Award resolves a landmark arbitration between the Government of The Bahamas and the Grand Bahama Port Authority (GBPA) over the annual payments owed under clause 1(5)(d) of the 1955 Hawksbill Creek Agreement. The Government claimed BSD 357.144 million for the period 2018–2022, arguing the GBPA must reimburse the full gross cost of providing public services in the Port Area. The Tribunal ruled that 'annual cost' means the net cost — gross expenditure minus revenues generated within the Port Area — and that the 1968 Supplemental Agreement remains binding alongside the HCA. The Award also rejected GBPA's claims of exclusive authority over immigration, utilities, and administrative functions, affirming the Government's legislative sovereignty in the Port Area through 2054.",
+  "methodology": "ICSID arbitration conducted under the UNCITRAL Rules. Evidence included the PricewaterhouseCoopers (PwC) assessment of government expenditures and revenues in the Port Area for 2018–2022, witness testimony, and expert financial reports. The Tribunal examined the Hawksbill Creek Agreement (1955), the 1968 Supplemental Agreement, and subsequent correspondence to determine the scope and calculation of the GBPA's payment obligations.",
+  "highlights": [
+    "The Government claimed BSD 357.144 million from the GBPA for the cost of public services (2018–2022) — the largest known financial dispute with a Bahamian public authority.",
+    "The Tribunal ruled that 'annual cost' under clause 1(5)(d) means net cost (gross expenditure minus Port Area revenues), not gross cost as the Government argued.",
+    "The 1968 Supplemental Agreement remains binding and governs the relationship between the GBPA and the Government alongside the original HCA.",
+    "GBPA's claims of exclusive rights over immigration, utilities, and administrative functions in the Port Area were rejected — the Government retains full legislative authority.",
+    "The GBPA is required to make annual payments to the Government until the HCA expires in 2054.",
+    "The PwC Report assessing costs was not signed by the Treasurer, raising significant questions about its validity as a binding determination.",
+    "Marriage of clause 1(5)(d) and Paragraph 3 of the 1968 Agreement: the Tribunal deferred final resolution on whether Paragraph 3 replaces or supplements the original payment clause.",
+    "Only one aspect of the GBPA's counterclaim was upheld — relating to the Government's failure to approve environmental bye-laws in a timely manner (2023).",
+    "Annual payment obligations varied widely: from BSD 30.7 million (2018) to BSD 88.8 million (2019), reflecting fluctuations in government expenditure in the Port Area.",
+    "The Award establishes a precedent for how public-service cost-sharing is calculated in special economic zones across The Bahamas.",
+    "The Tribunal's interpretation will impact future government claims and GBPA budgeting for the remaining 28 years of the Agreement.",
+    "The dispute underscores the tension between economic concession holders and sovereign regulatory authority in small island developing states."
+  ],
+  "key_stats": [
+    {
+      "label": "Total Government Claim",
+      "value": 357.144,
+      "unit": "million BSD"
+    },
+    {
+      "label": "HCA Expiry Year",
+      "value": 2054,
+      "unit": ""
+    },
+    {
+      "label": "Peak Annual Cost (2019)",
+      "value": 88.773,
+      "unit": "million BSD"
+    },
+    {
+      "label": "Lowest Annual Cost (2018)",
+      "value": 30.666,
+      "unit": "million BSD"
+    },
+    {
+      "label": "Dispute Period",
+      "value": 5,
+      "unit": "years (2018–2022)"
+    },
+    {
+      "label": "Years Remaining on HCA",
+      "value": 28,
+      "unit": "years"
+    }
+  ],
+  "charts": [
+    {
+      "id": "annual-costs-by-year",
+      "title": "Annual Government Cost in Port Area by Year (BSD millions)",
+      "type": "bar",
+      "data": [
+        { "name": "2018", "amount": 30.666 },
+        { "name": "2019", "amount": 88.773 },
+        { "name": "2020", "amount": 68.326 },
+        { "name": "2021", "amount": 85.175 },
+        { "name": "2022", "amount": 84.204 }
+      ]
+    },
+    {
+      "id": "gross-vs-net-concept",
+      "title": "Gross vs. Net Cost Approach (Illustrative, 2019)",
+      "type": "bar",
+      "data": [
+        { "name": "Gross Cost (Gov't Position)", "amount": 140 },
+        { "name": "Port Area Revenues", "amount": 51.2 },
+        { "name": "Net Cost (Tribunal Ruling)", "amount": 88.773 }
+      ]
+    },
+    {
+      "id": "claim-breakdown",
+      "title": "Claimed Amount by Year (BSD millions)",
+      "type": "bar",
+      "data": [
+        { "name": "2018", "amount": 30.666 },
+        { "name": "2019", "amount": 88.773 },
+        { "name": "2020", "amount": 68.326 },
+        { "name": "2021", "amount": 85.175 },
+        { "name": "2022", "amount": 84.204 }
+      ]
+    },
+    {
+      "id": "gbpa-counterclaims",
+      "title": "GBPA Counterclaim Outcomes",
+      "type": "bar",
+      "data": [
+        { "name": "Exclusive Immigration Rights", "amount": 0 },
+        { "name": "Exclusive Utility Control", "amount": 0 },
+        { "name": "Exclusive Admin Functions", "amount": 0 },
+        { "name": "Environmental Bye-laws (Upheld)", "amount": 1 }
+      ]
+    }
+  ],
+  "chart_data": [
+    { "name": "2018", "value": 30.666 },
+    { "name": "2019", "value": 88.773 },
+    { "name": "2020", "value": 68.326 },
+    { "name": "2021", "value": 85.175 },
+    { "name": "2022", "value": 84.204 }
+  ]
+}

@@ -68,6 +68,8 @@ def infer_document_type(filename: str) -> str:
         return "debt_report"
     elif "sweethearting" in name_lower or ("fielding" in name_lower and ("balance" in name_lower or "ballance" in name_lower)):
         return "procurement_report"
+    elif "gbpa" in name_lower or "arbitration" in name_lower or "award" in name_lower:
+        return "legal_ruling"
     else:
         return "other"
 
