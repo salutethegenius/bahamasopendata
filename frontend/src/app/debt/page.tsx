@@ -64,7 +64,7 @@ export default function DebtPage() {
           National <span className="text-turquoise">Debt</span>
         </h1>
         <p className="text-gray-600">
-          A clear, honest view of the nation's debt — domestic and external obligations.
+          A clear, honest view of the nation&apos;s debt — domestic and external obligations.
         </p>
       </motion.div>
 

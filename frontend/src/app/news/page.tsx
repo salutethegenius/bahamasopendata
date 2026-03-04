@@ -148,7 +148,7 @@ export default function NewsPage() {
           </a>
           <a href="#" className="flex items-center gap-2 text-gray-600 hover:text-turquoise">
             <ExternalLink className="w-4 h-4" />
-            Auditor General's Office
+            Auditor General&apos;s Office
           </a>
           <a href="#" className="flex items-center gap-2 text-gray-600 hover:text-turquoise">
             <ExternalLink className="w-4 h-4" />

@@ -1,10 +1,6 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
-
 export default function ConditionalFooter() {
-  const pathname = usePathname();
-
   return (
     <footer className="bg-white border-t border-gray-200 py-8 mt-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -19,7 +15,17 @@ export default function ConditionalFooter() {
           </div>
           <div className="text-sm text-gray-500 text-center md:text-right">
             <p>Data sourced from Official Bahamas Publications</p>
-            <p>© 2026 Registered. Development by Kemis Group of Companies Inc.</p>
+            <p>
+              © 2026 Registered. Development by{' '}
+              <a
+                href="https://kemisdigital.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-gray-700"
+              >
+                KemisDigital
+              </a>
+            </p>
           </div>
         </div>
       </div>

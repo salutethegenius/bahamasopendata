@@ -169,8 +169,16 @@ export default function Home() {
         ) {
           const json = await historicalRes.value.json();
           if (Array.isArray(json.years)) {
+            type HistoricalYear = {
+              year: string;
+              revenue: number;
+              expenditure: number;
+              debt: number;
+              debt_gdp: number;
+            };
+
             setHistoricalData(
-              json.years.map((y: any) => ({
+              (json.years as HistoricalYear[]).map((y) => ({
                 year: y.year,
                 revenue: y.revenue / 1_000_000_000,
                 expenditure: y.expenditure / 1_000_000_000,
@@ -187,8 +195,14 @@ export default function Home() {
         ) {
           const json = await sectorRes.value.json();
           if (Array.isArray(json.sectors)) {
+            type SectorApi = {
+              name: string;
+              amount: number;
+              color: string;
+            };
+
             setSectorData(
-              json.sectors.map((s: any) => ({
+              (json.sectors as SectorApi[]).map((s) => ({
                 name: s.name,
                 value: s.amount,
                 color: s.color,
@@ -254,16 +268,6 @@ export default function Home() {
 
     fetchData();
   }, []);
-
-  const totalDebt = debt?.total_debt ?? budgetSummary.national_debt;
-  const debtToGdp =
-    debt?.debt_to_gdp_ratio ?? budgetSummary.debt_to_gdp_ratio;
-  const interestCost = debt?.annual_interest_cost ?? 0;
-  const revenueTotal = revenue?.total_revenue ?? null;
-  const interestShare =
-    interestCost && revenueTotal
-      ? (interestCost / revenueTotal) * 100
-      : null;
 
   const healthMinistry = useMemo(
     () =>
@@ -348,8 +352,16 @@ export default function Home() {
           <FileText className="w-4 h-4" />
           <span>Last updated: May 28, 2025</span>
         </div>
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-          Bahamas <span className="text-turquoise">Open Data</span>
+        <h1 className="text-3xl md:text-4xl font-bold text-[var(--ocean)] mb-2">
+          <span className="font-bold text-[var(--ocean)]">
+            Bahamas
+          </span>{' '}
+          <span className="font-light text-[var(--teal)]">
+            Open
+          </span>{' '}
+          <span className="font-semibold text-[var(--ocean)]">
+            Data
+          </span>
         </h1>
         <p className="text-gray-600 max-w-2xl">
           Real-time insights into the Bahamas national budget. See where your money goes, 

@@ -60,8 +60,8 @@
   --color-warning: var(--warning);
   --color-error: var(--error);
   --color-info: var(--info);
-  --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
-  --font-mono: var(--font-geist-mono), monospace;
+  --font-sans: var(--font-sora), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-dm-mono), monospace;
 }
 
 body {

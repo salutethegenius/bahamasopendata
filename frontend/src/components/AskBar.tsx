@@ -333,7 +333,10 @@ export default function AskBar({ onAsk }: AskBarProps) {
                                   </p>
                                   {citation.snippet && (
                                     <p className="text-xs text-gray-500 italic line-clamp-2 border-l-2 border-turquoise/30 pl-2 py-1">
-                                      "{citation.snippet.substring(0, 150)}{citation.snippet.length > 150 ? '...' : ''}"
+                                      &ldquo;
+                                      {citation.snippet.substring(0, 150)}
+                                      {citation.snippet.length > 150 ? '...' : ''}
+                                      &rdquo;
                                     </p>
                                   )}
                                 </div>

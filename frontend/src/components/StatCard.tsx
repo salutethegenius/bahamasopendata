@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { formatCurrency, formatPercent, getChangeColor } from '@/lib/format';
+import { formatCurrency, formatPercent } from '@/lib/format';
 import { FileText, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface StatCardProps {
