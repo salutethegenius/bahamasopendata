@@ -6,10 +6,11 @@ import StatCard from '@/components/StatCard';
 import { formatCurrency, formatPercent } from '@/lib/format';
 import { EconomicIndicator, IncomeComparison } from '@/types';
 import { 
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, Tooltip,
   PieChart, Pie, Cell, CartesianGrid, Legend
 } from 'recharts';
 import { FileText, MapPin, ExternalLink } from 'lucide-react';
+import ResponsiveContainer from '@/components/SafeResponsiveContainer';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
 const COLORS = ['#00CED1', '#FCD116', '#3b82f6', '#10b981', '#f59e0b'];

@@ -1,8 +1,9 @@
 'use client';
 
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { motion } from 'framer-motion';
 import { formatCurrency } from '@/lib/format';
+import ResponsiveContainer from '@/components/SafeResponsiveContainer';
 
 interface SectorData {
   name: string;
@@ -92,4 +93,3 @@ export default function SectorPieChart({ data, title }: SectorPieChartProps) {
     </motion.div>
   );
 }
-

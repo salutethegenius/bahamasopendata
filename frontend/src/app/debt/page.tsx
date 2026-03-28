@@ -1,16 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import StatCard from '@/components/StatCard';
-import { formatCurrency, formatPercent } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
 import styles from '@/app/v2/v2.module.css';
+import { Creditor as DebtCreditor, DebtSummary as DebtSummaryType, RepaymentSchedule as RepaymentScheduleType } from '@/types';
 import { 
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, Tooltip,
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend,
   AreaChart, Area
 } from 'recharts';
-import { TrendingUp, TrendingDown, FileText, AlertTriangle, Building2, Globe } from 'lucide-react';
+import { TrendingDown, FileText, AlertTriangle, Building2, Globe } from 'lucide-react';
+import ResponsiveContainer from '@/components/SafeResponsiveContainer';
 
 const creditors = [
   { name: "Domestic Government Bonds", category: "domestic", amount: 4_500_000_000, percent: 39.1, color: "#00CED1" },
@@ -45,14 +47,94 @@ const historicalDebt = [
 ];
 
 const COLORS = ['#00CED1', '#4FE0E3', '#FCD116', '#FFE04A', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
 
 export default function DebtPage() {
   const [view, setView] = useState<'overview' | 'creditors' | 'schedule' | 'historical'>('overview');
+  const [summary, setSummary] = useState<DebtSummaryType>({
+    total_debt: 11_500_000_000,
+    domestic_debt: 6_200_000_000,
+    external_debt: 5_300_000_000,
+    debt_to_gdp_ratio: 82.5,
+    annual_interest_cost: 580_000_000,
+    change_yoy: 1.8,
+    last_updated: new Date().toISOString(),
+    source_document: "Debt Report 2024-25.pdf",
+  });
+  const [creditorData, setCreditorData] = useState(creditors);
+  const [scheduleData, setScheduleData] = useState(repaymentSchedule);
+  const [historyData, setHistoryData] = useState(historicalDebt);
 
-  const domesticTotal = creditors.filter(c => c.category === 'domestic').reduce((sum, c) => sum + c.amount, 0);
-  const externalTotal = creditors.filter(c => c.category !== 'domestic').reduce((sum, c) => sum + c.amount, 0);
-  const totalDebt = domesticTotal + externalTotal;
+  useEffect(() => {
+    const fetchDebt = async () => {
+      try {
+        const [summaryRes, creditorsRes, scheduleRes, historicalRes] = await Promise.allSettled([
+          fetch(`${API_BASE}/debt/overview`),
+          fetch(`${API_BASE}/debt/creditors`),
+          fetch(`${API_BASE}/debt/repayment-schedule`),
+          fetch(`${API_BASE}/debt/historical`),
+        ]);
 
+        if (summaryRes.status === 'fulfilled' && summaryRes.value.ok) {
+          setSummary(await summaryRes.value.json());
+        }
+
+        if (creditorsRes.status === 'fulfilled' && creditorsRes.value.ok) {
+          const payload: DebtCreditor[] = await creditorsRes.value.json();
+          setCreditorData(
+            payload.map((entry, index) => ({
+              name: entry.name,
+              category: entry.category,
+              amount: entry.amount,
+              percent: entry.percent_of_total,
+              color: COLORS[index % COLORS.length],
+            })),
+          );
+        }
+
+        if (scheduleRes.status === 'fulfilled' && scheduleRes.value.ok) {
+          const payload: RepaymentScheduleType[] = await scheduleRes.value.json();
+          setScheduleData(
+            payload.map((row) => ({
+              year: row.year,
+              principal: row.principal / 1_000_000,
+              interest: row.interest / 1_000_000,
+              total: row.total / 1_000_000,
+            })),
+          );
+        }
+
+        if (historicalRes.status === 'fulfilled' && historicalRes.value.ok) {
+          const payload = await historicalRes.value.json();
+          if (Array.isArray(payload.years)) {
+            setHistoryData(
+              payload.years.map((row: Record<string, number | string>) => ({
+                year: String(row.year ?? ''),
+                total: Number(row.total ?? 0) / 1_000_000_000,
+                domestic: Number(row.domestic ?? 0) / 1_000_000_000,
+                external: Number(row.external ?? 0) / 1_000_000_000,
+                gdpRatio: Number(row.gdp_ratio ?? 0),
+              })),
+            );
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load debt data', error);
+      }
+    };
+
+    void fetchDebt();
+  }, []);
+
+  const domesticTotal = summary.domestic_debt || creditorData.filter(c => c.category === 'domestic').reduce((sum, c) => sum + c.amount, 0);
+  const externalTotal = summary.external_debt || creditorData.filter(c => c.category !== 'domestic').reduce((sum, c) => sum + c.amount, 0);
+  const debtTotal = summary.total_debt || domesticTotal + externalTotal;
+  const domesticShare = debtTotal ? (domesticTotal / debtTotal) * 100 : 0;
+  const externalShare = debtTotal ? (externalTotal / debtTotal) * 100 : 0;
+  const totalPrincipalRepayment = scheduleData.reduce((sum, row) => sum + row.principal, 0);
+  const totalInterestRepayment = scheduleData.reduce((sum, row) => sum + row.interest, 0);
+  const totalRepayment = scheduleData.reduce((sum, row) => sum + row.total, 0);
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
@@ -74,25 +156,24 @@ export default function DebtPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
           title="Total National Debt"
-          value={11_500_000_000}
-          change={1.8}
-          sourceDocument="Debt Report 2024-25.pdf"
+          value={summary.total_debt}
+          change={summary.change_yoy}
+          sourceDocument={summary.source_document}
         />
         <StatCard
           title="Debt to GDP"
-          value={82.5}
+          value={summary.debt_to_gdp_ratio}
           format="percent"
-          change={-0.3}
-          subtitle="Improving trend"
+          subtitle="Current published ratio"
         />
         <StatCard
           title="Annual Interest"
-          value={580_000_000}
+          value={summary.annual_interest_cost}
           subtitle="Cost of servicing debt"
         />
         <StatCard
           title="5-Year Repayment"
-          value={5_590_000_000}
+          value={totalRepayment * 1_000_000}
           subtitle="Principal + Interest"
         />
       </div>
@@ -131,7 +212,7 @@ export default function DebtPage() {
                   <span className="text-sm font-medium text-gray-600">Domestic</span>
                 </div>
                 <p className="text-2xl font-bold text-gray-900">{formatCurrency(domesticTotal, true)}</p>
-                <p className="text-sm text-gray-500">53.9% of total</p>
+                <p className="text-sm text-gray-500">{domesticShare.toFixed(1)}% of total</p>
               </div>
               <div className="bg-yellow/10 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -139,12 +220,12 @@ export default function DebtPage() {
                   <span className="text-sm font-medium text-gray-600">External</span>
                 </div>
                 <p className="text-2xl font-bold text-gray-900">{formatCurrency(externalTotal, true)}</p>
-                <p className="text-sm text-gray-500">46.1% of total</p>
+                <p className="text-sm text-gray-500">{externalShare.toFixed(1)}% of total</p>
               </div>
             </div>
             <div className="h-4 bg-gray-100 rounded-full overflow-hidden flex">
-              <div className="bg-turquoise h-full" style={{ width: '53.9%' }}></div>
-              <div className="bg-yellow h-full" style={{ width: '46.1%' }}></div>
+              <div className="bg-turquoise h-full" style={{ width: `${domesticShare}%` }}></div>
+              <div className="bg-yellow h-full" style={{ width: `${externalShare}%` }}></div>
             </div>
           </motion.div>
 
@@ -163,7 +244,7 @@ export default function DebtPage() {
             </div>
             <div className="h-[200px]">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={historicalDebt.slice(-5)}>
+                <AreaChart data={historyData.slice(-5)}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis dataKey="year" tick={{ fontSize: 11 }} />
                   <YAxis domain={[75, 90]} tickFormatter={(v) => `${v}%`} tick={{ fontSize: 11 }} />
@@ -202,14 +283,14 @@ export default function DebtPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={creditors}
+                    data={creditorData}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
                     outerRadius={100}
                     dataKey="amount"
                   >
-                    {creditors.map((entry, index) => (
+                    {creditorData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -226,7 +307,7 @@ export default function DebtPage() {
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">By Creditor</h3>
             <div className="space-y-3 max-h-[350px] overflow-y-auto">
-              {creditors.map((creditor, i) => (
+              {creditorData.map((creditor, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <div 
                     className="w-3 h-3 rounded-full flex-shrink-0"
@@ -265,7 +346,7 @@ export default function DebtPage() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">5-Year Repayment Schedule (Millions)</h3>
           <div className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={repaymentSchedule}>
+            <BarChart data={scheduleData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="year" />
                 <YAxis tickFormatter={(v) => `$${v}M`} />
@@ -276,21 +357,27 @@ export default function DebtPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="mt-4 grid grid-cols-3 gap-4 text-center">
-            <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-sm text-gray-500">Total Principal</p>
-              <p className="text-lg font-bold text-turquoise">$2.92B</p>
+            <div className="mt-4 grid grid-cols-3 gap-4 text-center">
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-sm text-gray-500">Total Principal</p>
+                <p className="text-lg font-bold text-turquoise">
+                  {formatCurrency(totalPrincipalRepayment * 1_000_000, true)}
+                </p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-sm text-gray-500">Total Interest</p>
+                <p className="text-lg font-bold text-yellow-600">
+                  {formatCurrency(totalInterestRepayment * 1_000_000, true)}
+                </p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-sm text-gray-500">Total Repayment</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {formatCurrency(totalRepayment * 1_000_000, true)}
+                </p>
+              </div>
             </div>
-            <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-sm text-gray-500">Total Interest</p>
-              <p className="text-lg font-bold text-yellow-600">$2.67B</p>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-sm text-gray-500">Total Repayment</p>
-              <p className="text-lg font-bold text-gray-900">$5.59B</p>
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
       )}
 
       {/* Historical */}
@@ -303,7 +390,7 @@ export default function DebtPage() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">10-Year Debt History (Billions)</h3>
           <div className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={historicalDebt}>
+                <LineChart data={historyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="year" tick={{ fontSize: 11 }} />
                 <YAxis tickFormatter={(v) => `$${v}B`} />
@@ -321,9 +408,8 @@ export default function DebtPage() {
       {/* Source */}
       <div className="mt-6 flex items-center gap-2 text-sm text-gray-500">
         <FileText className="w-4 h-4" />
-        <span>Source: Debt Report 2024-25.pdf, Central Bank Quarterly Bulletin</span>
+        <span>Source: {summary.source_document}</span>
       </div>
     </div>
   );
 }
-

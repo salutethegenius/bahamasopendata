@@ -1,14 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import StatCard from '@/components/StatCard';
 import { formatCurrency, formatPercent } from '@/lib/format';
+import { RevenueBreakdown } from '@/types';
 import { 
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, Tooltip,
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend
 } from 'recharts';
 import { TrendingUp, Calendar, FileText } from 'lucide-react';
+import ResponsiveContainer from '@/components/SafeResponsiveContainer';
 
 const revenueData = [
   { name: "Value Added Tax (VAT)", amount: 1_100_000_000, percent: 38.6, change: 6.5, color: "#00CED1" },
@@ -37,10 +39,83 @@ const historicalData = [
   { year: "2024/25", total: 2.85, vat: 1.10, customs: 0.65, tourism: 0.42 },
 ];
 
-const totalRevenue = revenueData.reduce((sum, r) => sum + r.amount, 0);
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
 
 export default function RevenuePage() {
   const [view, setView] = useState<'breakdown' | 'monthly' | 'historical'>('breakdown');
+  const [breakdown, setBreakdown] = useState<RevenueBreakdown>({
+    fiscal_year: "2024/25",
+    total_revenue: revenueData.reduce((sum, r) => sum + r.amount, 0),
+    sources: revenueData.map((item) => ({
+      name: item.name,
+      amount: item.amount,
+      percent_of_total: item.percent,
+      change_yoy: item.change,
+    })),
+    last_updated: new Date().toISOString(),
+    source_document: "Budget Book 2024-25.pdf",
+  });
+  const [monthly, setMonthly] = useState(monthlyData);
+  const [historical, setHistorical] = useState(historicalData);
+
+  useEffect(() => {
+    const fetchRevenue = async () => {
+      try {
+        const [breakdownRes, monthlyRes, historicalRes] = await Promise.allSettled([
+          fetch(`${API_BASE}/revenue`),
+          fetch(`${API_BASE}/revenue/monthly`),
+          fetch(`${API_BASE}/revenue/historical`),
+        ]);
+
+        if (breakdownRes.status === 'fulfilled' && breakdownRes.value.ok) {
+          setBreakdown(await breakdownRes.value.json());
+        }
+
+        if (monthlyRes.status === 'fulfilled' && monthlyRes.value.ok) {
+          const payload = await monthlyRes.value.json();
+          if (Array.isArray(payload.monthly_data)) {
+            setMonthly(
+              payload.monthly_data.map((row: Record<string, number | string>) => ({
+                month: String(row.month ?? ''),
+                vat: Number(row.vat ?? 0),
+                customs: Number(row.customs ?? 0),
+                tourism: Number(row.tourism ?? 0),
+                other: Number(row.other ?? 0),
+              })),
+            );
+          }
+        }
+
+        if (historicalRes.status === 'fulfilled' && historicalRes.value.ok) {
+          const payload = await historicalRes.value.json();
+          if (Array.isArray(payload.years)) {
+            setHistorical(
+              payload.years.map((row: Record<string, number | string>) => ({
+                year: String(row.year ?? ''),
+                total: Number(row.total ?? 0) / 1_000_000_000,
+                vat: Number(row.vat ?? 0) / 1_000_000_000,
+                customs: Number(row.customs ?? 0) / 1_000_000_000,
+                tourism: Number(row.tourism ?? 0) / 1_000_000_000,
+              })),
+            );
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load revenue data', error);
+      }
+    };
+
+    void fetchRevenue();
+  }, []);
+
+  const revenueChartData = breakdown.sources.map((source, index) => ({
+    name: source.name,
+    amount: source.amount,
+    percent: source.percent_of_total,
+    change: source.change_yoy,
+    color: revenueData[index]?.color ?? "#00CED1",
+  }));
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -62,27 +137,27 @@ export default function RevenuePage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
           title="Total Revenue"
-          value={totalRevenue}
+          value={breakdown.total_revenue}
           change={5.2}
-          sourceDocument="Budget Book 2024-25.pdf"
+          sourceDocument={breakdown.source_document}
         />
         <StatCard
           title="VAT Collection"
-          value={1_100_000_000}
-          change={6.5}
-          subtitle="38.6% of total"
+          value={revenueChartData.find((source) => source.name.toLowerCase().includes('vat'))?.amount ?? 0}
+          change={revenueChartData.find((source) => source.name.toLowerCase().includes('vat'))?.change ?? 0}
+          subtitle={`${revenueChartData.find((source) => source.name.toLowerCase().includes('vat'))?.percent ?? 0}% of total`}
         />
         <StatCard
           title="Tourism Revenue"
-          value={420_000_000}
-          change={12.5}
-          subtitle="14.7% of total"
+          value={revenueChartData.find((source) => source.name.toLowerCase().includes('tour'))?.amount ?? 0}
+          change={revenueChartData.find((source) => source.name.toLowerCase().includes('tour'))?.change ?? 0}
+          subtitle={`${revenueChartData.find((source) => source.name.toLowerCase().includes('tour'))?.percent ?? 0}% of total`}
         />
         <StatCard
           title="Customs Duties"
-          value={650_000_000}
-          change={4.2}
-          subtitle="22.8% of total"
+          value={revenueChartData.find((source) => source.name.toLowerCase().includes('custom'))?.amount ?? 0}
+          change={revenueChartData.find((source) => source.name.toLowerCase().includes('custom'))?.change ?? 0}
+          subtitle={`${revenueChartData.find((source) => source.name.toLowerCase().includes('custom'))?.percent ?? 0}% of total`}
         />
       </div>
 
@@ -117,7 +192,7 @@ export default function RevenuePage() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={revenueData}
+                    data={revenueChartData}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -125,7 +200,7 @@ export default function RevenuePage() {
                     paddingAngle={2}
                     dataKey="amount"
                   >
-                    {revenueData.map((entry, index) => (
+                    {revenueChartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -145,7 +220,7 @@ export default function RevenuePage() {
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">By Source</h3>
             <div className="space-y-3">
-              {revenueData.map((source, i) => (
+              {revenueChartData.map((source, i) => (
                 <div key={i} className="flex items-center gap-4">
                   <div 
                     className="w-3 h-3 rounded-full flex-shrink-0"
@@ -192,7 +267,7 @@ export default function RevenuePage() {
           </div>
           <div className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyData}>
+              <BarChart data={monthly}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="month" />
                 <YAxis tickFormatter={(v) => `$${v}M`} />
@@ -223,7 +298,7 @@ export default function RevenuePage() {
           </div>
           <div className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={historicalData}>
+              <LineChart data={historical}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="year" />
                 <YAxis tickFormatter={(v) => `$${v}B`} />
@@ -242,9 +317,8 @@ export default function RevenuePage() {
       {/* Source */}
       <div className="mt-6 flex items-center gap-2 text-sm text-gray-500">
         <FileText className="w-4 h-4" />
-        <span>Source: Budget Book 2024-25.pdf, Revenue Report Q2 2024-25.pdf</span>
+        <span>Source: {breakdown.source_document}</span>
       </div>
     </div>
   );
 }
-

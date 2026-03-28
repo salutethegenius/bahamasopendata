@@ -2,6 +2,7 @@
 node_modules/
 venv/
 .venv/
+.venv311/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -80,6 +81,7 @@ data/raw/*.pdf
 data/processed/*.json
 data/processed/*.csv
 data/embeddings/*.json
+data/ingestion_status.json
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !data/embeddings/.gitkeep
@@ -118,4 +120,3 @@ temp/
 .Python
 *.manifest
 *.spec
-

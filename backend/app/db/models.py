@@ -207,6 +207,27 @@ class NewsItem(Base):
     created_at = Column(DateTime, default=func.now())
 
 
+class PublishedNewsItem(Base):
+    """News items created from the document upload/publish workflow."""
+    __tablename__ = "published_news_items"
+
+    id = Column(Integer, primary_key=True)
+    title = Column(String(500), nullable=False)
+    source = Column(String(255))
+    url = Column(Text)
+    published_date = Column(Date)
+    summary = Column(Text)
+    category = Column(String(100))
+    source_document_id = Column(Integer, ForeignKey("documents.id"))
+    source_page = Column(Integer)
+    created_at = Column(DateTime, default=func.now())
+
+    __table_args__ = (
+        Index("idx_published_news_created", "created_at"),
+        Index("idx_published_news_category", "category"),
+    )
+
+
 class UserFeedback(Base):
     """User-submitted data corrections and feedback."""
     __tablename__ = "user_feedback"
@@ -245,6 +266,73 @@ class EconomicIndicator(Base):
         Index("idx_economic_island", "island"),
         Index("idx_economic_year", "year"),
         Index("idx_economic_type_island_year", "indicator_type", "island", "year"),
+    )
+
+
+class PublishedEconomicIndicator(Base):
+    """Economic indicators published from uploaded documents or structured data."""
+    __tablename__ = "published_economic_indicators"
+
+    id = Column(Integer, primary_key=True)
+    indicator_type = Column(String(50), nullable=False)
+    island = Column(String(50), nullable=False)
+    year = Column(Integer, nullable=False)
+    month_amount = Column(Float, nullable=False)
+    annual_amount = Column(Float, nullable=False)
+    breakdown = Column(JSON)
+    source_document = Column(String(500))
+    source_url = Column(Text)
+    author = Column(String(255))
+    published_date = Column(Date)
+    source_document_id = Column(Integer, ForeignKey("documents.id"))
+    created_at = Column(DateTime, default=func.now())
+
+    __table_args__ = (
+        Index("idx_published_economic_type", "indicator_type"),
+        Index("idx_published_economic_island", "island"),
+        Index("idx_published_economic_year", "year"),
+        Index("idx_published_economic_type_island_year", "indicator_type", "island", "year"),
+    )
+
+
+class IslandAllocation(Base):
+    """Published island-level allocations and profile data."""
+    __tablename__ = "island_allocations"
+
+    id = Column(Integer, primary_key=True)
+    island_id = Column(String(80), nullable=False, unique=True)
+    name = Column(String(255), nullable=False)
+    capital = Column(String(255))
+    population = Column(Integer)
+    total_allocation = Column(Float, nullable=False, default=0.0)
+    source_document_id = Column(Integer, ForeignKey("documents.id"))
+    created_at = Column(DateTime, default=func.now())
+
+    projects = relationship("IslandProject", back_populates="island", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        Index("idx_island_allocations_name", "name"),
+    )
+
+
+class IslandProject(Base):
+    """Published capital/service projects associated with an island."""
+    __tablename__ = "island_projects"
+
+    id = Column(Integer, primary_key=True)
+    island_id = Column(Integer, ForeignKey("island_allocations.id", ondelete="CASCADE"), nullable=False)
+    project_name = Column(String(500), nullable=False)
+    category = Column(String(100))
+    amount = Column(Float, nullable=False, default=0.0)
+    source_document_id = Column(Integer, ForeignKey("documents.id"))
+    source_page = Column(Integer)
+    created_at = Column(DateTime, default=func.now())
+
+    island = relationship("IslandAllocation", back_populates="projects")
+
+    __table_args__ = (
+        Index("idx_island_projects_island", "island_id"),
+        Index("idx_island_projects_category", "category"),
     )
     
 
@@ -308,4 +396,82 @@ class PollVote(Base):
             "fingerprint",
             unique=True,
         ),
+    )
+
+
+class AdminUser(Base):
+    """Admin users who can manage data via the admin panel."""
+    __tablename__ = "admin_users"
+
+    id = Column(Integer, primary_key=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    hashed_password = Column(String(255), nullable=False)
+    full_name = Column(String(255))
+    role = Column(String(20), nullable=False)  # "superuser" or "admin"
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    last_login_at = Column(DateTime)
+
+    refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
+    audit_logs = relationship("AuditLog", back_populates="user")
+    api_keys = relationship("IngestionApiKey", back_populates="created_by_user", cascade="all, delete-orphan")
+
+
+class RefreshToken(Base):
+    """JWT refresh tokens for session management."""
+    __tablename__ = "refresh_tokens"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("admin_users.id", ondelete="CASCADE"), nullable=False)
+    token_hash = Column(String(64), unique=True, nullable=False)  # SHA-256 of raw token
+    expires_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=func.now())
+    revoked_at = Column(DateTime)
+    ip_address = Column(String(45))  # IPv6-safe length
+
+    user = relationship("AdminUser", back_populates="refresh_tokens")
+
+    __table_args__ = (
+        Index("idx_refresh_tokens_user_id", "user_id"),
+        Index("idx_refresh_tokens_hash", "token_hash"),
+    )
+
+
+class IngestionApiKey(Base):
+    """Long-lived API keys for ingestion clients, agents, and scripts."""
+    __tablename__ = "ingestion_api_keys"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(255), nullable=False)
+    description = Column(Text)
+    key_prefix = Column(String(32), nullable=False, index=True)
+    key_hash = Column(String(64), nullable=False, unique=True, index=True)
+    is_active = Column(Boolean, default=True)
+    created_by_user_id = Column(Integer, ForeignKey("admin_users.id", ondelete="SET NULL"))
+    created_at = Column(DateTime, default=func.now())
+    last_used_at = Column(DateTime)
+    revoked_at = Column(DateTime)
+
+    created_by_user = relationship("AdminUser", back_populates="api_keys")
+
+
+class AuditLog(Base):
+    """Audit trail for all admin actions."""
+    __tablename__ = "audit_log"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("admin_users.id", ondelete="SET NULL"))
+    action = Column(String(50), nullable=False)  # create, update, delete, login, upload
+    resource_type = Column(String(50), nullable=False)  # e.g. "budget_items", "user", "poll"
+    resource_id = Column(String(50))
+    details = Column(JSON)  # diff or payload summary
+    ip_address = Column(String(45))
+    created_at = Column(DateTime, default=func.now())
+
+    user = relationship("AdminUser", back_populates="audit_logs")
+
+    __table_args__ = (
+        Index("idx_audit_user_created", "user_id", "created_at"),
+        Index("idx_audit_resource_created", "resource_type", "created_at"),
     )

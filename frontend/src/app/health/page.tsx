@@ -8,16 +8,16 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
 } from 'recharts';
-import { MinistryDetail, AskResponse } from '@/types';
+import { Ministry, MinistryDetail, AskResponse } from '@/types';
 import { formatCurrency, formatPercent } from '@/lib/format';
 import { Activity, HeartPulse, FileText, AlertCircle, MapPin } from 'lucide-react';
 import AskBar from '@/components/AskBar';
-import { islands } from '@/data/islands';
+import ResponsiveContainer from '@/components/SafeResponsiveContainer';
+import { islands as fallbackIslands, type Island } from '@/data/islands';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
 
@@ -32,11 +32,14 @@ type SectorBreakdownResponse = {
 export default function HealthPage() {
   const [detail, setDetail] = useState<MinistryDetail | null>(null);
   const [sectorData, setSectorData] = useState<SectorBreakdownResponse | null>(null);
+  const [totalPublishedAllocations, setTotalPublishedAllocations] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [healthProjects] = useState(() => {
-    return islands.flatMap((island) =>
+  const [projectIslands, setProjectIslands] = useState<Island[]>(fallbackIslands);
+
+  const healthProjects = useMemo(() => {
+    return projectIslands.flatMap((island) =>
       island.projects
         .filter((p) => p.category === 'health')
         .map((p) => ({
@@ -46,7 +49,7 @@ export default function HealthPage() {
           amount: p.amount,
         })),
     );
-  });
+  }, [projectIslands]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,21 +57,48 @@ export default function HealthPage() {
         setIsLoading(true);
         setError(null);
 
-        const [ministryRes, sectorRes] = await Promise.all([
-          fetch(`${API_BASE}/ministries/health`),
+        const [ministriesRes, sectorRes, islandsRes] = await Promise.all([
+          fetch(`${API_BASE}/ministries`),
           fetch(`${API_BASE}/budget/sector-breakdown`),
+          fetch(`${API_BASE}/islands`),
         ]);
 
-        if (!ministryRes.ok) {
-          throw new Error('Failed to load Ministry of Health data.');
+        if (!ministriesRes.ok) {
+          throw new Error('Failed to load ministry data.');
         }
 
         if (!sectorRes.ok) {
           throw new Error('Failed to load sector breakdown data.');
         }
 
+        const ministriesJson = (await ministriesRes.json()) as Ministry[];
+        setTotalPublishedAllocations(
+          ministriesJson.reduce((sum, ministry) => sum + ministry.allocation, 0),
+        );
+        const healthMinistry = ministriesJson.find(
+          (ministry) =>
+            ministry.id === 'health' ||
+            ministry.sector.toLowerCase() === 'health' ||
+            ministry.name.toLowerCase().includes('health'),
+        );
+
+        if (!healthMinistry) {
+          throw new Error('No published health ministry allocation was found.');
+        }
+
+        const ministryRes = await fetch(`${API_BASE}/ministries/${healthMinistry.id}`);
+        if (!ministryRes.ok) {
+          throw new Error('Failed to load Ministry of Health detail.');
+        }
+
         const ministryJson = await ministryRes.json();
         const sectorJson = (await sectorRes.json()) as SectorBreakdownResponse;
+        if (islandsRes.ok) {
+          const islandsJson = (await islandsRes.json()) as Island[];
+          if (Array.isArray(islandsJson) && islandsJson.length > 0) {
+            setProjectIslands(islandsJson);
+          }
+        }
 
         setDetail(ministryJson);
         setSectorData(sectorJson);
@@ -89,7 +119,9 @@ export default function HealthPage() {
   const healthShare =
     sectorData && healthSector
       ? healthSector.amount / sectorData.total
-      : null;
+      : detail && totalPublishedAllocations > 0
+        ? detail.allocation / totalPublishedAllocations
+        : null;
 
   const totalHealthProjectsAmount = useMemo(
     () =>
@@ -254,7 +286,7 @@ export default function HealthPage() {
                       innerRadius={50}
                       outerRadius={80}
                     >
-                      {['#00CED1', '#FCD116', '#3b82f6', '#10b981'].map((color, idx) => (
+                      {['#00CED1', '#FCD116', '#3b82f6', '#10b981'].map((color) => (
                         <Cell key={color} fill={color} />
                       ))}
                     </Pie>
@@ -374,7 +406,8 @@ export default function HealthPage() {
           <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-8">
             <FileText className="w-4 h-4" />
             <span>
-              Source: {detail.source_document}, page {detail.source_page}
+              Source: {detail.source_document}
+              {detail.source_page > 0 ? `, page ${detail.source_page}` : ''}
             </span>
           </div>
 
@@ -395,4 +428,3 @@ export default function HealthPage() {
     </div>
   );
 }
-

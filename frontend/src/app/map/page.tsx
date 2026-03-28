@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { formatCurrency } from '@/lib/format';
-import { islands } from '@/data/islands';
+import { islands as fallbackIslands, type Island } from '@/data/islands';
 import { MapPin, Building, School, Heart, Shield, Construction, FileText } from 'lucide-react';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
 
 const categoryIcons: Record<string, typeof School> = {
   education: School,
@@ -21,8 +23,26 @@ const categoryColors: Record<string, string> = {
 };
 
 export default function MapPage() {
+  const [islands, setIslands] = useState<Island[]>(fallbackIslands);
   const [selectedIsland, setSelectedIsland] = useState<string | null>(null);
   const selected = islands.find(i => i.id === selectedIsland);
+
+  useEffect(() => {
+    const loadIslands = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/islands`);
+        if (!response.ok) return;
+        const payload = (await response.json()) as Island[];
+        if (Array.isArray(payload) && payload.length > 0) {
+          setIslands(payload);
+        }
+      } catch {
+        // Fallback stays in place when live island data has not been published yet.
+      }
+    };
+
+    loadIslands();
+  }, []);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -188,4 +208,3 @@ export default function MapPage() {
     </div>
   );
 }
-

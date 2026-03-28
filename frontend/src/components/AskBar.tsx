@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Send, X, FileText, BarChart3, Loader2, ExternalLink, Flame } from 'lucide-react';
 import { AskResponse } from '@/types';
 import { formatCurrency } from '@/lib/format';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+import ResponsiveContainer from '@/components/SafeResponsiveContainer';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
 
@@ -403,4 +404,3 @@ export default function AskBar({ onAsk }: AskBarProps) {
     </>
   );
 }
-

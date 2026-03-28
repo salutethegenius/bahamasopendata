@@ -5,23 +5,19 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import StatCard from '@/components/StatCard';
 import SectorPieChart from '@/components/SectorPieChart';
-import MinistryCard from '@/components/MinistryCard';
 import AskBar from '@/components/AskBar';
 import DashboardSectionCard from '@/components/DashboardSectionCard';
+import ResponsiveContainer from '@/components/SafeResponsiveContainer';
 import { formatCurrency, formatPercent } from '@/lib/format';
 import {
   Ministry,
   AskResponse,
-  RevenueBreakdown,
-  DebtSummary,
   IncomeComparison,
   Poll,
+  NewsItem,
 } from '@/types';
 import { initialBudgetSummary, initialMinistries } from '@/data/budget';
-import { 
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  LineChart, Line, CartesianGrid, Legend
-} from 'recharts';
+import { XAxis, YAxis, Tooltip, LineChart, Line, CartesianGrid } from 'recharts';
 import { TrendingUp, Calendar, FileText, AlertCircle, HeartPulse, DollarSign, BarChart3, Newspaper, Flame, Building2 } from 'lucide-react';
 import { newsItems } from '@/data/news';
 
@@ -34,6 +30,16 @@ type HotTopicSummary = {
   stat_count?: number;
   chart_count?: number;
   highlight_count?: number;
+};
+
+type DashboardNewsItem = {
+  id: number;
+  title: string;
+  source: string;
+  url: string;
+  summary: string;
+  category: string;
+  published_date: string;
 };
 
 const API_BASE =
@@ -58,14 +64,6 @@ const initialHistoricalData = [
   { year: "2023/24", revenue: 3.07, expenditure: 3.26, debt: 11.31, debt_gdp: 72.7 },
   { year: "2024/25", revenue: 3.54, expenditure: 3.61, debt: 11.46, debt_gdp: 71.4 },
   { year: "2025/26", revenue: 3.89, expenditure: 3.82, debt: 11.39, debt_gdp: 68.9 },
-];
-
-// Budget priorities from Budget Communication
-const budgetPriorities = [
-  { name: "Security", description: "National security and personal safety", icon: "🛡️" },
-  { name: "Opportunity", description: "Growing the economy and investing in people", icon: "📈" },
-  { name: "Affordability", description: "Combating inflation and lowering prices", icon: "💰" },
-  { name: "Reform", description: "Fiscal discipline and modernizing government", icon: "⚙️" },
 ];
 
 // Real API ask function - lazy load to avoid SSR issues
@@ -97,13 +95,22 @@ export default function Home() {
   const [sectorData, setSectorData] = useState(initialSectorData);
   const [historicalData, setHistoricalData] =
     useState(initialHistoricalData);
-  const [revenue, setRevenue] = useState<RevenueBreakdown | null>(null);
-  const [debt, setDebt] = useState<DebtSummary | null>(null);
   const [incomeComparisons, setIncomeComparisons] = useState<
     IncomeComparison[] | null
   >(null);
   const [activePoll, setActivePoll] = useState<Poll | null>(null);
   const [hotTopics, setHotTopics] = useState<HotTopicSummary[] | null>(null);
+  const [latestNewsItems, setLatestNewsItems] = useState<DashboardNewsItem[]>(
+    newsItems.map((item) => ({
+      id: item.id,
+      title: item.title,
+      source: item.source,
+      url: item.url,
+      summary: item.summary,
+      category: item.category,
+      published_date: item.date,
+    })),
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -118,6 +125,7 @@ export default function Home() {
           economicRes,
           pollsRes,
           hotTopicsRes,
+          newsRes,
         ] = await Promise.allSettled([
           fetch(`${API_BASE}/budget/summary`),
           fetch(`${API_BASE}/budget/historical`),
@@ -128,6 +136,7 @@ export default function Home() {
           fetch(`${API_BASE}/economic/comparison`),
           fetch(`${API_BASE}/polls/active`),
           fetch(`${API_BASE}/hot-topics/reports`),
+          fetch(`${API_BASE}/news`),
         ]);
 
         if (
@@ -199,17 +208,12 @@ export default function Home() {
           }
         }
 
-        if (
-          revenueRes.status === 'fulfilled' &&
-          revenueRes.value.ok
-        ) {
-          const json = await revenueRes.value.json();
-          setRevenue(json);
+        if (revenueRes.status === 'fulfilled' && revenueRes.value.ok) {
+          await revenueRes.value.json();
         }
 
         if (debtRes.status === 'fulfilled' && debtRes.value.ok) {
-          const json = await debtRes.value.json();
-          setDebt(json);
+          await debtRes.value.json();
         }
 
         if (
@@ -237,6 +241,16 @@ export default function Home() {
           const json = await hotTopicsRes.value.json();
           if (Array.isArray(json)) {
             setHotTopics(json);
+          }
+        }
+
+        if (
+          newsRes.status === 'fulfilled' &&
+          newsRes.value.ok
+        ) {
+          const json = await newsRes.value.json();
+          if (Array.isArray(json) && json.length > 0) {
+            setLatestNewsItems(json as NewsItem[]);
           }
         }
       } catch (err) {
@@ -272,48 +286,11 @@ export default function Home() {
   );
 
   const latestNews = useMemo(
-    () => newsItems.slice(0, 3),
-    [],
+    () => latestNewsItems.slice(0, 3),
+    [latestNewsItems],
   );
 
   const firstHotTopic = hotTopics && hotTopics.length > 0 ? hotTopics[0] : null;
-
-  const handleMinistryClick = (ministryId: string) => {
-    // #region agent log
-    fetch('http://localhost:7242/ingest/9b91e0da-2b25-4d4b-8286-9d38d86a8b2c', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        location: 'page.tsx:79',
-        message: 'Ministry card clicked',
-        data: { ministryId },
-        timestamp: Date.now(),
-        sessionId: 'debug-session',
-        runId: 'run1',
-        hypothesisId: 'A'
-      })
-    }).catch(() => {});
-    // #endregion agent log
-    
-    // Navigate to ministries page with query parameter
-    router.push(`/ministries?ministry=${ministryId}`);
-    
-    // #region agent log
-    fetch('http://localhost:7242/ingest/9b91e0da-2b25-4d4b-8286-9d38d86a8b2c', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        location: 'page.tsx:88',
-        message: 'Navigation triggered',
-        data: { url: `/ministries?ministry=${ministryId}` },
-        timestamp: Date.now(),
-        sessionId: 'debug-session',
-        runId: 'run1',
-        hypothesisId: 'B'
-      })
-    }).catch(() => {});
-    // #endregion agent log
-  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

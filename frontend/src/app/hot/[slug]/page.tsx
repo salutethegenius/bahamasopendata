@@ -10,7 +10,6 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
   Legend,
   CartesianGrid,
   Cell,
@@ -28,6 +27,7 @@ import {
   ChevronUp,
   AlertTriangle,
 } from 'lucide-react';
+import ResponsiveContainer from '@/components/SafeResponsiveContainer';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
 

@@ -1,22 +1,51 @@
 'use client';
 
-import { useState } from 'react';
+import { type ComponentType, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { formatDate } from '@/lib/format';
 import {
   Newspaper,
   Calendar,
   ExternalLink,
-  Filter
+  Filter,
+  FileText,
+  TrendingUp,
+  AlertCircle,
+  Building2,
 } from 'lucide-react';
 import { newsItems } from '@/data/news';
 import styles from '@/app/v2/v2.module.css';
+import type { NewsItem } from '@/types';
 
-const categories = ["All", "Budget", "Revenue", "Debt", "Audit", "Economic", "Policy"];
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
+
+type DisplayNewsItem = {
+  id: number;
+  title: string;
+  source: string;
+  url: string;
+  summary: string;
+  category: string;
+  published_date: string;
+  icon?: ComponentType<{ className?: string }>;
+};
+
+const fallbackIcons: Record<string, ComponentType<{ className?: string }>> = {
+  Budget: FileText,
+  Revenue: TrendingUp,
+  Debt: TrendingUp,
+  Audit: AlertCircle,
+  Economic: TrendingUp,
+  Policy: Building2,
+};
+
+const categories = ["All", "Budget", "Health", "Revenue", "Debt", "Audit", "Economic", "Policy"];
 
 const categoryColors: Record<string, string> = {
   Budget: "bg-turquoise/10 text-turquoise",
   Revenue: "bg-green-100 text-green-700",
+  Health: "bg-rose-100 text-rose-700",
   Debt: "bg-yellow-100 text-yellow-700",
   Audit: "bg-red-100 text-red-700",
   Economic: "bg-blue-100 text-blue-700",
@@ -25,10 +54,39 @@ const categoryColors: Record<string, string> = {
 
 export default function NewsPage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [items, setItems] = useState<DisplayNewsItem[]>(
+    newsItems.map((item) => ({
+      id: item.id,
+      title: item.title,
+      source: item.source,
+      url: item.url,
+      summary: item.summary,
+      category: item.category,
+      published_date: item.date,
+      icon: item.icon,
+    })),
+  );
+
+  useEffect(() => {
+    const loadNews = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/news`);
+        if (!response.ok) return;
+        const payload = await response.json();
+        if (Array.isArray(payload) && payload.length > 0) {
+          setItems(payload as NewsItem[]);
+        }
+      } catch (error) {
+        console.error('Failed to load news feed', error);
+      }
+    };
+
+    void loadNews();
+  }, []);
 
   const filteredNews = selectedCategory === "All" 
-    ? newsItems 
-    : newsItems.filter(n => n.category === selectedCategory);
+    ? items 
+    : items.filter(n => n.category === selectedCategory);
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -77,7 +135,7 @@ export default function NewsPage() {
       {/* News List */}
       <div className="space-y-4">
         {filteredNews.map((item, i) => {
-          const Icon = item.icon;
+          const Icon = item.icon ?? fallbackIcons[item.category] ?? Newspaper;
           return (
             <motion.article
               key={item.id}
@@ -97,7 +155,7 @@ export default function NewsPage() {
                     </span>
                     <span className="text-xs text-gray-400 flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      {formatDate(item.date)}
+                      {formatDate(item.published_date)}
                     </span>
                   </div>
                   <h2 className="text-lg font-semibold text-gray-900 mb-1">
@@ -161,4 +219,3 @@ export default function NewsPage() {
     </div>
   );
 }
-

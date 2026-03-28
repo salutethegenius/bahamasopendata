@@ -1,6 +1,7 @@
 'use client';
 
-import { Line, LineChart, ResponsiveContainer } from 'recharts';
+import { Line, LineChart } from 'recharts';
+import ResponsiveContainer from '@/components/SafeResponsiveContainer';
 
 interface SparklineChartProps {
   data: number[];
@@ -29,4 +30,3 @@ export default function SparklineChart({
     </ResponsiveContainer>
   );
 }
-

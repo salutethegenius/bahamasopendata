@@ -6,7 +6,7 @@ export default function ConditionalFooter() {
   const pathname = usePathname();
 
   // V2 marketing page renders its own footer shell
-  if (pathname.startsWith('/v2')) {
+  if (pathname.startsWith('/v2') || pathname.startsWith('/admin')) {
     return null;
   }
 
@@ -41,4 +41,3 @@ export default function ConditionalFooter() {
     </footer>
   );
 }
-

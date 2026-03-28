@@ -7,22 +7,28 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import (
+    auth,
     ask,
     budget,
     debt,
     documents,
     economic,
     export,
+    future_updates,
     hot_topics,
+    ingestion,
+    islands,
     ministries,
+    news,
     polls,
     revenue,
 )
 from sqlalchemy import select
 
 from app.core.config import settings
+from app.core.security import ensure_jwt_key_pair, hash_password, validate_password
 from app.db.database import AsyncSessionLocal, engine
-from app.db.models import Base, Poll, PollOption
+from app.db.models import AdminUser, Base, Poll, PollOption
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +40,7 @@ RETRY_DELAY_SECONDS = 3
 async def lifespan(app: FastAPI):
     """Application lifespan handler."""
     print(f"🇧🇸 {settings.APP_NAME} starting up...")
+    ensure_jwt_key_pair()
 
     for attempt in range(1, MAX_DB_RETRIES + 1):
         try:
@@ -73,6 +80,34 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         logger.warning("Could not seed default polls: %s", exc)
 
+    # Seed initial superuser when explicitly configured
+    if settings.INITIAL_SUPERUSER_EMAIL and settings.INITIAL_SUPERUSER_PASSWORD:
+        try:
+            validate_password(settings.INITIAL_SUPERUSER_PASSWORD)
+            async with AsyncSessionLocal() as session:
+                result = await session.execute(
+                    select(AdminUser).where(
+                        AdminUser.email == settings.INITIAL_SUPERUSER_EMAIL.lower()
+                    )
+                )
+                if result.scalars().first() is None:
+                    session.add(
+                        AdminUser(
+                            email=settings.INITIAL_SUPERUSER_EMAIL.lower(),
+                            hashed_password=hash_password(settings.INITIAL_SUPERUSER_PASSWORD),
+                            full_name="Initial Superuser",
+                            role="superuser",
+                            is_active=True,
+                        )
+                    )
+                    await session.commit()
+                    logger.info(
+                        "Seeded initial superuser account for %s",
+                        settings.INITIAL_SUPERUSER_EMAIL.lower(),
+                    )
+        except Exception as exc:
+            logger.warning("Could not seed initial superuser: %s", exc)
+
     yield
     print(f"🇧🇸 {settings.APP_NAME} shutting down...")
 
@@ -94,6 +129,8 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth.router, prefix=f"{settings.API_V1_PREFIX}/auth", tags=["Auth"])
+app.include_router(future_updates.router, prefix=f"{settings.API_V1_PREFIX}/future-updates", tags=["Future Updates"])
 app.include_router(budget.router, prefix=f"{settings.API_V1_PREFIX}/budget", tags=["Budget"])
 app.include_router(ministries.router, prefix=f"{settings.API_V1_PREFIX}/ministries", tags=["Ministries"])
 app.include_router(revenue.router, prefix=f"{settings.API_V1_PREFIX}/revenue", tags=["Revenue"])
@@ -101,7 +138,10 @@ app.include_router(debt.router, prefix=f"{settings.API_V1_PREFIX}/debt", tags=["
 app.include_router(ask.router, prefix=f"{settings.API_V1_PREFIX}/ask", tags=["Ask"])
 app.include_router(export.router, prefix=f"{settings.API_V1_PREFIX}/export", tags=["Export"])
 app.include_router(economic.router, prefix=f"{settings.API_V1_PREFIX}/economic", tags=["Economic"])
+app.include_router(news.router, prefix=f"{settings.API_V1_PREFIX}/news", tags=["News"])
+app.include_router(islands.router, prefix=f"{settings.API_V1_PREFIX}/islands", tags=["Islands"])
 app.include_router(documents.router, prefix=f"{settings.API_V1_PREFIX}/documents", tags=["Documents"])
+app.include_router(ingestion.router, prefix=f"{settings.API_V1_PREFIX}/ingestion", tags=["Ingestion"])
 app.include_router(hot_topics.router, prefix=f"{settings.API_V1_PREFIX}/hot-topics", tags=["Hot Topics"])
 app.include_router(polls.router, prefix=f"{settings.API_V1_PREFIX}/polls", tags=["Polls"])
 
@@ -122,4 +162,3 @@ async def root():
 async def health():
     """Health check endpoint."""
     return {"status": "healthy", "service": settings.APP_NAME}
-

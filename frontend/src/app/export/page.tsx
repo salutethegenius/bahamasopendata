@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Download, 
@@ -14,7 +14,7 @@ import {
   FileText
 } from 'lucide-react';
 
-const datasets = [
+const fallbackDatasets = [
   {
     id: 'budget_summary',
     name: 'Budget Summary',
@@ -57,6 +57,27 @@ const datasets = [
     size: '45 KB',
     records: 250,
   },
+  {
+    id: 'news',
+    name: 'News Feed',
+    description: 'Published official updates and announcement records',
+    size: '4 KB',
+    records: 2,
+  },
+  {
+    id: 'economic_indicators',
+    name: 'Economic Indicators',
+    description: 'Household economy indicators by island and class',
+    size: '6 KB',
+    records: 4,
+  },
+  {
+    id: 'island_projects',
+    name: 'Island Projects',
+    description: 'Island allocations and project counts for map-driven views',
+    size: '5 KB',
+    records: 3,
+  },
 ];
 
 const apiEndpoints = [
@@ -69,22 +90,60 @@ const apiEndpoints = [
   { method: 'GET', path: '/api/v1/export/{dataset}', description: 'Export dataset' },
 ];
 
-const API_DOMAIN = 'api.bahamasopendata.com';
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000/api/v1';
+
+type ExportDataset = {
+  id: string;
+  name: string;
+  description: string;
+  records: number;
+  available?: boolean;
+};
 
 export default function ExportPage() {
   const [selectedFormat, setSelectedFormat] = useState<'json' | 'csv'>('json');
   const [copiedEndpoint, setCopiedEndpoint] = useState<string | null>(null);
+  const [datasets, setDatasets] = useState<ExportDataset[]>(fallbackDatasets);
+  const apiOrigin = useMemo(() => API_BASE.replace(/\/api\/v1$/, ''), []);
+
+  useEffect(() => {
+    const loadDatasets = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/export`);
+        if (!response.ok) {
+          return;
+        }
+        const payload = await response.json();
+        if (Array.isArray(payload.datasets) && payload.datasets.length) {
+          setDatasets(
+            payload.datasets.map((dataset: ExportDataset) => {
+              const fallback = fallbackDatasets.find((item) => item.id === dataset.name || item.id === dataset.id);
+              return {
+                id: dataset.name,
+                name: fallback?.name ?? dataset.name,
+                description: dataset.description,
+                records: dataset.records,
+                available: dataset.available,
+              };
+            }),
+          );
+        }
+      } catch (error) {
+        console.error('Failed to load export datasets', error);
+      }
+    };
+
+    void loadDatasets();
+  }, []);
 
   const handleDownload = (datasetId: string) => {
-    // In production, this would trigger an actual download
-    const url = `/api/v1/export/${datasetId}?format=${selectedFormat}`;
-    console.log('Downloading:', url);
-    // window.location.href = url;
-    alert(`Download started: ${datasetId}.${selectedFormat}`);
+    const url = `${API_BASE}/export/${datasetId}?format=${selectedFormat}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const copyEndpoint = (path: string) => {
-    navigator.clipboard.writeText(`https://api.bahamasopendata.com${path}`);
+    navigator.clipboard.writeText(`${apiOrigin}${path}`);
     setCopiedEndpoint(path);
     setTimeout(() => setCopiedEndpoint(null), 2000);
   };
@@ -136,9 +195,9 @@ export default function ExportPage() {
 
       {/* Datasets */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
-        {datasets.map((dataset, i) => (
-          <motion.div
-            key={dataset.id}
+          {datasets.map((dataset, i) => (
+            <motion.div
+            key={dataset.name}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
@@ -152,7 +211,7 @@ export default function ExportPage() {
                 <div>
                   <h3 className="font-semibold text-gray-900">{dataset.name}</h3>
                   <p className="text-xs text-gray-400">
-                    {dataset.records} records • {dataset.size}
+                    {dataset.records} records
                   </p>
                 </div>
               </div>
@@ -160,8 +219,14 @@ export default function ExportPage() {
             <p className="text-sm text-gray-600 mb-4">
               {dataset.description}
             </p>
+            {dataset.available === false && (
+              <p className="text-xs text-amber-600 mb-3">
+                No published rows are available for this dataset yet.
+              </p>
+            )}
             <button
               onClick={() => handleDownload(dataset.id)}
+              disabled={dataset.available === false}
               className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-turquoise text-white rounded-lg text-sm font-medium hover:bg-turquoise-dark transition-colors"
             >
               <Download className="w-4 h-4" />
@@ -188,7 +253,7 @@ export default function ExportPage() {
         {/* Base URL */}
         <div className="bg-gray-800 rounded-lg p-4 mb-6">
           <p className="text-xs text-gray-400 mb-1">Base URL</p>
-          <code className="text-turquoise">https://api.bahamasopendata.com/api/v1</code>
+          <code className="text-turquoise">{API_BASE}</code>
         </div>
 
         {/* Endpoints */}
@@ -227,7 +292,7 @@ export default function ExportPage() {
           <h3 className="text-sm font-medium text-gray-400 mb-3">Example Request</h3>
           <div className="bg-gray-800 rounded-lg p-4 overflow-x-auto">
             <pre className="text-sm text-gray-300">
-{`curl -X GET "https://api.bahamasopendata.com/api/v1/budget/summary" \\
+{`curl -X GET "${API_BASE}/budget/summary" \\
   -H "Accept: application/json"`}
             </pre>
           </div>
@@ -265,4 +330,3 @@ export default function ExportPage() {
     </div>
   );
 }
-

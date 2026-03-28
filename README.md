@@ -75,6 +75,7 @@ bahamasopendata/
 ├── ingestion/               # Data pipeline
 │   ├── scraper.py           # Downloads PDFs from govt sites
 │   ├── parser.py            # Extracts tables from PDFs → CSV
+│   ├── ai_normalizer.py     # Uses Gemini to normalize parsed outputs → JSON
 │   ├── embeddings.py        # Creates Pinecone vectors for RAG
 │   ├── Dockerfile
 │   └── requirements.txt
@@ -94,7 +95,7 @@ bahamasopendata/
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.11 or 3.12
 - Node.js 18+
 - PostgreSQL (or use Docker)
 - OpenAI API key (for RAG features)
@@ -165,9 +166,20 @@ python scraper.py
 # Parse PDFs and extract data
 python parser.py
 
+# Normalize extracted data with Gemini into validated JSON artifacts (optional)
+python ai_normalizer.py
+
 # Create embeddings for RAG (requires OpenAI + Pinecone keys)
 python embeddings.py
+
+# Or run the managed ingestion pipeline end-to-end
+python run_pipeline.py
 ```
+
+For ingestion formatting and AI normalization rules, see:
+
+- `DATA_INGESTION_FORMAT_SPEC.md`
+- `AI_NORMALIZATION_PROMPT_SPEC.md`
 
 ---
 
@@ -200,6 +212,9 @@ Base URL: `https://api.bahamasopendata.com/api/v1`
 | `GET` | `/debt` | Debt summary |
 | `GET` | `/debt/creditors` | Creditor breakdown |
 | `GET` | `/debt/repayment-schedule` | 5-year repayment schedule |
+| `POST` | `/documents/upload` | Upload a source PDF into canonical raw storage |
+| `POST` | `/ingestion/run` | Run the ingestion pipeline on demand |
+| `GET` | `/ingestion/status` | View latest ingestion status and document counts |
 | `POST` | `/ask` | Ask a question (RAG with citations) |
 | `GET` | `/export/{dataset}` | Export data (JSON/CSV) |
 
@@ -210,6 +225,23 @@ curl -X POST "https://api.bahamasopendata.com/api/v1/ask" \
   -H "Content-Type: application/json" \
   -d '{"question": "How much was allocated for education this year?"}'
 ```
+
+### Example: Upload a source PDF
+
+`POST /api/v1/documents/upload` currently accepts PDF files only and expects `multipart/form-data`.
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/documents/upload" \
+  -H "Authorization: Bearer <access-token>" \
+  -F "file=@/absolute/path/to/Bahamas BudgetFINAL(2025-2026).pdf;type=application/pdf" \
+  -F "document_type=budget_book" \
+  -F "fiscal_year=2025/26" \
+  -F "source_url=https://www.bahamasbudget.gov.bs/budget-documents/budget-book/"
+```
+
+The full data-format contract for uploads, metadata, processed files, and scraper expectations lives in `DATA_INGESTION_FORMAT_SPEC.md`.
+
+The Gemini prompt and validation contract lives in `AI_NORMALIZATION_PROMPT_SPEC.md`.
 
 ---
 

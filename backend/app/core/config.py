@@ -7,25 +7,44 @@ from pathlib import Path
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
     # Polls
-    POLLS_ADMIN_API_KEY: str | None = None  # used to protect /polls admin endpoints
+    POLLS_ADMIN_API_KEY: str | None = None  # used to protect /polls admin endpoints (deprecated)
     # App
     APP_NAME: str = "Bahamas Open Data API"
     DEBUG: bool = False
     API_V1_PREFIX: str = "/api/v1"
-    
+
     # Database
     DATABASE_URL: str = "postgresql://localhost:5432/nationalpulse"
-    
+
+    # JWT Authentication
+    JWT_PRIVATE_KEY_PATH: str = ""
+    JWT_PUBLIC_KEY_PATH: str = ""
+    JWT_ALGORITHM: str = "EdDSA"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    # Initial Superuser (auto-created on first startup if set)
+    INITIAL_SUPERUSER_EMAIL: str = ""
+    INITIAL_SUPERUSER_PASSWORD: str = ""
+
+    # Rate Limiting
+    RATE_LIMIT_DEFAULT: str = "60/minute"
+    RATE_LIMIT_AUTH: str = "5/minute"
+
     # Pinecone
     PINECONE_API_KEY: str = ""
     PINECONE_INDEX_NAME: str = "national-pulse"
     PINECONE_ENVIRONMENT: str = "us-east-1"
-    
+
     # OpenAI
     OPENAI_API_KEY: str = ""
     EMBEDDING_MODEL: str = "text-embedding-3-small"
     CHAT_MODEL: str = "gpt-4o-mini"
-    
+
+    # Gemini
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-2.5-flash"
+
     # CORS
     CORS_ORIGINS: list[str] = [
         "http://localhost:3000",
@@ -47,4 +66,3 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
-
