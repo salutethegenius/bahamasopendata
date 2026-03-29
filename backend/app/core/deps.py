@@ -236,13 +236,12 @@ def get_client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
-async def get_audit_logger(
-    request: Request,
-    user: AdminUser = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+def _build_audit_log_fn(
+    actor: IngestionActor,
+    ip: str,
+    db: AsyncSession,
 ) -> Callable:
-    """Returns a callable to log audit events for the current request."""
-    ip = get_client_ip(request)
+    """Build an audit-logging callable for the given actor and request."""
 
     async def log(
         action: str,
@@ -260,25 +259,34 @@ async def get_audit_logger(
                 }
                 serialized_resource_id = serialized_resource_id[:50]
 
+        enriched_details = {
+            **(details or {}),
+            **actor.audit_details(),
+        }
+        if actor.api_key:
+            actor.api_key.last_used_at = utc_now_naive()
+
         entry = AuditLog(
-            user_id=user.id,
+            user_id=actor.audit_user_id,
             action=action,
             resource_type=resource_type,
             resource_id=serialized_resource_id,
-            details={
-                **(details or {}),
-                "actor_type": "user",
-                "actor_label": user.email,
-                "actor_role": user.role,
-                "user_email": user.email,
-                "user_id": user.id,
-            },
+            details=enriched_details,
             ip_address=ip,
         )
         db.add(entry)
         await db.flush()
 
     return log
+
+
+async def get_audit_logger(
+    request: Request,
+    user: AdminUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Callable:
+    """Returns a callable to log audit events for the current request."""
+    return _build_audit_log_fn(IngestionActor(user=user), get_client_ip(request), db)
 
 
 async def get_ingestion_audit_logger(
@@ -287,43 +295,7 @@ async def get_ingestion_audit_logger(
     db: AsyncSession = Depends(get_db),
 ) -> Callable:
     """Audit logger that works for both JWT admins and ingestion API keys."""
-    ip = get_client_ip(request)
-
-    async def log(
-        action: str,
-        resource_type: str,
-        resource_id: str | None = None,
-        details: dict | None = None,
-    ) -> None:
-        serialized_resource_id = None
-        if resource_id is not None:
-            serialized_resource_id = str(resource_id)
-            if len(serialized_resource_id) > 50:
-                details = {
-                    **(details or {}),
-                    "resource_id_full": serialized_resource_id,
-                }
-                serialized_resource_id = serialized_resource_id[:50]
-
-        enriched_details = {
-            **(details or {}),
-            **actor.audit_details(),
-        }
-        if actor.api_key:
-            actor.api_key.last_used_at = utc_now_naive()
-
-        entry = AuditLog(
-            user_id=actor.audit_user_id,
-            action=action,
-            resource_type=resource_type,
-            resource_id=serialized_resource_id,
-            details=enriched_details,
-            ip_address=ip,
-        )
-        db.add(entry)
-        await db.flush()
-
-    return log
+    return _build_audit_log_fn(actor, get_client_ip(request), db)
 
 
 async def get_document_audit_logger(
@@ -332,40 +304,4 @@ async def get_document_audit_logger(
     db: AsyncSession = Depends(get_db),
 ) -> Callable:
     """Audit logger for document actions available to panel users or API keys."""
-    ip = get_client_ip(request)
-
-    async def log(
-        action: str,
-        resource_type: str,
-        resource_id: str | None = None,
-        details: dict | None = None,
-    ) -> None:
-        serialized_resource_id = None
-        if resource_id is not None:
-            serialized_resource_id = str(resource_id)
-            if len(serialized_resource_id) > 50:
-                details = {
-                    **(details or {}),
-                    "resource_id_full": serialized_resource_id,
-                }
-                serialized_resource_id = serialized_resource_id[:50]
-
-        enriched_details = {
-            **(details or {}),
-            **actor.audit_details(),
-        }
-        if actor.api_key:
-            actor.api_key.last_used_at = utc_now_naive()
-
-        entry = AuditLog(
-            user_id=actor.audit_user_id,
-            action=action,
-            resource_type=resource_type,
-            resource_id=serialized_resource_id,
-            details=enriched_details,
-            ip_address=ip,
-        )
-        db.add(entry)
-        await db.flush()
-
-    return log
+    return _build_audit_log_fn(actor, get_client_ip(request), db)

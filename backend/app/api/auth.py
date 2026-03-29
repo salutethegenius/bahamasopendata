@@ -1,6 +1,6 @@
 """Authentication API endpoints for admin users."""
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, EmailStr, Field
@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.deps import get_client_ip, get_current_user, require_admin
+from app.core.deps import get_client_ip, get_current_user, require_admin, utc_now_naive
 from app.core.security import (
     create_access_token,
     create_ingestion_api_key,
@@ -29,11 +29,6 @@ router = APIRouter()
 auth_limiter = Limiter(key_func=get_remote_address, storage_uri="memory://")
 
 REFRESH_COOKIE_NAME = "refresh_token"
-
-
-def utc_now_naive() -> datetime:
-    """Return UTC now as a naive datetime for TIMESTAMP WITHOUT TIME ZONE columns."""
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class LoginRequest(BaseModel):
