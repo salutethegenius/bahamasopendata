@@ -2,14 +2,15 @@
 from datetime import date
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Header, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import select, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.deps import require_admin
 from app.db.database import get_db
-from app.db.models import Poll, PollOption, PollVote
+from app.db.models import AdminUser, Poll, PollOption, PollVote
 
 
 router = APIRouter()
@@ -126,15 +127,6 @@ async def _load_poll_with_results(
     return _aggregate_poll_result(poll, option_rows, vote_counts)
 
 
-def _require_admin(api_key: Optional[str], expected: Optional[str]) -> None:
-    """Simple API key check for admin endpoints."""
-    if not expected:
-        # If no admin key configured, treat all access as admin (development mode).
-        return
-    if api_key != expected:
-        raise HTTPException(status_code=401, detail="Invalid admin API key")
-
-
 @router.get("", response_model=List[PollResult])
 async def list_polls(db: AsyncSession = Depends(get_db)) -> List[PollResult]:
     """
@@ -181,17 +173,9 @@ async def get_poll(poll_id: int, db: AsyncSession = Depends(get_db)) -> PollResu
 async def create_poll(
     payload: PollCreate,
     db: AsyncSession = Depends(get_db),
-    x_admin_api_key: Optional[str] = Header(default=None),
+    current_user: AdminUser = Depends(require_admin),
 ) -> PollResult:
-    """
-    Create a new poll.
-
-    Admin-only: requires X-Admin-Api-Key header when POLLS_ADMIN_API_KEY is set.
-    """
-    from app.core.config import settings  # local import to avoid cycles
-
-    _require_admin(x_admin_api_key, getattr(settings, "POLLS_ADMIN_API_KEY", None))
-
+    """Create a new poll. Requires admin authentication."""
     poll = Poll(
         question=payload.question,
         description=payload.description,
@@ -222,12 +206,9 @@ async def update_poll(
     poll_id: int,
     payload: PollUpdate,
     db: AsyncSession = Depends(get_db),
-    x_admin_api_key: Optional[str] = Header(default=None),
+    current_user: AdminUser = Depends(require_admin),
 ) -> PollResult:
-    """Update poll metadata (question, description, status, dates, domain)."""
-    from app.core.config import settings
-
-    _require_admin(x_admin_api_key, getattr(settings, "POLLS_ADMIN_API_KEY", None))
+    """Update poll metadata. Requires admin authentication."""
 
     result = await db.execute(select(Poll).where(Poll.id == poll_id))
     poll = result.scalars().first()
@@ -246,12 +227,9 @@ async def update_poll(
 async def delete_poll(
     poll_id: int,
     db: AsyncSession = Depends(get_db),
-    x_admin_api_key: Optional[str] = Header(default=None),
+    current_user: AdminUser = Depends(require_admin),
 ) -> None:
-    """Delete a poll and all of its options and votes."""
-    from app.core.config import settings
-
-    _require_admin(x_admin_api_key, getattr(settings, "POLLS_ADMIN_API_KEY", None))
+    """Delete a poll. Requires admin authentication."""
 
     result = await db.execute(select(Poll).where(Poll.id == poll_id))
     poll = result.scalars().first()

@@ -4,6 +4,8 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, EmailStr, Field
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,6 +25,8 @@ from app.db.models import AdminUser, AuditLog, IngestionApiKey, RefreshToken
 
 
 router = APIRouter()
+
+auth_limiter = Limiter(key_func=get_remote_address, storage_uri="memory://")
 
 REFRESH_COOKIE_NAME = "refresh_token"
 
@@ -148,7 +152,7 @@ async def _create_login_response(
         key=REFRESH_COOKIE_NAME,
         value=raw_refresh_token,
         httponly=True,
-        secure=not settings.DEBUG,
+        secure=settings.COOKIE_SECURE,
         samesite="lax",
         max_age=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
         path=f"{settings.API_V1_PREFIX}/auth",
@@ -168,6 +172,7 @@ async def _create_login_response(
 
 
 @router.post("/login", response_model=LoginResponse)
+@auth_limiter.limit(settings.RATE_LIMIT_AUTH)
 async def login(
     payload: LoginRequest,
     request: Request,
@@ -214,6 +219,7 @@ async def login(
 
 
 @router.post("/refresh", response_model=LoginResponse)
+@auth_limiter.limit(settings.RATE_LIMIT_AUTH)
 async def refresh_tokens(
     request: Request,
     response: Response,

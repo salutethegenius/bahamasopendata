@@ -94,6 +94,7 @@ data/ingestion_status.json
 # Secrets
 *.pem
 *.key
+keys/
 secrets/
 
 # Temporary files

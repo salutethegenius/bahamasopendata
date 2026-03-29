@@ -39,6 +39,10 @@ from app.services.ingestion_pipeline import process_single_document
 
 router = APIRouter()
 
+MAX_UPLOAD_SIZE_BYTES = 100 * 1024 * 1024  # 100 MB
+PDF_MAGIC_BYTES = b"%PDF"
+ALLOWED_CONTENT_TYPES = {"application/pdf", "application/x-pdf"}
+
 
 class DocumentRecord(BaseModel):
     """Document metadata returned by the API."""
@@ -411,9 +415,18 @@ async def upload_document(
     if not filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF uploads are supported")
 
+    if file.content_type and file.content_type not in ALLOWED_CONTENT_TYPES:
+        raise HTTPException(status_code=400, detail="File content type must be application/pdf")
+
     content = await file.read()
     if not content:
         raise HTTPException(status_code=400, detail="Uploaded file is empty")
+
+    if len(content) > MAX_UPLOAD_SIZE_BYTES:
+        raise HTTPException(status_code=413, detail="File exceeds 100 MB upload limit")
+
+    if not content[:4].startswith(PDF_MAGIC_BYTES):
+        raise HTTPException(status_code=400, detail="File does not appear to be a valid PDF")
 
     doc_meta, created = register_document_bytes(
         content=content,

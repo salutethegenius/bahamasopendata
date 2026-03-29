@@ -9,6 +9,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.security import decode_access_token, hash_ingestion_api_key
 from app.db.database import get_db
 from app.db.models import AdminUser, AuditLog, IngestionApiKey
@@ -217,10 +218,21 @@ async def require_document_access(
 
 
 def get_client_ip(request: Request) -> str:
-    """Extract client IP, respecting X-Forwarded-For."""
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    """Extract client IP from X-Forwarded-For only when behind a trusted proxy.
+
+    TRUSTED_PROXY_COUNT controls how many proxies sit in front of the app.
+    When 0 (default), X-Forwarded-For is ignored to prevent spoofing.
+    When > 0, the Nth-from-right entry is used (the one your outermost
+    trusted proxy appended).
+    """
+    proxy_count = settings.TRUSTED_PROXY_COUNT
+    if proxy_count > 0:
+        forwarded = request.headers.get("x-forwarded-for")
+        if forwarded:
+            parts = [p.strip() for p in forwarded.split(",")]
+            # Take the entry added by the outermost trusted proxy
+            index = max(0, len(parts) - proxy_count)
+            return parts[index]
     return request.client.host if request.client else "unknown"
 
 
