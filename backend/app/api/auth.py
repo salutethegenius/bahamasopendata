@@ -345,18 +345,21 @@ def serialize_user_record(record: AdminUser) -> UserRecord:
     )
 
 
-def serialize_audit_log_record(record: AuditLog) -> AuditLogRecord:
+def serialize_audit_log_record(
+    record: AuditLog,
+    user: AdminUser | None = None,
+) -> AuditLogRecord:
     """Convert an audit log row into a front-end payload."""
     details = record.details or {}
     actor_type = details.get("actor_type") or (
-        "user" if getattr(record, "user", None) and record.user else "unknown"
+        "user" if user else "unknown"
     )
     actor_label = details.get("actor_label") or (
-        record.user.email if getattr(record, "user", None) and record.user else "unknown"
+        user.email if user else "unknown"
     )
     actor_role = details.get("actor_role")
-    if actor_role is None and actor_type == "user" and getattr(record, "user", None) and record.user:
-        actor_role = record.user.role
+    if actor_role is None and actor_type == "user" and user:
+        actor_role = user.role
     return AuditLogRecord(
         id=record.id,
         action=record.action,
@@ -630,11 +633,10 @@ async def list_audit_log(
         )
         users_by_id = {user.id: user for user in user_result.scalars().all()}
 
-    for record in records:
-        if record.user_id and record.user_id in users_by_id:
-            record.user = users_by_id[record.user_id]
-
-    serialized_records = [serialize_audit_log_record(record) for record in records]
+    serialized_records = [
+        serialize_audit_log_record(record, users_by_id.get(record.user_id))
+        for record in records
+    ]
     filtered_records = [
         record
         for record in serialized_records

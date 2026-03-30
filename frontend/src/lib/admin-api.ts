@@ -2,6 +2,7 @@ import {
   fetchCurrentAdmin,
   getAccessToken,
   refreshAdminSession,
+  setAccessToken,
 } from '@/lib/auth';
 import type {
   AuditLogRecord,
@@ -49,6 +50,13 @@ async function request<T>(path: string, options: ApiRequestOptions = {}): Promis
         skipAuthRetry: true,
       });
     }
+
+    // Refresh failed — clear token and redirect to login
+    setAccessToken(null);
+    if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/admin/login')) {
+      window.location.href = '/admin/login';
+    }
+    throw new Error('Session expired');
   }
 
   if (!response.ok) {
