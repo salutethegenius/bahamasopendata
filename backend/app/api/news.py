@@ -1,5 +1,4 @@
 """Official news and announcement endpoints."""
-from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import desc, select

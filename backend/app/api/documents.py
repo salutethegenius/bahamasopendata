@@ -1,17 +1,17 @@
 """Document serving, intake, and review API endpoints."""
-from __future__ import annotations
 
 from datetime import datetime
 import math
 from urllib.parse import unquote
 from typing import Any
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile, status
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import limiter, settings
 from app.core.deps import (
     IngestionActor,
     get_document_audit_logger,
@@ -395,7 +395,9 @@ def _build_review_response(doc: dict[str, Any]) -> DocumentReviewResponse:
 
 
 @router.post("/upload", response_model=UploadDocumentResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit(settings.RATE_LIMIT_ADMIN)
 async def upload_document(
+    request: Request,
     file: UploadFile = File(...),
     document_type: str | None = Form(default=None),
     fiscal_year: str | None = Form(default=None),
@@ -409,6 +411,7 @@ async def upload_document(
     db: AsyncSession = Depends(get_db),
 ):
     """Upload a source PDF into canonical storage and register metadata."""
+    del request
     ensure_document_dirs()
 
     filename = file.filename or ""
@@ -488,13 +491,16 @@ async def upload_document(
 
 
 @router.post("/upload-structured", response_model=UploadDocumentResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit(settings.RATE_LIMIT_ADMIN)
 async def upload_structured_document(
+    request: Request,
     payload: StructuredUploadRequest,
     actor: IngestionActor = Depends(require_document_access),
     audit_log=Depends(get_document_audit_logger),
     db: AsyncSession = Depends(get_db),
 ):
     """Upload already-formatted structured data directly into review."""
+    del request
     doc_meta, created = register_structured_document(
         title=payload.title,
         document_type=payload.document_type,
@@ -542,14 +548,17 @@ async def upload_structured_document(
 
 
 @router.post("/{filename}/process")
+@limiter.limit(settings.RATE_LIMIT_ADMIN)
 async def process_document_endpoint(
     filename: str,
+    request: Request,
     payload: ProcessDocumentRequest,
     actor: IngestionActor = Depends(require_document_access),
     audit_log=Depends(get_document_audit_logger),
     db: AsyncSession = Depends(get_db),
 ):
     """Process one document through parser, normalizer, and embeddings."""
+    del request
     filename = unquote(filename)
     metadata = load_metadata()
     if not any(doc.get("filename") == filename for doc in metadata.get("documents", [])):
@@ -591,11 +600,14 @@ async def process_document_endpoint(
 
 
 @router.get("/{filename}/review", response_model=DocumentReviewResponse)
+@limiter.limit(settings.RATE_LIMIT_ADMIN)
 async def get_document_review(
     filename: str,
+    request: Request,
     actor: IngestionActor = Depends(require_document_access),
 ):
     """Return extraction, AI organization, and review-ready data for one document."""
+    del request
     del actor
     filename = unquote(filename)
     doc = _find_document_or_404(filename)
@@ -603,14 +615,17 @@ async def get_document_review(
 
 
 @router.post("/{filename}/submit", response_model=DocumentReviewResponse)
+@limiter.limit(settings.RATE_LIMIT_ADMIN)
 async def submit_document_review(
     filename: str,
+    request: Request,
     payload: SubmitDocumentRequest,
     actor: IngestionActor = Depends(require_document_access),
     audit_log=Depends(get_document_audit_logger),
     db: AsyncSession = Depends(get_db),
 ):
     """Mark a reviewed document as approved and ready to publish."""
+    del request
     filename = unquote(filename)
     metadata = load_metadata()
     target_doc = next((doc for doc in metadata.get("documents", []) if doc.get("filename") == filename), None)
@@ -644,13 +659,16 @@ async def submit_document_review(
 
 
 @router.post("/{filename}/unapprove", response_model=DocumentReviewResponse)
+@limiter.limit(settings.RATE_LIMIT_ADMIN)
 async def unapprove_document_review(
     filename: str,
+    request: Request,
     actor: IngestionActor = Depends(require_document_access),
     audit_log=Depends(get_document_audit_logger),
     db: AsyncSession = Depends(get_db),
 ):
     """Move an approved document back to pending review."""
+    del request
     filename = unquote(filename)
     metadata = load_metadata()
     target_doc = next((doc for doc in metadata.get("documents", []) if doc.get("filename") == filename), None)
@@ -690,13 +708,16 @@ async def unapprove_document_review(
 
 
 @router.post("/{filename}/publish", response_model=PublishDocumentResponse)
+@limiter.limit(settings.RATE_LIMIT_ADMIN)
 async def publish_document_review(
     filename: str,
+    request: Request,
     actor: IngestionActor = Depends(require_document_access),
     audit_log=Depends(get_document_audit_logger),
     db: AsyncSession = Depends(get_db),
 ):
     """Publish an approved document into the live finance tables."""
+    del request
     filename = unquote(filename)
     metadata = load_metadata()
     target_doc = next((doc for doc in metadata.get("documents", []) if doc.get("filename") == filename), None)
@@ -737,13 +758,16 @@ async def publish_document_review(
 
 
 @router.delete("/{filename}", response_model=DeleteDocumentResponse)
+@limiter.limit(settings.RATE_LIMIT_ADMIN)
 async def delete_document(
     filename: str,
+    request: Request,
     current_user=Depends(require_admin),
     audit_log=Depends(get_ingestion_audit_logger),
     db: AsyncSession = Depends(get_db),
 ):
     """Delete a stored document, its artifacts, and any published finance rows."""
+    del request
     actor = IngestionActor(user=current_user)
     filename = unquote(filename)
     _find_document_or_404(filename)
@@ -812,10 +836,13 @@ async def get_document(
 
 
 @router.get("", response_model=dict[str, list[DocumentRecord]])
+@limiter.limit(settings.RATE_LIMIT_ADMIN)
 async def list_documents(
+    request: Request,
     actor: IngestionActor = Depends(require_document_access),
 ):
     """List known documents from metadata plus any orphan PDFs in raw storage."""
+    del request
     del actor
     ensure_document_dirs()
     metadata = load_metadata()

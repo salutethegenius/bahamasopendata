@@ -30,7 +30,8 @@ class Settings(BaseSettings):
     INITIAL_SUPERUSER_PASSWORD: str = ""
 
     # Rate Limiting
-    RATE_LIMIT_DEFAULT: str = "60/minute"
+    RATE_LIMIT_DEFAULT: str = "240/minute"
+    RATE_LIMIT_ADMIN: str = "60/minute"
     RATE_LIMIT_AUTH: str = "5/minute"
 
     # Pinecone
@@ -68,3 +69,13 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
+
+# Shared rate limiter instance — import from here in routers and main.py
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=[settings.RATE_LIMIT_DEFAULT],
+    storage_uri="memory://",
+)

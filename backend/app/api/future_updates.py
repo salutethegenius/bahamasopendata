@@ -1,10 +1,10 @@
 """Superuser-only editable roadmap endpoints."""
-from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import limiter, settings
 from app.core.deps import get_client_ip, require_superuser
 from app.db.database import get_db
 from app.db.models import AdminUser, AuditLog
@@ -23,15 +23,19 @@ class FutureUpdateCard(BaseModel):
 
 
 @router.get("", response_model=list[FutureUpdateCard])
+@limiter.limit(settings.RATE_LIMIT_ADMIN)
 async def get_future_updates(
+    request: Request,
     current_user: AdminUser = Depends(require_superuser),
 ) -> list[FutureUpdateCard]:
     """Return editable roadmap cards for the superuser panel."""
+    del request
     del current_user
     return [FutureUpdateCard.model_validate(item) for item in load_future_updates()]
 
 
 @router.put("", response_model=list[FutureUpdateCard])
+@limiter.limit(settings.RATE_LIMIT_ADMIN)
 async def update_future_updates(
     payload: list[FutureUpdateCard],
     request: Request,

@@ -4,12 +4,10 @@ from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, EmailStr, Field
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
+from app.core.config import limiter, settings
 from app.core.deps import get_client_ip, get_current_user, require_admin, utc_now_naive
 from app.core.security import (
     create_access_token,
@@ -25,8 +23,6 @@ from app.db.models import AdminUser, AuditLog, IngestionApiKey, RefreshToken
 
 
 router = APIRouter()
-
-auth_limiter = Limiter(key_func=get_remote_address, storage_uri="memory://")
 
 REFRESH_COOKIE_NAME = "refresh_token"
 
@@ -167,7 +163,7 @@ async def _create_login_response(
 
 
 @router.post("/login", response_model=LoginResponse)
-@auth_limiter.limit(settings.RATE_LIMIT_AUTH)
+@limiter.limit(settings.RATE_LIMIT_AUTH)
 async def login(
     payload: LoginRequest,
     request: Request,
@@ -214,7 +210,7 @@ async def login(
 
 
 @router.post("/refresh", response_model=LoginResponse)
-@auth_limiter.limit(settings.RATE_LIMIT_AUTH)
+@limiter.limit(settings.RATE_LIMIT_AUTH)
 async def refresh_tokens(
     request: Request,
     response: Response,
@@ -412,11 +408,14 @@ def matches_audit_log_filters(
 
 
 @router.get("/api-keys", response_model=list[ApiKeyRecord])
+@limiter.limit(settings.RATE_LIMIT_ADMIN)
 async def list_api_keys(
+    request: Request,
     current_user: AdminUser = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ) -> list[ApiKeyRecord]:
     """List ingestion API keys available to the current admin."""
+    del request
     result = await db.execute(
         select(IngestionApiKey).order_by(IngestionApiKey.created_at.desc())
     )
@@ -424,6 +423,7 @@ async def list_api_keys(
 
 
 @router.post("/api-keys", response_model=ApiKeyCreateResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit(settings.RATE_LIMIT_ADMIN)
 async def create_api_key(
     payload: ApiKeyCreateRequest,
     request: Request,
@@ -461,6 +461,7 @@ async def create_api_key(
 
 
 @router.post("/api-keys/{key_id}/revoke", response_model=ApiKeyRecord)
+@limiter.limit(settings.RATE_LIMIT_ADMIN)
 async def revoke_api_key(
     key_id: int,
     request: Request,
@@ -494,17 +495,21 @@ async def revoke_api_key(
 
 
 @router.get("/users", response_model=list[UserRecord])
+@limiter.limit(settings.RATE_LIMIT_ADMIN)
 async def list_users(
+    request: Request,
     current_user: AdminUser = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ) -> list[UserRecord]:
     """List panel users available to the current admin."""
+    del request
     del current_user
     result = await db.execute(select(AdminUser).order_by(AdminUser.created_at.desc()))
     return [serialize_user_record(record) for record in result.scalars().all()]
 
 
 @router.post("/users", response_model=UserRecord, status_code=status.HTTP_201_CREATED)
+@limiter.limit(settings.RATE_LIMIT_ADMIN)
 async def create_user(
     payload: UserCreateRequest,
     request: Request,
@@ -558,6 +563,7 @@ async def create_user(
 
 
 @router.post("/users/{user_id}/revoke", response_model=UserRecord)
+@limiter.limit(settings.RATE_LIMIT_ADMIN)
 async def revoke_user_access(
     user_id: int,
     request: Request,
@@ -607,7 +613,9 @@ async def revoke_user_access(
 
 
 @router.get("/audit-log", response_model=list[AuditLogRecord])
+@limiter.limit(settings.RATE_LIMIT_ADMIN)
 async def list_audit_log(
+    request: Request,
     limit: int = 50,
     search: str | None = None,
     action: str | None = None,
@@ -616,6 +624,7 @@ async def list_audit_log(
     db: AsyncSession = Depends(get_db),
 ) -> list[AuditLogRecord]:
     """Return recent access and ingestion activity."""
+    del request
     del current_user
     safe_limit = max(1, min(limit, 200))
     fetch_limit = 500 if search or action or actor_type else safe_limit

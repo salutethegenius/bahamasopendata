@@ -5,9 +5,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
 
 from app.api import (
     auth,
@@ -28,18 +27,12 @@ from app.api import (
 )
 from sqlalchemy import select
 
-from app.core.config import settings
+from app.core.config import limiter, settings
 from app.core.security import ensure_jwt_key_pair, hash_password, validate_password
 from app.db.database import AsyncSessionLocal, engine
 from app.db.models import AdminUser, Base, Poll, PollOption
 
 logger = logging.getLogger(__name__)
-
-limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=[settings.RATE_LIMIT_DEFAULT],
-    storage_uri="memory://",
-)
 
 MAX_DB_RETRIES = 5
 RETRY_DELAY_SECONDS = 3

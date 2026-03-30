@@ -44,6 +44,18 @@ DEFAULT_FUTURE_UPDATES = [
         ],
     },
     {
+        "id": "publish-pipeline-coverage",
+        "title": "Publish pipeline coverage",
+        "phase": "In progress",
+        "description": "Keep the remaining intentionally separate areas visible so operators know which parts of the site are not yet fed by uploaded and published records.",
+        "items": [
+            "Hot topics still sit outside the main publish flow",
+            "Polls remain outside the document publish pipeline",
+            "Debt repayment schedule still relies on fallback data",
+            "Some editorial and homepage sections are still intentionally separate",
+        ],
+    },
+    {
         "id": "release-controls",
         "title": "Smarter release controls",
         "phase": "Later",
@@ -63,6 +75,17 @@ DEFAULT_FUTURE_UPDATES = [
             "Additional public accountability content",
             "Sector-specific uploads beyond finance and health",
             "More structured data templates for repeatable reporting",
+        ],
+    },
+    {
+        "id": "rag-integration",
+        "title": "RAG ingestion and retrieval",
+        "phase": "Planned",
+        "description": "Connect uploaded and published records more directly into the ask and retrieval experience with clearer indexing and citation controls.",
+        "items": [
+            "Index approved and published source files for retrieval",
+            "Show retrieval and indexing status inside the admin panel",
+            "Improve source traceability and citations in the ask experience",
         ],
     },
 ]

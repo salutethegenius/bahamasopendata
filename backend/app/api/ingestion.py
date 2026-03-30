@@ -1,13 +1,13 @@
 """Admin ingestion orchestration endpoints."""
-from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import limiter, settings
 from app.core.deps import IngestionActor, get_ingestion_audit_logger, require_ingestion_access
 from app.db.database import get_db
 from app.services.ingestion_pipeline import (
@@ -41,10 +41,13 @@ class IngestionStatusResponse(BaseModel):
 
 
 @router.get("/status", response_model=IngestionStatusResponse)
+@limiter.limit(settings.RATE_LIMIT_ADMIN)
 async def get_ingestion_status(
+    request: Request,
     actor: IngestionActor = Depends(require_ingestion_access),
 ) -> IngestionStatusResponse:
     """Return the latest ingestion status plus current document summary."""
+    del request
     status_payload = load_ingestion_status()
     return IngestionStatusResponse(
         status=status_payload.get("status", "idle"),
@@ -55,13 +58,16 @@ async def get_ingestion_status(
 
 
 @router.post("/run", status_code=status.HTTP_202_ACCEPTED)
+@limiter.limit(settings.RATE_LIMIT_ADMIN)
 async def run_ingestion(
     payload: IngestionRunRequest,
+    request: Request,
     actor: IngestionActor = Depends(require_ingestion_access),
     audit_log=Depends(get_ingestion_audit_logger),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
     """Run the ingestion pipeline on demand."""
+    del request
     options = IngestionRunOptions(
         run_scraper=payload.run_scraper,
         run_parser=payload.run_parser,

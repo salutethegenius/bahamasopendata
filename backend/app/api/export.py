@@ -1,5 +1,4 @@
 """Data export API endpoints."""
-from __future__ import annotations
 
 import csv
 import io
