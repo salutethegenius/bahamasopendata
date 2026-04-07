@@ -83,6 +83,7 @@ bahamasopendata/
 │   ├── raw/                 # Original PDFs
 │   ├── processed/           # Extracted JSON/CSV
 │   └── embeddings/          # Vector metadata
+├── Dockerfile               # API image (repo root: backend + ingestion)
 ├── docker-compose.yml       # Full stack orchestration
 ├── Procfile                 # Heroku process definitions
 ├── heroku.yml               # Heroku Docker config
@@ -277,12 +278,15 @@ git push heroku main
 
 ### Backend → Railway (monorepo)
 
+The API image is built from the **repository root** [`Dockerfile`](Dockerfile) so both `backend/` and `ingestion/` are present (`PYTHONPATH=/srv`). Do **not** set the service root to `backend` only, or the build will miss `ingestion` and Uvicorn will fail with `ModuleNotFoundError: No module named 'ingestion'`.
+
 1. **New Project** → Deploy from GitHub → select this repo.
-2. **Set Root Directory** (required): Service → **Settings** → **Source** → **Root Directory** = `backend`.  
-   (Railway builds from repo root by default; the API lives in `backend/`, so Railpack must see only that folder.)
+2. **Settings** → **Build**:
+   - **Root Directory:** leave empty (repo root), **not** `backend`.
+   - **Dockerfile path:** `Dockerfile` (at repo root).
 3. Add **PostgreSQL** to the project; Railway sets `DATABASE_URL` automatically.
 4. In **Variables**, set: `OPENAI_API_KEY`, `PINECONE_API_KEY`, `PINECONE_INDEX_NAME`, `PINECONE_ENVIRONMENT`, `POLLS_ADMIN_API_KEY`.
-5. Deploy; tables are created on startup. Start command is in `backend/Procfile` (`uvicorn` on `$PORT`).
+5. Deploy; the container runs `uvicorn main:app` from `/srv/backend` on `$PORT` (see root `Dockerfile`).
 
 ### Frontend → Railway (or Vercel)
 

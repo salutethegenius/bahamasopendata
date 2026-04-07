@@ -1,4 +1,5 @@
-# Bahamas Open Data - Backend Dockerfile
+# Bahamas Open Data - Backend-only Dockerfile (legacy / special cases).
+# Production and docker compose use the repository root Dockerfile (includes ingestion).
 FROM python:3.11-slim
 
 # Set environment variables

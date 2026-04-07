@@ -4,7 +4,7 @@ services:
   # Backend API
   backend:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
@@ -15,7 +15,7 @@ services:
       - PINECONE_INDEX_NAME=${PINECONE_INDEX_NAME:-national-pulse}
       - PINECONE_ENVIRONMENT=${PINECONE_ENVIRONMENT:-us-east-1}
     volumes:
-      - ./data:/app/data
+      - ./data:/srv/data
     depends_on:
       - db
     restart: unless-stopped
