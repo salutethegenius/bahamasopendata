@@ -7,7 +7,6 @@ export type AdminUser = {
 };
 
 export type LoginResponse = {
-  access_token: string;
   token_type: string;
   expires_in: number;
   user: AdminUser;

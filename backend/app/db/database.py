@@ -15,7 +15,7 @@ def get_async_url(url: str) -> str:
 # Create async engine
 engine = create_async_engine(
     get_async_url(settings.DATABASE_URL),
-    echo=settings.DEBUG,
+    echo=settings.SQLALCHEMY_ECHO,
     pool_pre_ping=True,
 )
 

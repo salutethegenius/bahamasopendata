@@ -10,6 +10,22 @@ class Settings(BaseSettings):
     APP_NAME: str = "Bahamas Open Data API"
     DEBUG: bool = False
     API_V1_PREFIX: str = "/api/v1"
+    # OpenAPI /docs — disable in production (ENABLE_OPENAPI=false)
+    ENABLE_OPENAPI: bool = False
+    # SQL echo: never default True; keep independent of DEBUG (R04)
+    SQLALCHEMY_ECHO: bool = False
+    # Only seed INITIAL_SUPERUSER_* when explicitly allowed (R09)
+    ALLOW_INITIAL_SUPERUSER_BOOTSTRAP: bool = False
+    # Dev convenience: auto-create tables from models. Production should use Alembic only (R10).
+    ENABLE_METADATA_CREATE_ALL: bool = True
+    # Optional Redis URL for shared rate limits across workers (R03); empty = in-memory
+    REDIS_URL: str = ""
+    # Public Ask endpoint abuse control (R05)
+    RATE_LIMIT_ASK: str = "30/minute"
+    # HMAC pepper for poll vote fingerprints (R07); set in production
+    FINGERPRINT_PEPPER: str = ""
+    # httpOnly access JWT cookie name (R01)
+    ACCESS_TOKEN_COOKIE_NAME: str = "bod_access_token"
 
     # Database
     DATABASE_URL: str = "postgresql://localhost:5432/nationalpulse"
@@ -74,8 +90,10 @@ settings = get_settings()
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
+_limiter_storage = settings.REDIS_URL.strip() if settings.REDIS_URL.strip() else "memory://"
+
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=[settings.RATE_LIMIT_DEFAULT],
-    storage_uri="memory://",
+    storage_uri=_limiter_storage,
 )

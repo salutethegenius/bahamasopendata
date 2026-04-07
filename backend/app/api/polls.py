@@ -1,4 +1,6 @@
 """Polls API endpoints."""
+import hashlib
+import hmac
 from datetime import date
 from typing import List, Optional
 
@@ -8,7 +10,8 @@ from sqlalchemy import select, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import require_admin
+from app.core.config import settings
+from app.core.deps import ADMIN_ROLES, get_optional_staff_user, require_admin
 from app.db.database import get_db
 from app.db.models import AdminUser, Poll, PollOption, PollVote
 
@@ -76,6 +79,20 @@ class VoteRequest(BaseModel):
     fingerprint: Optional[str] = None
 
 
+def _hash_vote_fingerprint(raw: str) -> str:
+    """One-way store for poll fingerprint / IP (R07)."""
+    if not raw:
+        return ""
+    data = raw.encode()
+    if settings.FINGERPRINT_PEPPER:
+        return hmac.new(
+            settings.FINGERPRINT_PEPPER.encode(),
+            data,
+            hashlib.sha256,
+        ).hexdigest()
+    return hashlib.sha256(data).hexdigest()
+
+
 def _aggregate_poll_result(
     poll: Poll,
     option_rows: List[PollOption],
@@ -128,14 +145,18 @@ async def _load_poll_with_results(
 
 
 @router.get("", response_model=List[PollResult])
-async def list_polls(db: AsyncSession = Depends(get_db)) -> List[PollResult]:
+async def list_polls(
+    db: AsyncSession = Depends(get_db),
+    staff: AdminUser | None = Depends(get_optional_staff_user),
+) -> List[PollResult]:
     """
-    List all polls with aggregated results, newest first.
-    Includes both active and recently closed polls.
+    List polls with aggregated results, newest first.
+    Anonymous users only see **active** polls (R06); admins see all statuses.
     """
-    result = await db.execute(
-        select(Poll).order_by(Poll.created_at.desc())
-    )
+    stmt = select(Poll).order_by(Poll.created_at.desc())
+    if staff is None or staff.role not in ADMIN_ROLES:
+        stmt = stmt.where(Poll.status == "active")
+    result = await db.execute(stmt)
     polls = result.scalars().all()
 
     output: List[PollResult] = []
@@ -160,11 +181,17 @@ async def get_active_poll(db: AsyncSession = Depends(get_db)) -> Optional[PollRe
 
 
 @router.get("/{poll_id}", response_model=PollResult)
-async def get_poll(poll_id: int, db: AsyncSession = Depends(get_db)) -> PollResult:
-    """Get a specific poll by ID with results."""
+async def get_poll(
+    poll_id: int,
+    db: AsyncSession = Depends(get_db),
+    staff: AdminUser | None = Depends(get_optional_staff_user),
+) -> PollResult:
+    """Get a specific poll by ID with results. Draft/non-active hidden from non-admins (R06)."""
     result = await db.execute(select(Poll).where(Poll.id == poll_id))
     poll = result.scalars().first()
     if not poll:
+        raise HTTPException(status_code=404, detail="Poll not found")
+    if poll.status != "active" and (staff is None or staff.role not in ADMIN_ROLES):
         raise HTTPException(status_code=404, detail="Poll not found")
     return await _load_poll_with_results(poll, db)
 
@@ -269,8 +296,12 @@ async def cast_vote(
     if not option:
         raise HTTPException(status_code=400, detail="Invalid option for this poll")
 
+    if poll.status != "active":
+        raise HTTPException(status_code=400, detail="This poll is not accepting votes")
+
     # Use client-provided fingerprint when available, otherwise fall back to IP
-    fingerprint = payload.fingerprint or request.client.host
+    raw_fp = payload.fingerprint or (request.client.host if request.client else "unknown")
+    fingerprint = _hash_vote_fingerprint(raw_fp)
 
     vote = PollVote(
       poll_id=poll_id,

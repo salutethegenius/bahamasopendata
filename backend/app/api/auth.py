@@ -27,6 +27,25 @@ router = APIRouter()
 REFRESH_COOKIE_NAME = "refresh_token"
 
 
+def _set_access_token_cookie(response: Response, access_token: str) -> None:
+    response.set_cookie(
+        key=settings.ACCESS_TOKEN_COOKIE_NAME,
+        value=access_token,
+        httponly=True,
+        secure=settings.COOKIE_SECURE,
+        samesite="lax",
+        max_age=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        path="/",
+    )
+
+
+def _clear_access_token_cookie(response: Response) -> None:
+    response.delete_cookie(
+        key=settings.ACCESS_TOKEN_COOKIE_NAME,
+        path="/",
+    )
+
+
 class LoginRequest(BaseModel):
     """Login payload."""
 
@@ -45,9 +64,8 @@ class UserProfile(BaseModel):
 
 
 class LoginResponse(BaseModel):
-    """Authentication response with short-lived access token."""
+    """Authentication response. Short-lived JWT is set as an httpOnly cookie (not in JSON)."""
 
-    access_token: str
     token_type: str = "bearer"
     expires_in: int
     user: UserProfile
@@ -149,8 +167,9 @@ async def _create_login_response(
         path=f"{settings.API_V1_PREFIX}/auth",
     )
 
+    _set_access_token_cookie(response, access_token)
+
     return LoginResponse(
-        access_token=access_token,
         expires_in=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         user=UserProfile(
             id=user.id,
@@ -299,6 +318,7 @@ async def logout(
         key=REFRESH_COOKIE_NAME,
         path=f"{settings.API_V1_PREFIX}/auth",
     )
+    _clear_access_token_cookie(response)
     return {"message": "Logged out"}
 
 

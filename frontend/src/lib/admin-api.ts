@@ -1,9 +1,4 @@
-import {
-  fetchCurrentAdmin,
-  getAccessToken,
-  refreshAdminSession,
-  setAccessToken,
-} from '@/lib/auth';
+import { fetchCurrentAdmin, refreshAdminSession } from '@/lib/auth';
 import type {
   AuditLogRecord,
   ApiKeyCreateResponse,
@@ -30,16 +25,12 @@ type ApiRequestOptions = RequestInit & {
 };
 
 async function request<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
-  const token = getAccessToken();
   const headers = new Headers(options.headers);
-
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
-  }
 
   const response = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers,
+    credentials: 'include',
   });
 
   if (response.status === 401 && !options.skipAuthRetry) {
@@ -51,8 +42,6 @@ async function request<T>(path: string, options: ApiRequestOptions = {}): Promis
       });
     }
 
-    // Refresh failed — clear token and redirect to login
-    setAccessToken(null);
     if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/admin/login')) {
       window.location.href = '/admin/login';
     }
@@ -68,13 +57,10 @@ async function request<T>(path: string, options: ApiRequestOptions = {}): Promis
 }
 
 export async function bootstrapAdminSession() {
-  const token = getAccessToken();
-  if (token) {
-    try {
-      return await fetchCurrentAdmin(token);
-    } catch {
-      // Fall through to refresh
-    }
+  try {
+    return await fetchCurrentAdmin();
+  } catch {
+    /* fall through to refresh */
   }
 
   const refreshed = await refreshAdminSession();
@@ -82,7 +68,7 @@ export async function bootstrapAdminSession() {
     return null;
   }
 
-  return fetchCurrentAdmin(refreshed);
+  return fetchCurrentAdmin();
 }
 
 export function fetchAdminDocuments(): Promise<DocumentsResponse> {

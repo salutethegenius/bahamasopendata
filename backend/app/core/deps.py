@@ -4,8 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Callable
 
-from fastapi import Depends, Header, HTTPException, Request, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Cookie, Depends, Header, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,7 +15,20 @@ from app.db.models import AdminUser, AuditLog, IngestionApiKey
 
 logger = logging.getLogger(__name__)
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
+
+def get_access_token_optional(
+    authorization: str | None = Header(None),
+    access_cookie: str | None = Cookie(
+        None,
+        alias=settings.ACCESS_TOKEN_COOKIE_NAME,
+    ),
+) -> str | None:
+    """Bearer header takes precedence; else httpOnly access cookie (R01)."""
+    if authorization:
+        parts = authorization.split()
+        if len(parts) == 2 and parts[0].lower() == "bearer" and parts[1]:
+            return parts[1]
+    return access_cookie
 
 ADMIN_ROLES = {"admin", "superuser"}
 PANEL_ROLES = {"uploader", "admin", "superuser"}
@@ -99,7 +111,7 @@ async def _get_user_from_token(token: str | None, db: AsyncSession) -> AdminUser
 
 
 async def get_current_user(
-    token: str | None = Depends(oauth2_scheme),
+    token: str | None = Depends(get_access_token_optional),
     db: AsyncSession = Depends(get_db),
 ) -> AdminUser:
     """Extract and validate the current user from the Bearer token."""
@@ -111,6 +123,16 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user
+
+
+async def get_optional_staff_user(
+    token: str | None = Depends(get_access_token_optional),
+    db: AsyncSession = Depends(get_db),
+) -> AdminUser | None:
+    """Resolved admin user when a valid access cookie/header is present; else None."""
+    if token is None:
+        return None
+    return await _get_user_from_token(token, db)
 
 
 async def require_superuser(
@@ -168,7 +190,7 @@ async def get_current_ingestion_api_key(
 
 
 async def require_ingestion_access(
-    token: str | None = Depends(oauth2_scheme),
+    token: str | None = Depends(get_access_token_optional),
     db: AsyncSession = Depends(get_db),
     api_key: IngestionApiKey | None = Depends(get_current_ingestion_api_key),
 ) -> IngestionActor:
@@ -193,7 +215,7 @@ async def require_ingestion_access(
 
 
 async def require_document_access(
-    token: str | None = Depends(oauth2_scheme),
+    token: str | None = Depends(get_access_token_optional),
     db: AsyncSession = Depends(get_db),
     api_key: IngestionApiKey | None = Depends(get_current_ingestion_api_key),
 ) -> IngestionActor:

@@ -47,7 +47,8 @@ async def lifespan(app: FastAPI):
     for attempt in range(1, MAX_DB_RETRIES + 1):
         try:
             async with engine.begin() as conn:
-                await conn.run_sync(Base.metadata.create_all)
+                if settings.ENABLE_METADATA_CREATE_ALL:
+                    await conn.run_sync(Base.metadata.create_all)
             break
         except Exception as exc:
             if attempt == MAX_DB_RETRIES:
@@ -82,8 +83,12 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         logger.warning("Could not seed default polls: %s", exc)
 
-    # Seed initial superuser when explicitly configured
-    if settings.INITIAL_SUPERUSER_EMAIL and settings.INITIAL_SUPERUSER_PASSWORD:
+    # Seed initial superuser only when bootstrap is explicitly allowed (R09)
+    if (
+        settings.ALLOW_INITIAL_SUPERUSER_BOOTSTRAP
+        and settings.INITIAL_SUPERUSER_EMAIL
+        and settings.INITIAL_SUPERUSER_PASSWORD
+    ):
         try:
             validate_password(settings.INITIAL_SUPERUSER_PASSWORD)
             async with AsyncSessionLocal() as session:
@@ -114,11 +119,18 @@ async def lifespan(app: FastAPI):
     print(f"🇧🇸 {settings.APP_NAME} shutting down...")
 
 
+_openapi_url = "/openapi.json" if settings.ENABLE_OPENAPI else None
+_docs_url = "/docs" if settings.ENABLE_OPENAPI else None
+_redoc_url = "/redoc" if settings.ENABLE_OPENAPI else None
+
 app = FastAPI(
     title=settings.APP_NAME,
     description="Bahamas Open Data - Public finance data made clear and accessible.",
     version="1.0.0",
     lifespan=lifespan,
+    openapi_url=_openapi_url,
+    docs_url=_docs_url,
+    redoc_url=_redoc_url,
 )
 
 # Rate limiting
@@ -174,13 +186,15 @@ app.include_router(polls.router, prefix=f"{settings.API_V1_PREFIX}/polls", tags=
 @app.get("/")
 async def root():
     """Root endpoint."""
-    return {
+    payload = {
         "name": settings.APP_NAME,
         "description": "Bahamas Open Data - Civic finance dashboard API",
         "version": "1.0.0",
         "website": "https://bahamasopendata.com",
-        "docs": "/docs",
     }
+    if settings.ENABLE_OPENAPI:
+        payload["docs"] = "/docs"
+    return payload
 
 
 @app.get("/health")

@@ -28,7 +28,8 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-nationalpulse}
       - POSTGRES_DB=${POSTGRES_DB:-nationalpulse}
     ports:
-      - "5432:5432"
+      # Use 5433 on host when a local Postgres already owns 5432 (common on dev machines).
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped

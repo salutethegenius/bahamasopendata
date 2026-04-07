@@ -228,22 +228,6 @@ class PublishedNewsItem(Base):
     )
 
 
-class UserFeedback(Base):
-    """User-submitted data corrections and feedback."""
-    __tablename__ = "user_feedback"
-    
-    id = Column(Integer, primary_key=True)
-    feedback_type = Column(String(50))  # "correction", "question", "suggestion"
-    related_table = Column(String(100))
-    related_id = Column(Integer)
-    description = Column(Text, nullable=False)
-    submitted_by = Column(String(255))
-    email = Column(String(255))
-    status = Column(String(20), default="pending")  # "pending", "reviewed", "resolved"
-    created_at = Column(DateTime, default=func.now())
-    resolved_at = Column(DateTime)
-
-
 class EconomicIndicator(Base):
     """Economic indicators including income and cost of living data."""
     __tablename__ = "economic_indicators"

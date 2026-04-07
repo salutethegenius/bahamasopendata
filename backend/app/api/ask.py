@@ -1,9 +1,10 @@
 """RAG-powered Q&A API endpoint."""
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
 from typing import Optional
-import os
-from app.core.config import settings
+
+from fastapi import APIRouter, HTTPException, Request
+from pydantic import BaseModel
+
+from app.core.config import limiter, settings
 
 router = APIRouter()
 
@@ -32,7 +33,8 @@ class AskResponse(BaseModel):
 
 
 @router.post("", response_model=AskResponse)
-async def ask_question(request: AskRequest):
+@limiter.limit(settings.RATE_LIMIT_ASK)
+async def ask_question(request: Request, body: AskRequest):
     """
     Ask a natural language question about the budget.
     
@@ -44,7 +46,7 @@ async def ask_question(request: AskRequest):
         try:
             from app.rag.pipeline import get_rag_pipeline
             pipeline = get_rag_pipeline()
-            response = await pipeline.ask(request.question, request.fiscal_year)
+            response = await pipeline.ask(body.question, body.fiscal_year)
             
             return AskResponse(
                 answer=response.answer,
@@ -65,7 +67,7 @@ async def ask_question(request: AskRequest):
             # Fall through to mock responses
     
     # Mock responses for demo when RAG is not configured
-    question = request.question.lower()
+    question = body.question.lower()
     
     if "education" in question or "school" in question:
         return AskResponse(
