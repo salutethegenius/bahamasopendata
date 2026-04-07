@@ -37,6 +37,20 @@ def get_gemini_api_key() -> str:
     return os.getenv("GEMINI_API_KEY", "")
 
 
+def get_openai_api_key() -> str:
+    """Return the configured OpenAI API key from canonical settings or env."""
+    if app_settings and getattr(app_settings, "OPENAI_API_KEY", ""):
+        return app_settings.OPENAI_API_KEY
+    return os.getenv("OPENAI_API_KEY", "")
+
+
+def get_openai_model() -> str:
+    """Return the configured OpenAI chat model from canonical settings or env."""
+    if app_settings and getattr(app_settings, "CHAT_MODEL", ""):
+        return app_settings.CHAT_MODEL
+    return os.getenv("CHAT_MODEL", "gpt-4o-mini")
+
+
 def get_gemini_model() -> str:
     """Return the configured Gemini model from canonical settings or env."""
     if app_settings and getattr(app_settings, "GEMINI_MODEL", ""):
@@ -50,6 +64,15 @@ def get_gemini_api_base() -> str:
         "GEMINI_API_BASE",
         "https://generativelanguage.googleapis.com/v1beta",
     )
+
+
+def get_normalizer_provider() -> str:
+    """Determine which AI provider to use: gemini (preferred) or openai."""
+    if get_gemini_api_key():
+        return "gemini"
+    if get_openai_api_key():
+        return "openai"
+    return "none"
 
 CANONICAL_DOCUMENT_TYPES = [
     "budget_book",
@@ -247,8 +270,52 @@ def call_gemini(prompt: str) -> dict:
     return json.loads(response_text)
 
 
+def call_openai(prompt: str) -> dict:
+    """Call OpenAI chat completions and return parsed JSON."""
+    api_key = get_openai_api_key()
+    model = get_openai_model()
+
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY is not set")
+
+    response = httpx.post(
+        "https://api.openai.com/v1/chat/completions",
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+        },
+        json={
+            "model": model,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You normalize government-finance documents into structured JSON. Return JSON only, no markdown fences.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": 0.1,
+            "response_format": {"type": "json_object"},
+        },
+        timeout=120.0,
+    )
+    response.raise_for_status()
+    data = response.json()
+    text = data["choices"][0]["message"]["content"].strip()
+    return json.loads(text)
+
+
+def call_ai(prompt: str) -> tuple[dict, str, str]:
+    """Call the best available AI provider. Returns (parsed_json, provider, model)."""
+    provider = get_normalizer_provider()
+    if provider == "gemini":
+        return call_gemini(prompt), "gemini", get_gemini_model()
+    if provider == "openai":
+        return call_openai(prompt), "openai", get_openai_model()
+    raise ValueError("No AI API key is set (need GEMINI_API_KEY or OPENAI_API_KEY)")
+
+
 def normalize_document(doc_meta: dict) -> dict:
-    """Normalize one extracted document with Gemini."""
+    """Normalize one extracted document with the best available AI provider."""
     text_payload, tables_payload = load_processed_inputs(doc_meta)
     if not text_payload and not tables_payload:
         return {
@@ -257,7 +324,7 @@ def normalize_document(doc_meta: dict) -> dict:
         }
 
     prompt = build_prompt(doc_meta, text_payload, tables_payload)
-    raw_response = call_gemini(prompt)
+    raw_response, provider, model = call_ai(prompt)
     normalized = NormalizedDocument.model_validate(raw_response)
 
     base_name = Path(doc_meta["filename"]).stem
@@ -267,8 +334,8 @@ def normalize_document(doc_meta: dict) -> dict:
         json.dumps(
             {
                 **normalized.model_dump(),
-                "normalization_provider": "gemini",
-                "normalization_model": get_gemini_model(),
+                "normalization_provider": provider,
+                "normalization_model": model,
                 "normalized_at": datetime.now().isoformat(),
             },
             indent=2,
@@ -285,8 +352,8 @@ def normalize_document(doc_meta: dict) -> dict:
 
 
 def main() -> None:
-    """Normalize all extracted documents with Gemini."""
-    print("🇧🇸 Bahamas Open Data - Gemini Normalizer")
+    """Normalize all extracted documents with the best available AI provider."""
+    print("🇧🇸 Bahamas Open Data - AI Normalizer")
     print("=" * 40)
 
     metadata = load_metadata()
@@ -294,12 +361,13 @@ def main() -> None:
         print("No documents found. Run scraper.py or process_upload.py first.")
         return
 
-    gemini_api_key = get_gemini_api_key()
-    gemini_model = get_gemini_model()
-
-    if not gemini_api_key:
-        print("❌ GEMINI_API_KEY not set. Skipping AI normalization.")
+    provider = get_normalizer_provider()
+    if provider == "none":
+        print("❌ No AI key set. Need GEMINI_API_KEY or OPENAI_API_KEY.")
         return
+
+    model = get_gemini_model() if provider == "gemini" else get_openai_model()
+    print(f"   Provider: {provider} ({model})")
 
     normalized_documents = 0
 
@@ -329,8 +397,8 @@ def main() -> None:
 
         doc["normalization_status"] = result["status"]
         doc["normalization_result"] = result
-        doc["normalization_provider"] = "gemini"
-        doc["normalization_model"] = gemini_model
+        doc["normalization_provider"] = provider
+        doc["normalization_model"] = model
         doc["normalized_at"] = datetime.now().isoformat()
         doc["normalized_count"] = result.get("normalized_count", 0)
 
@@ -340,9 +408,9 @@ def main() -> None:
         save_metadata(metadata)
 
     print("\n" + "=" * 40)
-    print("✅ Gemini normalization complete!")
+    print("✅ AI normalization complete!")
     print(f"   Normalized documents: {normalized_documents}")
-    print(f"   Model: {gemini_model}")
+    print(f"   Provider: {provider} ({model})")
 
 
 if __name__ == "__main__":

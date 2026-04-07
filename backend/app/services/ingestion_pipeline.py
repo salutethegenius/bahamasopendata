@@ -118,12 +118,13 @@ def _run_parser_stage(force: bool) -> dict[str, Any]:
 
 
 def _run_normalizer_stage(force: bool) -> dict[str, Any]:
-    """Run the Gemini normalization stage."""
+    """Run the AI normalization stage (Gemini or OpenAI)."""
     metadata = ai_normalizer.load_metadata()
-    if not ai_normalizer.get_gemini_api_key():
+    provider = ai_normalizer.get_normalizer_provider()
+    if provider == "none":
         return {
             "status": "skipped",
-            "reason": "GEMINI_API_KEY not configured",
+            "reason": "No AI key configured (need GEMINI_API_KEY or OPENAI_API_KEY)",
         }
 
     processed = 0
@@ -157,8 +158,11 @@ def _run_normalizer_stage(force: bool) -> dict[str, Any]:
 
         doc["normalization_status"] = result["status"]
         doc["normalization_result"] = result
-        doc["normalization_provider"] = "gemini"
-        doc["normalization_model"] = ai_normalizer.get_gemini_model()
+        doc["normalization_provider"] = provider
+        doc["normalization_model"] = (
+            ai_normalizer.get_gemini_model() if provider == "gemini"
+            else ai_normalizer.get_openai_model()
+        )
         doc["normalized_at"] = _now()
         doc["normalized_count"] = result.get("normalized_count", 0)
         processed += 1
@@ -262,8 +266,9 @@ def process_single_document(
     if run_normalizer:
         metadata = ai_normalizer.load_metadata()
         target_doc = next((doc for doc in metadata.get("documents", []) if doc.get("filename") == filename), None)
-        if not ai_normalizer.get_gemini_api_key():
-            normalizer_result = {"status": "skipped", "reason": "GEMINI_API_KEY not configured"}
+        provider = ai_normalizer.get_normalizer_provider()
+        if provider == "none":
+            normalizer_result = {"status": "skipped", "reason": "No AI key configured (need GEMINI_API_KEY or OPENAI_API_KEY)"}
         elif target_doc and target_doc.get("extraction_status") == "success":
             if force or target_doc.get("normalization_status") != "success":
                 try:
@@ -282,8 +287,11 @@ def process_single_document(
                     }
                 target_doc["normalization_status"] = normalizer_result["status"]
                 target_doc["normalization_result"] = normalizer_result
-                target_doc["normalization_provider"] = "gemini"
-                target_doc["normalization_model"] = ai_normalizer.get_gemini_model()
+                target_doc["normalization_provider"] = provider
+                target_doc["normalization_model"] = (
+                    ai_normalizer.get_gemini_model() if provider == "gemini"
+                    else ai_normalizer.get_openai_model()
+                )
                 target_doc["normalized_at"] = _now()
                 target_doc["normalized_count"] = normalizer_result.get("normalized_count", 0)
                 ai_normalizer.save_metadata(metadata)
