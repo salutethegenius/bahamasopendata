@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     COOKIE_SECURE: bool = True
+    COOKIE_SAMESITE: str = "none"
 
     # Trusted proxy
     TRUSTED_PROXY_COUNT: int = 0

@@ -33,7 +33,7 @@ def _set_access_token_cookie(response: Response, access_token: str) -> None:
         value=access_token,
         httponly=True,
         secure=settings.COOKIE_SECURE,
-        samesite="lax",
+        samesite=settings.COOKIE_SAMESITE,
         max_age=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         path="/",
     )
@@ -43,6 +43,8 @@ def _clear_access_token_cookie(response: Response) -> None:
     response.delete_cookie(
         key=settings.ACCESS_TOKEN_COOKIE_NAME,
         path="/",
+        samesite=settings.COOKIE_SAMESITE,
+        secure=settings.COOKIE_SECURE,
     )
 
 
@@ -162,7 +164,7 @@ async def _create_login_response(
         value=raw_refresh_token,
         httponly=True,
         secure=settings.COOKIE_SECURE,
-        samesite="lax",
+        samesite=settings.COOKIE_SAMESITE,
         max_age=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
         path=f"{settings.API_V1_PREFIX}/auth",
     )
@@ -317,6 +319,8 @@ async def logout(
     response.delete_cookie(
         key=REFRESH_COOKIE_NAME,
         path=f"{settings.API_V1_PREFIX}/auth",
+        samesite=settings.COOKIE_SAMESITE,
+        secure=settings.COOKIE_SECURE,
     )
     _clear_access_token_cookie(response)
     return {"message": "Logged out"}
