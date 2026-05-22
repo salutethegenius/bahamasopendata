@@ -238,6 +238,12 @@ class TestRejections:
         with pytest.raises(ValidationError):
             _provenance(fetched_at=NAIVE_NOW)
 
+    def test_post_metric_rejects_naive_posted_at(self):
+        payload = _post_minimal().model_dump()
+        payload["posted_at"] = NAIVE_NOW
+        with pytest.raises(ValidationError):
+            PostMetric.model_validate(payload)
+
     def test_post_metric_engagement_rejects_negative(self):
         payload = _post_minimal().model_dump()
         payload["engagement"] = -1

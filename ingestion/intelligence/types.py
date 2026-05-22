@@ -6,11 +6,11 @@ validators, and exporters.
 """
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field, HttpUrl, field_validator
+from pydantic import AwareDatetime, BaseModel, Field, HttpUrl
 
 
 class Platform(str, Enum):
@@ -25,17 +25,10 @@ class Platform(str, Enum):
 
 class SourceProvenance(BaseModel):
     url: HttpUrl
-    fetched_at: datetime
+    fetched_at: AwareDatetime
     http_status: int
     method: str
     archive_url: Optional[HttpUrl] = None
-
-    @field_validator("fetched_at")
-    @classmethod
-    def fetched_at_must_be_timezone_aware(cls, value: datetime) -> datetime:
-        if value.tzinfo is None or value.tzinfo.utcoffset(value) is None:
-            raise ValueError("fetched_at must be timezone-aware (UTC recommended)")
-        return value
 
 
 class SocialMetric(BaseModel):
@@ -56,7 +49,7 @@ class PostMetric(BaseModel):
     bank_id: str
     platform: Platform
     post_id: str
-    posted_at: datetime
+    posted_at: AwareDatetime
     format: str
     caption_excerpt: Optional[str] = Field(default=None, max_length=280)
     engagement: int = Field(ge=0)
