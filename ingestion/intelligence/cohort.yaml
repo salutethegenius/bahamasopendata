@@ -1,0 +1,145 @@
+# =============================================================================
+# Bahamas Open Data | Intelligence
+# Banking Sector — 2026 Annual Issue
+# Cohort Definition
+# =============================================================================
+# This file is the source of truth for the six tracked institutions across all
+# scrapers, normalizers, and report renderers. Every scraper reads this; every
+# chart binds its series colour from the `series_token` field here.
+#
+# Items marked `# verify` need a human pass before the pipeline runs live —
+# they are best-effort starting points, not authoritative values.
+# =============================================================================
+
+issue:
+  imprint: "Bahamas Open Data | Intelligence"
+  title: "Digital Intelligence Annual Report"
+  edition: "2026"
+  sector: "Banking"
+  release_date: "2026-10-05"
+
+measurement_window:
+  start: "2025-10-01"
+  end: "2026-09-30"
+  timezone: "America/Nassau"  # AST, UTC-4
+
+cohort:
+  - id: rbc_bahamas
+    legal_name: "RBC Royal Bank (Bahamas) Limited"
+    display_name: "RBC Royal Bank Bahamas"
+    short_name: "RBC Bahamas"
+    series_token: "--intel-series-1"  # #00CED1
+    parent_group: "Royal Bank of Canada"
+    domain: "rbcroyalbank.com"           # verify regional path: /caribbean/bs.html
+    social:
+      facebook: null                     # verify — likely RBCRoyalBankBahamas
+      instagram: null                    # verify
+      twitter: null                      # verify
+      youtube: null                      # verify channel ID
+      tiktok: null                       # verify — may not exist
+      linkedin: null                     # verify
+    wayback_seeds:
+      - "https://www.facebook.com/RBCRoyalBankBahamas"   # verify
+      - "https://www.instagram.com/rbcroyalbankbahamas"  # verify
+
+  - id: scotiabank_bahamas
+    legal_name: "Scotiabank (Bahamas) Limited"
+    display_name: "Scotiabank Bahamas"
+    short_name: "Scotiabank"
+    series_token: "--intel-series-2"  # #FCD116
+    parent_group: "Bank of Nova Scotia"
+    domain: "bs.scotiabank.com"
+    social:
+      facebook: null                     # verify
+      instagram: null                    # verify
+      twitter: null                      # verify
+      youtube: null                      # verify
+      tiktok: null                       # verify
+      linkedin: null                     # verify
+    wayback_seeds: []
+
+  - id: commonwealth_bank
+    legal_name: "Commonwealth Bank Limited"
+    display_name: "Commonwealth Bank"
+    short_name: "Commonwealth"
+    series_token: "--intel-series-3"  # #A78BFA
+    parent_group: null                   # Bahamian-owned
+    domain: "combankltd.com"             # verify
+    social:
+      facebook: null                     # verify
+      instagram: null                    # verify
+      twitter: null                      # verify
+      youtube: null                      # verify
+      tiktok: null                       # verify
+      linkedin: null                     # verify
+    wayback_seeds: []
+
+  - id: fidelity_bahamas
+    legal_name: "Fidelity Bank (Bahamas) Limited"
+    display_name: "Fidelity Bank Bahamas"
+    short_name: "Fidelity"
+    series_token: "--intel-series-4"  # #FB923C
+    parent_group: null                   # Bahamian-listed
+    domain: "fidelitybahamas.com"        # verify
+    social:
+      facebook: null                     # verify
+      instagram: null                    # verify
+      twitter: null                      # verify
+      youtube: null                      # verify
+      tiktok: null                       # verify
+      linkedin: null                     # verify
+    wayback_seeds: []
+
+  - id: cibc_caribbean
+    legal_name: "CIBC Caribbean Bank Limited"
+    display_name: "CIBC Caribbean"
+    short_name: "CIBC Caribbean"
+    series_token: "--intel-series-5"  # #F472B6
+    parent_group: "Canadian Imperial Bank of Commerce"
+    domain: "cibcfcib.com"               # verify — recently rebranded from FirstCaribbean
+    rebrand_note: "Rebranded from FirstCaribbean International Bank (FCIB) in 2024. Historical social/web data may be under FCIB handles — track both during data capture."
+    social:
+      facebook: null                     # verify both CIBC Caribbean AND legacy FCIB
+      instagram: null                    # verify
+      twitter: null                      # verify
+      youtube: null                      # verify
+      tiktok: null                       # verify
+      linkedin: null                     # verify
+    wayback_seeds: []
+
+  - id: bank_of_bahamas
+    legal_name: "Bank of The Bahamas Limited"
+    display_name: "Bank of The Bahamas"
+    short_name: "Bank of The Bahamas"
+    series_token: "--intel-series-6"  # #34D399
+    parent_group: null                   # government-controlled, publicly listed (BISX: BOB)
+    domain: "bankbahamas.com"            # verify
+    social:
+      facebook: null                     # verify
+      instagram: null                    # verify
+      twitter: null                      # verify
+      youtube: null                      # verify
+      tiktok: null                       # verify
+      linkedin: null                     # verify
+    wayback_seeds: []
+
+# =============================================================================
+# Methodology gates — these are enforced by the scrapers, not just documented
+# =============================================================================
+
+methodology:
+  scraping_rules:
+    public_only: true                    # never use authenticated sessions
+    rate_limit_seconds_min: 2            # minimum between requests to same host
+    user_agent: "BahamasOpenDataBot/1.0 (+https://bahamasopendata.com/intelligence)"
+    respect_robots_txt: true
+    attribution_required: true           # every data point cites its source URL + timestamp
+
+  data_retention:
+    raw_snapshots_days: 730              # keep raw HTML/JSON for 2 years for auditability
+    normalized_indefinite: true          # the published dataset never expires
+
+  delta_validation:
+    rival_iq_trial_window: "2026-09-14 to 2026-09-27"
+    semrush_trial_window: "2026-09-21 to 2026-09-27"
+    purpose: "Cross-check our scraped values against commercial tooling; flag variances over 5% for manual review before lockdown."
