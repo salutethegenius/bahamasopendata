@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import date, datetime, timezone
 
 import pytest
+from pydantic import ValidationError
 
 from ingestion.intelligence.capture import registry
 from ingestion.intelligence.capture.registry import (
@@ -127,6 +128,34 @@ def test_mark_validation_updates_fields(registry_file):
 
     loaded = registry.load_registry()
     assert loaded.captures[0].validation_status == "validated"
+
+
+def test_mark_capture_rejects_invalid_scrape_status(registry_file):
+    with pytest.raises(ValidationError):
+        mark_capture(
+            BANK_ID,
+            CAPTURE_DATE,
+            platforms_captured=[],
+            platforms_failed=[],
+            raw_artifact_paths={},
+            scrape_status="bogus",  # type: ignore[arg-type]
+        )
+
+
+def test_mark_validation_rejects_invalid_validation_status(registry_file):
+    mark_capture(
+        BANK_ID,
+        CAPTURE_DATE,
+        platforms_captured=["facebook"],
+        platforms_failed=[],
+        raw_artifact_paths={},
+        scrape_status="complete",
+    )
+    with pytest.raises(ValidationError):
+        mark_validation(
+            "rbc_bahamas_2026-08-15",
+            validation_status="bogus",  # type: ignore[arg-type]
+        )
 
 
 def test_mark_validation_unknown_capture_raises(registry_file):

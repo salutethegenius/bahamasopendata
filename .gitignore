@@ -90,7 +90,6 @@ data/ingestion_status.json
 data/intelligence/raw/**
 data/intelligence/processed/**
 data/intelligence/exports/**
-data/intelligence/registry.json
 data/intelligence/logs/*
 !data/intelligence/raw/.gitkeep
 !data/intelligence/processed/.gitkeep

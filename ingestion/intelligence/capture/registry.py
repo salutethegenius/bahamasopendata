@@ -10,9 +10,12 @@ from __future__ import annotations
 
 import json
 from datetime import date, datetime, timezone
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import AwareDatetime, BaseModel, Field
+
+ScrapeStatus = Literal["pending", "partial", "complete", "failed"]
+ValidationStatus = Literal["pending", "validated", "failed"]
 
 from backend.app.services.document_ingestion import INTELLIGENCE_DATA_DIR
 
@@ -29,8 +32,8 @@ class CaptureRecord(BaseModel):
     platforms_failed: list[str] = Field(default_factory=list)
     raw_artifact_paths: dict[str, str] = Field(default_factory=dict)
     processed_path: Optional[str] = None
-    scrape_status: str = "pending"
-    validation_status: str = "pending"
+    scrape_status: ScrapeStatus = "pending"
+    validation_status: ValidationStatus = "pending"
     validated_at: Optional[AwareDatetime] = None
     delta_variance_pct: Optional[float] = Field(default=None, ge=0)
 
@@ -77,7 +80,7 @@ def mark_capture(
     platforms_failed: list[str],
     raw_artifact_paths: dict[str, str],
     processed_path: str | None = None,
-    scrape_status: str = "complete",
+    scrape_status: ScrapeStatus = "complete",
 ) -> CaptureRecord:
     """Upsert a capture row after scrape (or partial scrape) completes."""
     registry = load_registry()
@@ -112,7 +115,7 @@ def mark_capture(
 def mark_validation(
     capture_id: str,
     *,
-    validation_status: str,
+    validation_status: ValidationStatus,
     validated_at: AwareDatetime | None = None,
     delta_variance_pct: float | None = None,
 ) -> CaptureRecord:
@@ -124,8 +127,9 @@ def mark_validation(
     if validated_at is None and validation_status == "validated":
         validated_at = datetime.now(timezone.utc)
 
-    updated = record.model_copy(
-        update={
+    updated = CaptureRecord.model_validate(
+        {
+            **record.model_dump(),
             "validation_status": validation_status,
             "validated_at": validated_at,
             "delta_variance_pct": delta_variance_pct,
