@@ -16,6 +16,7 @@ UPLOADS_DIR = DATA_DIR / "uploads"
 RAW_DIR = DATA_DIR / "raw"
 PROCESSED_DIR = DATA_DIR / "processed"
 EMBEDDINGS_DIR = DATA_DIR / "embeddings"
+INTELLIGENCE_DATA_DIR = DATA_DIR / "intelligence"
 METADATA_FILE = DATA_DIR / "document_metadata.json"
 
 
