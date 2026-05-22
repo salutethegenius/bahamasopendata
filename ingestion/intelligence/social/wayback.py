@@ -1,9 +1,21 @@
-"""Historical follower counts via archive.org (Wayback Machine)."""
+"""Historical follower counts via archive.org (Wayback Machine).
+
+CDX matching uses the nearest snapshot within ±7 days of ``capture_date``
+(one row per calendar day via ``collapse=timestamp:8``). The actual snapshot
+date is preserved in ``SourceProvenance.archive_url`` — we never re-date
+artifacts to ``capture_date``.
+
+Follower parsing is implemented for Facebook, Instagram, and Twitter HTML
+only. YouTube and TikTok Wayback captures rarely expose follower counts in
+static HTML; those platforms are handled by dedicated scrapers (e.g.
+Social Blade). LinkedIn seeds are accepted but typically yield
+``followers=None`` unless a parseable count appears in the archive.
+"""
 from __future__ import annotations
 
 import asyncio
 import re
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
@@ -21,8 +33,8 @@ from ingestion.intelligence.types import (
 )
 
 CDX_API = "https://web.archive.org/cdx/search/cdx"
-WAYBACK_HOST = "web.archive.org"
 ARCHIVE_BASE = "https://web.archive.org/web"
+CDX_WINDOW_DAYS = 7
 
 _FOLLOWER_PATTERNS: dict[Platform, re.Pattern[str]] = {
     Platform.FACEBOOK: re.compile(
@@ -81,9 +93,39 @@ def _parse_follower_count(text: str, platform: Platform) -> Optional[int]:
         return None
 
 
-def _capture_date_range(capture_date: date) -> tuple[str, str]:
-    iso = capture_date.isoformat().replace("-", "")
-    return iso, iso
+def _cdx_window_bounds(capture_date: date) -> tuple[str, str]:
+    """Return CDX ``from`` and ``to`` bounds (YYYYMMDD) for the ±window."""
+    start = capture_date - timedelta(days=CDX_WINDOW_DAYS)
+    end = capture_date + timedelta(days=CDX_WINDOW_DAYS)
+    return start.strftime("%Y%m%d"), end.strftime("%Y%m%d")
+
+
+def _snapshot_date_from_timestamp(timestamp: str) -> date:
+    """Parse YYYYMMDD from a Wayback timestamp string."""
+    return date(int(timestamp[0:4]), int(timestamp[4:6]), int(timestamp[6:8]))
+
+
+def _pick_nearest_cdx_timestamp(rows: list, capture_date: date) -> Optional[str]:
+    """Select the CDX row whose snapshot date is closest to capture_date."""
+    if len(rows) < 2:
+        return None
+
+    best_timestamp: Optional[str] = None
+    best_distance: Optional[int] = None
+
+    for row in rows[1:]:
+        if len(row) < 2:
+            continue
+        timestamp = row[1]
+        if not timestamp or len(timestamp) < 8:
+            continue
+        snapshot_date = _snapshot_date_from_timestamp(timestamp)
+        distance = abs((snapshot_date - capture_date).days)
+        if best_distance is None or distance < best_distance:
+            best_distance = distance
+            best_timestamp = timestamp
+
+    return best_timestamp
 
 
 async def _fetch_cdx_timestamp(
@@ -91,15 +133,14 @@ async def _fetch_cdx_timestamp(
     seed_url: str,
     capture_date: date,
 ) -> Optional[str]:
-    """Return the closest Wayback timestamp (YYYYMMDDhhmmss) for the capture date."""
-    from_date, to_date = _capture_date_range(capture_date)
+    """Return the nearest Wayback timestamp within ±CDX_WINDOW_DAYS of capture_date."""
+    from_date, to_date = _cdx_window_bounds(capture_date)
     params = {
         "url": seed_url,
         "from": from_date,
         "to": to_date,
         "output": "json",
         "filter": "statuscode:200",
-        "limit": 1,
         "collapse": "timestamp:8",
     }
     response = await client.get(CDX_API, params=params)
@@ -109,9 +150,7 @@ async def _fetch_cdx_timestamp(
         )
     response.raise_for_status()
     rows = response.json()
-    if len(rows) < 2:
-        return None
-    return rows[1][1]
+    return _pick_nearest_cdx_timestamp(rows, capture_date)
 
 
 async def _fetch_snapshot_html(
@@ -181,7 +220,9 @@ async def capture(
                 timestamp = await _fetch_cdx_timestamp(client, seed_url, capture_date)
                 if not timestamp:
                     errors.append(
-                        f"wayback: no snapshot for {seed_url} on {capture_date.isoformat()}"
+                        "wayback: no snapshot within "
+                        f"±{CDX_WINDOW_DAYS} days of {capture_date.isoformat()} "
+                        f"for {seed_url}"
                     )
                     continue
 

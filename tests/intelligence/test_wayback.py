@@ -38,6 +38,33 @@ def test_parse_follower_count_facebook():
     assert wayback._parse_follower_count(html, Platform.FACEBOOK) == 12345
 
 
+def test_pick_nearest_cdx_timestamp_selects_closest_in_window():
+    rows = [
+        ["urlkey", "timestamp", "original", "mimetype", "statuscode"],
+        ["fb", "20260808120000", SEED_URL, "text/html", "200"],
+        ["fb", "20260820120000", SEED_URL, "text/html", "200"],
+    ]
+    selected = wayback._pick_nearest_cdx_timestamp(rows, CAPTURE_DATE)
+    assert selected == "20260820120000"
+
+
+def test_pick_nearest_cdx_timestamp_prefers_exact_day_when_present():
+    rows = [
+        ["urlkey", "timestamp", "original", "mimetype", "statuscode"],
+        ["fb", "20260808120000", SEED_URL, "text/html", "200"],
+        ["fb", "20260815143000", SEED_URL, "text/html", "200"],
+        ["fb", "20260820120000", SEED_URL, "text/html", "200"],
+    ]
+    selected = wayback._pick_nearest_cdx_timestamp(rows, CAPTURE_DATE)
+    assert selected == "20260815143000"
+
+
+def test_cdx_window_bounds_span_seven_days():
+    start, end = wayback._cdx_window_bounds(CAPTURE_DATE)
+    assert start == "20260808"
+    assert end == "20260822"
+
+
 @pytest.mark.asyncio
 async def test_capture_returns_social_metric_with_provenance(monkeypatch, tmp_path):
     html = (FIXTURES / "wayback_facebook_snapshot.html").read_text()
@@ -84,7 +111,35 @@ async def test_capture_records_error_when_no_snapshot(monkeypatch):
     result = await wayback.capture("rbc_bahamas", _cohort_entry(), CAPTURE_DATE)
 
     assert result.social_metrics == []
-    assert any("no snapshot" in err for err in result.errors)
+    assert any("no snapshot within" in err for err in result.errors)
+
+
+@pytest.mark.asyncio
+async def test_capture_selects_nearest_snapshot_when_not_exact_date(monkeypatch, tmp_path):
+    html = (FIXTURES / "wayback_facebook_snapshot.html").read_text()
+    monkeypatch.setattr(wayback, "INTELLIGENCE_DATA_DIR", tmp_path / "data" / "intelligence")
+    monkeypatch.setattr(wayback, "REPO_ROOT", tmp_path)
+
+    async def fake_cdx(client, seed_url, capture_date):
+        return "20260820120000"
+
+    async def fake_snapshot(client, seed_url, timestamp):
+        assert timestamp == "20260820120000"
+        return (
+            html,
+            f"https://web.archive.org/web/{timestamp}/{seed_url}",
+            200,
+        )
+
+    monkeypatch.setattr(wayback, "_fetch_cdx_timestamp", fake_cdx)
+    monkeypatch.setattr(wayback, "_fetch_snapshot_html", fake_snapshot)
+    monkeypatch.setattr(wayback, "get_rate_limit_seconds", lambda: 0)
+
+    result = await wayback.capture("rbc_bahamas", _cohort_entry(), CAPTURE_DATE)
+
+    assert len(result.social_metrics) == 1
+    assert "20260820" in str(result.social_metrics[0].source.archive_url)
+    assert result.social_metrics[0].capture_date == CAPTURE_DATE
 
 
 @pytest.mark.asyncio
