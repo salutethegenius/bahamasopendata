@@ -98,6 +98,25 @@ async def test_capture_returns_social_metric_with_provenance(monkeypatch, tmp_pa
     assert metric.source.archive_url is not None
     assert str(metric.source.archive_url).startswith("https://web.archive.org/")
     assert "wayback_facebook" in result.raw_artifacts
+    assert result.attempted_platforms == [Platform.FACEBOOK]
+
+
+def test_attempted_platforms_from_seeds_reflects_handles_present():
+    entry = CohortEntry(
+        id="rbc_bahamas",
+        legal_name="RBC Royal Bank (Bahamas) Limited",
+        display_name="RBC Royal Bank Bahamas",
+        short_name="RBC Bahamas",
+        series_token="--intel-series-1",
+        wayback_seeds=[
+            "https://www.facebook.com/RBCRoyalBankBahamas",
+            "https://www.instagram.com/rbc",
+        ],
+    )
+    assert wayback._attempted_platforms_from_seeds(entry.wayback_seeds) == [
+        Platform.FACEBOOK,
+        Platform.INSTAGRAM,
+    ]
 
 
 @pytest.mark.asyncio
@@ -111,6 +130,7 @@ async def test_capture_records_error_when_no_snapshot(monkeypatch):
     result = await wayback.capture("rbc_bahamas", _cohort_entry(), CAPTURE_DATE)
 
     assert result.social_metrics == []
+    assert result.attempted_platforms == [Platform.FACEBOOK]
     assert any("no snapshot within" in err for err in result.errors)
 
 
@@ -138,6 +158,7 @@ async def test_capture_selects_nearest_snapshot_when_not_exact_date(monkeypatch,
     result = await wayback.capture("rbc_bahamas", _cohort_entry(), CAPTURE_DATE)
 
     assert len(result.social_metrics) == 1
+    assert result.attempted_platforms == [Platform.FACEBOOK]
     assert "20260820" in str(result.social_metrics[0].source.archive_url)
     assert result.social_metrics[0].capture_date == CAPTURE_DATE
 
@@ -161,3 +182,4 @@ async def test_capture_no_seeds_returns_error_message():
     entry = entry.model_copy(update={"wayback_seeds": []})
     result = await wayback.capture("rbc_bahamas", entry, CAPTURE_DATE)
     assert "no wayback_seeds" in result.errors[0]
+    assert result.attempted_platforms == []

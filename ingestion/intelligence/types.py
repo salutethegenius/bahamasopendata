@@ -82,3 +82,10 @@ class CaptureResult(BaseModel):
     web_metrics: list[WebMetric] = Field(default_factory=list)
     raw_artifacts: dict[str, str] = Field(default_factory=dict)
     errors: list[str] = Field(default_factory=list)
+    attempted_platforms: list[Platform] = Field(
+        default_factory=list,
+        description=(
+            "Platforms this capture attempted, regardless of measurement success. "
+            "Used to derive platforms_failed."
+        ),
+    )

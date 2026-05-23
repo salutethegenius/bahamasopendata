@@ -10,7 +10,7 @@ from ingestion.intelligence.cohort import get_cohort_entry, load_cohort_file
 from ingestion.intelligence.errors import CaptureError
 from ingestion.intelligence.logging_config import get_logger
 from ingestion.intelligence.social import wayback
-from ingestion.intelligence.types import CaptureResult
+from ingestion.intelligence.types import CaptureResult, Platform
 
 SCRAPERS: dict[str, Callable[..., Awaitable[CaptureResult]]] = {
     "wayback": wayback.capture,
@@ -32,6 +32,8 @@ def merge_capture_results(results: list[CaptureResult]) -> CaptureResult:
     web_metrics: list = []
     raw_artifacts: dict[str, str] = {}
     errors: list[str] = []
+    attempted_platforms: list[Platform] = []
+    seen_attempted: set[Platform] = set()
 
     for result in results:
         if result.bank_id != bank_id:
@@ -53,6 +55,10 @@ def merge_capture_results(results: list[CaptureResult]) -> CaptureResult:
                 raise ValueError(f"raw_artifacts key collision: {key!r}")
             raw_artifacts[key] = path
         errors.extend(result.errors)
+        for platform in result.attempted_platforms:
+            if platform not in seen_attempted:
+                seen_attempted.add(platform)
+                attempted_platforms.append(platform)
 
     return CaptureResult(
         bank_id=bank_id,
@@ -62,13 +68,38 @@ def merge_capture_results(results: list[CaptureResult]) -> CaptureResult:
         web_metrics=web_metrics,
         raw_artifacts=raw_artifacts,
         errors=errors,
+        attempted_platforms=attempted_platforms,
     )
+
+
+def _captured_platforms(result: CaptureResult) -> set[str]:
+    """Platform.value strings with provenance recorded in merged metrics."""
+    captured = {metric.platform.value for metric in result.social_metrics}
+    if result.web_metrics:
+        captured.add(Platform.WEBSITE.value)
+    return captured
+
+
+def _registry_platforms(result: CaptureResult) -> tuple[list[str], list[str]]:
+    """Derive platform-granular registry lists from metrics and attempted_platforms."""
+    captured = _captured_platforms(result)
+    platforms_captured = sorted(captured)
+    platforms_failed = [
+        platform.value
+        for platform in result.attempted_platforms
+        if platform.value not in captured
+    ]
+    return platforms_captured, platforms_failed
 
 
 def _scrape_status(
     platforms_captured: list[str],
     platforms_failed: list[str],
+    *,
+    catastrophic_failure: bool = False,
 ) -> ScrapeStatus:
+    if catastrophic_failure:
+        return "failed"
     if not platforms_failed:
         return "complete"
     if platforms_captured:
@@ -90,23 +121,20 @@ async def capture_one(
             raise ValueError(f"Unknown scraper: {name!r}")
 
     successful: list[CaptureResult] = []
-    platforms_captured: list[str] = []
-    platforms_failed: list[str] = []
     failure_errors: list[str] = []
 
     for name in scraper_names:
         try:
             result = await SCRAPERS[name](bank_id, cohort_entry, capture_date)
             successful.append(result)
-            platforms_captured.append(name)
         except CaptureError as exc:
+            # Catastrophic scraper failure: attempted_platforms is unreachable on
+            # raise, so we cannot attribute failure to specific platforms.
             logger.warning("Scraper %s failed for %s: %s", name, bank_id, exc)
             failure_errors.append(str(exc))
-            platforms_failed.append(name)
         except Exception as exc:
             logger.exception("Unexpected error in scraper %s for %s", name, bank_id)
             failure_errors.append(str(exc))
-            platforms_failed.append(name)
 
     if successful:
         merged = merge_capture_results(successful)
@@ -122,7 +150,13 @@ async def capture_one(
     processed_path.write_text(merged.model_dump_json(indent=2), encoding="utf-8")
     rel_processed = str(processed_path.relative_to(REPO_ROOT))
 
-    scrape_status = _scrape_status(platforms_captured, platforms_failed)
+    platforms_captured, platforms_failed = _registry_platforms(merged)
+    catastrophic_failure = bool(failure_errors) and not platforms_captured and not platforms_failed
+    scrape_status = _scrape_status(
+        platforms_captured,
+        platforms_failed,
+        catastrophic_failure=catastrophic_failure,
+    )
     mark_capture(
         bank_id,
         capture_date,

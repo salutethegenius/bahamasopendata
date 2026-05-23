@@ -36,6 +36,23 @@ CDX_API = "https://web.archive.org/cdx/search/cdx"
 ARCHIVE_BASE = "https://web.archive.org/web"
 CDX_WINDOW_DAYS = 7
 
+_WAYBACK_ATTEMPTED_PLATFORMS = frozenset(
+    {Platform.FACEBOOK, Platform.INSTAGRAM, Platform.TWITTER}
+)
+
+
+def _attempted_platforms_from_seeds(seeds: list[str]) -> list[Platform]:
+    """Return FB/IG/Twitter platforms with a usable wayback seed URL in the cohort."""
+    seen: set[Platform] = set()
+    attempted: list[Platform] = []
+    for seed_url in seeds:
+        platform = _platform_for_url(seed_url)
+        if platform in _WAYBACK_ATTEMPTED_PLATFORMS and platform not in seen:
+            seen.add(platform)
+            attempted.append(platform)
+    return attempted
+
+
 _FOLLOWER_PATTERNS: dict[Platform, re.Pattern[str]] = {
     Platform.FACEBOOK: re.compile(
         r"([\d,.]+[KMB]?)\s+followers",
@@ -199,10 +216,12 @@ async def capture(
     fetched_at = datetime.now(timezone.utc)
 
     seeds = cohort_entry.wayback_seeds
+    attempted_platforms = _attempted_platforms_from_seeds(seeds)
     if not seeds:
         return CaptureResult(
             bank_id=bank_id,
             capture_date=capture_date,
+            attempted_platforms=attempted_platforms,
             errors=["wayback: no wayback_seeds configured for this bank"],
         )
 
@@ -270,4 +289,5 @@ async def capture(
         social_metrics=social_metrics,
         raw_artifacts=raw_artifacts,
         errors=errors,
+        attempted_platforms=attempted_platforms,
     )

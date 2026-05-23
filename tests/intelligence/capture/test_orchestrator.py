@@ -57,6 +57,7 @@ def _sample_result(
         ],
         raw_artifacts={artifact_key: artifact_path},
         errors=[error] if error else [],
+        attempted_platforms=[Platform.FACEBOOK],
     )
 
 
@@ -81,12 +82,27 @@ def test_merge_capture_results_combines_two_valid_results():
         artifact_path="data/intelligence/raw/2026-08-15/rbc_bahamas/wayback_instagram.html",
         error="soft failure b",
     )
+    second = second.model_copy(
+        update={
+            "attempted_platforms": [Platform.INSTAGRAM],
+            "social_metrics": [
+                SocialMetric(
+                    bank_id=BANK_ID,
+                    platform=Platform.INSTAGRAM,
+                    capture_date=CAPTURE_DATE,
+                    followers=200,
+                    source=second.social_metrics[0].source,
+                )
+            ],
+        }
+    )
 
     merged = orchestrator.merge_capture_results([first, second])
 
     assert merged.bank_id == BANK_ID
     assert merged.capture_date == CAPTURE_DATE
     assert len(merged.social_metrics) == 2
+    assert merged.attempted_platforms == [Platform.FACEBOOK, Platform.INSTAGRAM]
     assert merged.raw_artifacts == {
         "wayback_facebook": "data/intelligence/raw/2026-08-15/rbc_bahamas/wayback_facebook.html",
         "wayback_instagram": "data/intelligence/raw/2026-08-15/rbc_bahamas/wayback_instagram.html",
@@ -158,7 +174,7 @@ async def test_capture_one_success_writes_processed_json_and_registry(
     assert len(loaded.captures) == 1
     row = loaded.captures[0]
     assert row.scrape_status == "complete"
-    assert row.platforms_captured == ["wayback"]
+    assert row.platforms_captured == ["facebook"]
     assert row.platforms_failed == []
     assert row.processed_path.endswith("rbc_bahamas.json")
 
@@ -183,8 +199,57 @@ async def test_capture_one_capture_error_marks_failed(
     loaded = registry.load_registry()
     row = loaded.captures[0]
     assert row.scrape_status == "failed"
-    assert row.platforms_failed == ["wayback"]
+    assert row.platforms_failed == []
     assert row.platforms_captured == []
+
+
+@pytest.mark.asyncio
+async def test_capture_one_partial_platform_failure(
+    intelligence_dirs, monkeypatch
+):
+    provenance = SourceProvenance(
+        url="https://www.facebook.com/example",
+        fetched_at=datetime(2026, 8, 15, 12, 0, 0, tzinfo=UTC),
+        http_status=200,
+        method="wayback",
+    )
+    partial_result = CaptureResult(
+        bank_id=BANK_ID,
+        capture_date=CAPTURE_DATE,
+        attempted_platforms=[Platform.FACEBOOK, Platform.INSTAGRAM, Platform.TWITTER],
+        social_metrics=[
+            SocialMetric(
+                bank_id=BANK_ID,
+                platform=Platform.FACEBOOK,
+                capture_date=CAPTURE_DATE,
+                followers=100,
+                source=provenance,
+            ),
+            SocialMetric(
+                bank_id=BANK_ID,
+                platform=Platform.INSTAGRAM,
+                capture_date=CAPTURE_DATE,
+                followers=None,
+                source=provenance.model_copy(
+                    update={"url": "https://www.instagram.com/example"}
+                ),
+            ),
+        ],
+    )
+    mock_capture = AsyncMock(return_value=partial_result)
+    monkeypatch.setattr(orchestrator, "SCRAPERS", {"wayback": mock_capture})
+    monkeypatch.setattr(
+        orchestrator,
+        "get_cohort_entry",
+        lambda bank_id: _cohort_entry(bank_id),
+    )
+
+    _, status = await orchestrator.capture_one(BANK_ID, CAPTURE_DATE)
+
+    assert status == "partial"
+    row = registry.load_registry().captures[0]
+    assert row.platforms_captured == ["facebook", "instagram"]
+    assert row.platforms_failed == ["twitter"]
 
 
 @pytest.mark.asyncio
@@ -209,6 +274,8 @@ async def test_capture_one_unexpected_exception_marks_failed(
 
     loaded = registry.load_registry()
     assert loaded.captures[0].scrape_status == "failed"
+    assert loaded.captures[0].platforms_captured == []
+    assert loaded.captures[0].platforms_failed == []
 
 
 @pytest.mark.asyncio

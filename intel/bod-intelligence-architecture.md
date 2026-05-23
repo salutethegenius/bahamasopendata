@@ -185,6 +185,7 @@ class CaptureResult(BaseModel):
     web_metrics: list[WebMetric] = Field(default_factory=list)
     raw_artifacts: dict[str, str] = Field(default_factory=dict)  # logical name → path under data/intelligence/raw/
     errors: list[str] = Field(default_factory=list)              # non-fatal failures, logged not raised
+    attempted_platforms: list[Platform] = Field(default_factory=list)  # platforms attempted regardless of measurement success; used to derive platforms_failed
 ```
 
 All `Optional` fields default to `None` — the distinction between "measured zero" and "couldn't measure" must survive into the published dataset.
@@ -250,6 +251,7 @@ Adopting these from the existing codebase, not reinventing:
 5. **No retry magic.** `tenacity` is in requirements but unused — do not assume retries exist. Implement explicit backoff in `capture/orchestrator.py` for the rate-limit gate.
 6. **Embeddings reuse.** If we later embed report text for the RAG `/ask` endpoint, use the existing `national-pulse` Pinecone index with `document_type: "intel_report"` discriminator. Call into `ingestion/embeddings.py` via its existing helpers and apply `sanitize_metadata_string()` to all metadata.
 7. **Logging via Python `logging`**, not `print()`. Define logger in `ingestion/intelligence/logging_config.py` with handlers writing to both stdout and `data/intelligence/logs/capture.log`. Use semantic levels (`info` for run lifecycle, `warning` for soft failures the dataset survives, `error` for hard failures that abort a capture).
+8. **Registry platform attribution.** `platforms_captured` and `platforms_failed` are `Platform.value` strings (e.g. `"facebook"`, `"website"`), not scraper dispatch keys. The orchestrator derives them from `CaptureResult.attempted_platforms` and the union of platforms appearing in merged `social_metrics` and `web_metrics`.
 
 ---
 
