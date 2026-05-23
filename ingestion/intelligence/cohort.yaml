@@ -7,8 +7,8 @@
 # scrapers, normalizers, and report renderers. Every scraper reads this; every
 # chart binds its series colour from the `series_token` field here.
 #
-# Items marked `# verify` need a human pass before the pipeline runs live —
-# they are best-effort starting points, not authoritative values.
+# Social handles verified May 2026 from each bank's public website / official
+# social media centre. `null` means the platform is not used (not attempted).
 # =============================================================================
 
 issue:
@@ -30,17 +30,17 @@ cohort:
     short_name: "RBC Bahamas"
     series_token: "--intel-series-1"  # #00CED1
     parent_group: "Royal Bank of Canada"
-    domain: "rbcroyalbank.com"           # verify regional path: /caribbean/bs.html
+    domain: "rbcroyalbank.com"
     social:
-      facebook: null                     # verify — likely RBCRoyalBankBahamas
-      instagram: null                    # verify
-      twitter: null                      # verify
-      youtube: null                      # verify channel ID
-      tiktok: null                       # verify — may not exist
-      linkedin: null                     # verify
+      facebook: RBCCaribbean
+      instagram: rbccaribbean
+      twitter: null
+      youtube: "@RBC"
+      tiktok: null
+      linkedin: rbc-caribbean-banking
     wayback_seeds:
-      - "https://www.facebook.com/RBCRoyalBankBahamas"   # verify
-      - "https://www.instagram.com/rbcroyalbankbahamas"  # verify
+      - "https://www.facebook.com/RBCCaribbean"
+      - "https://www.instagram.com/rbccaribbean"
 
   - id: scotiabank_bahamas
     legal_name: "Scotiabank (Bahamas) Limited"
@@ -50,13 +50,15 @@ cohort:
     parent_group: "Bank of Nova Scotia"
     domain: "bs.scotiabank.com"
     social:
-      facebook: null                     # verify
-      instagram: null                    # verify
-      twitter: null                      # verify
-      youtube: null                      # verify
-      tiktok: null                       # verify
-      linkedin: null                     # verify
-    wayback_seeds: []
+      facebook: scotiacaribbean
+      instagram: scotiabankbah
+      twitter: null
+      youtube: "UCCr-rdQ1xIrcAj0IiG2mo8g"
+      tiktok: null
+      linkedin: null
+    wayback_seeds:
+      - "https://www.facebook.com/scotiacaribbean"
+      - "https://www.instagram.com/scotiabankbah"
 
   - id: commonwealth_bank
     legal_name: "Commonwealth Bank Limited"
@@ -64,15 +66,17 @@ cohort:
     short_name: "Commonwealth"
     series_token: "--intel-series-3"  # #A78BFA
     parent_group: null                   # Bahamian-owned
-    domain: "combankltd.com"             # verify
+    domain: "combankltd.com"
     social:
-      facebook: null                     # verify
-      instagram: null                    # verify
-      twitter: null                      # verify
-      youtube: null                      # verify
-      tiktok: null                       # verify
-      linkedin: null                     # verify
-    wayback_seeds: []
+      facebook: CommonwealthBank242
+      instagram: commonwealthbankltd
+      twitter: null
+      youtube: "@CommonwealthBankLtd"
+      tiktok: null
+      linkedin: commonwealth-bank-ltd-bahamas
+    wayback_seeds:
+      - "https://www.facebook.com/CommonwealthBank242"
+      - "https://www.instagram.com/commonwealthbankltd"
 
   - id: fidelity_bahamas
     legal_name: "Fidelity Bank (Bahamas) Limited"
@@ -80,15 +84,17 @@ cohort:
     short_name: "Fidelity"
     series_token: "--intel-series-4"  # #FB923C
     parent_group: null                   # Bahamian-listed
-    domain: "fidelitybahamas.com"        # verify
+    domain: "fidelitybahamas.com"
     social:
-      facebook: null                     # verify
-      instagram: null                    # verify
-      twitter: null                      # verify
-      youtube: null                      # verify
-      tiktok: null                       # verify
-      linkedin: null                     # verify
-    wayback_seeds: []
+      facebook: FidelityBankBahamas
+      instagram: fidelity.bank
+      twitter: null
+      youtube: null
+      tiktok: null
+      linkedin: null
+    wayback_seeds:
+      - "https://www.facebook.com/FidelityBankBahamas"
+      - "https://www.instagram.com/fidelity.bank"
 
   - id: cibc_caribbean
     legal_name: "CIBC Caribbean Bank Limited"
@@ -96,16 +102,19 @@ cohort:
     short_name: "CIBC Caribbean"
     series_token: "--intel-series-5"  # #F472B6
     parent_group: "Canadian Imperial Bank of Commerce"
-    domain: "cibcfcib.com"               # verify — recently rebranded from FirstCaribbean
+    domain: "cibcfcib.com"
     rebrand_note: "Rebranded from FirstCaribbean International Bank (FCIB) in 2024. Historical social/web data may be under FCIB handles — track both during data capture."
     social:
-      facebook: null                     # verify both CIBC Caribbean AND legacy FCIB
-      instagram: null                    # verify
-      twitter: null                      # verify
-      youtube: null                      # verify
-      tiktok: null                       # verify
-      linkedin: null                     # verify
-    wayback_seeds: []
+      facebook: cibccaribbeanBAHandTCI
+      instagram: cibccaribbean
+      twitter: cibccaribbeanbs
+      youtube: "@CIBCCaribbean"
+      tiktok: null
+      linkedin: cibccaribbean
+    wayback_seeds:
+      - "https://www.facebook.com/cibccaribbeanBAHandTCI"
+      - "https://www.instagram.com/cibccaribbean"
+      - "https://twitter.com/cibccaribbeanbs"
 
   - id: bank_of_bahamas
     legal_name: "Bank of The Bahamas Limited"
@@ -113,15 +122,17 @@ cohort:
     short_name: "Bank of The Bahamas"
     series_token: "--intel-series-6"  # #34D399
     parent_group: null                   # government-controlled, publicly listed (BISX: BOB)
-    domain: "bankbahamas.com"            # verify
+    domain: "bankbahamas.com"
     social:
-      facebook: null                     # verify
-      instagram: null                    # verify
-      twitter: null                      # verify
-      youtube: null                      # verify
-      tiktok: null                       # verify
-      linkedin: null                     # verify
-    wayback_seeds: []
+      facebook: BOBBankofSolutions
+      instagram: bankofthebahamaslimited
+      twitter: null
+      youtube: null
+      tiktok: null
+      linkedin: bank-of-the-bahamas
+    wayback_seeds:
+      - "https://www.facebook.com/BOBBankofSolutions"
+      - "https://www.instagram.com/bankofthebahamaslimited"
 
 # =============================================================================
 # Methodology gates — these are enforced by the scrapers, not just documented
