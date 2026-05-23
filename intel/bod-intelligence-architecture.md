@@ -32,6 +32,8 @@ bahamasopedata/                            # Note: workspace folder is bahamasop
 │   └── intelligence/                      # NEW — Intelligence imprint pipeline
 │       ├── __init__.py
 │       ├── cohort.yaml                    # the six banks — source of truth (already drafted)
+│       ├── cohort.py                      # Pydantic loader for cohort.yaml (load_cohort_file, get_cohort_entry)
+│       ├── errors.py                      # CaptureError — raised on rate-limit, paywall, auth-required surfaces
 │       ├── types.py                       # pydantic models for normalized data
 │       ├── logging_config.py              # shared logger setup for the imprint
 │       ├── methodology.md                 # public-facing transparency doc (drafted after first scraper lands)
