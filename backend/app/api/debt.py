@@ -1,5 +1,6 @@
 """Debt and Loans API endpoints."""
 from datetime import date
+from typing import Optional
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -114,14 +115,18 @@ async def _latest_document_name(db: AsyncSession, fiscal_year: str) -> str:
 
 
 @router.get("", response_model=DebtSummary)
-async def get_debt_summary(db: AsyncSession = Depends(get_db)):
+async def get_debt_summary(
+    fiscal_year: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
+):
     """Get national debt summary."""
     years = await _debt_years(db)
     if not years:
         return FALLBACK_SUMMARY
 
-    current_year = years[-1]
-    previous_year = years[-2] if len(years) > 1 else None
+    current_year = fiscal_year if fiscal_year in years else years[-1]
+    current_index = years.index(current_year)
+    previous_year = years[current_index - 1] if current_index > 0 else None
     current_result = await db.execute(
         select(Debt).where(Debt.fiscal_year == current_year).order_by(Debt.created_at.desc())
     )
@@ -149,19 +154,25 @@ async def get_debt_summary(db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/overview", response_model=DebtSummary)
-async def get_debt_overview(db: AsyncSession = Depends(get_db)):
+async def get_debt_overview(
+    fiscal_year: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
+):
     """Alias for the debt summary endpoint used by overview-style clients."""
-    return await get_debt_summary(db)
+    return await get_debt_summary(fiscal_year=fiscal_year, db=db)
 
 
 @router.get("/creditors", response_model=list[Creditor])
-async def get_creditors(db: AsyncSession = Depends(get_db)):
+async def get_creditors(
+    fiscal_year: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
+):
     """Get breakdown of major creditors."""
     years = await _debt_years(db)
     if not years:
         return FALLBACK_CREDITORS
 
-    current_year = years[-1]
+    current_year = fiscal_year if fiscal_year in years else years[-1]
     debt_result = await db.execute(select(Debt).where(Debt.fiscal_year == current_year).order_by(Debt.created_at.desc()))
     debt_row = debt_result.scalars().first()
     total_debt = float(debt_row.total_debt or 0.0) if debt_row else 0.0

@@ -1,17 +1,35 @@
 import type { AskResponse, Poll } from '@/types';
+import { fiscalYearSearchParam } from '@/lib/fiscal-year';
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
 
-export async function askQuestion(question: string): Promise<AskResponse> {
+export async function askQuestion(
+  question: string,
+  fiscalYear?: string | null,
+): Promise<AskResponse> {
   const res = await fetch(`${API_BASE}/ask`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ question }),
+    body: JSON.stringify({
+      question,
+      fiscal_year: fiscalYear ?? undefined,
+    }),
   });
   if (!res.ok) throw new Error(`Ask request failed (${res.status})`);
   return res.json();
 }
+
+export async function fetchBudgetYears(): Promise<{
+  years: string[];
+  current_year: string;
+}> {
+  const res = await fetch(`${API_BASE}/budget/years`);
+  if (!res.ok) throw new Error(`Failed to fetch budget years (${res.status})`);
+  return res.json();
+}
+
+export { fiscalYearSearchParam };
 
 export async function fetchPolls(): Promise<Poll[]> {
   const res = await fetch(`${API_BASE}/polls`);

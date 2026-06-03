@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import StatCard from '@/components/StatCard';
 import SectorPieChart from '@/components/SectorPieChart';
 import AskBar from '@/components/AskBar';
 import DashboardSectionCard from '@/components/DashboardSectionCard';
+import FiscalYearSelector from '@/components/FiscalYearSelector';
 import ResponsiveContainer from '@/components/SafeResponsiveContainer';
 import { formatCurrency, formatPercent } from '@/lib/format';
+import { fiscalYearSearchParam, useFiscalYear } from '@/lib/fiscal-year';
 import {
   Ministry,
   AskResponse,
@@ -67,17 +69,15 @@ const initialHistoricalData = [
 ];
 
 // Real API ask function - lazy load to avoid SSR issues
-const handleAsk = async (question: string): Promise<AskResponse> => {
+const createAskHandler = (fiscalYear: string) => async (question: string): Promise<AskResponse> => {
   try {
-    // Dynamically import to avoid SSR issues
     const { askQuestion } = await import('@/lib/api');
-    return await askQuestion(question);
+    return await askQuestion(question, fiscalYear);
   } catch (error) {
     console.error('Failed to get answer:', error);
-    // Return a user-friendly error response
     return {
-      answer: error instanceof Error 
-        ? error.message 
+      answer: error instanceof Error
+        ? error.message
         : "I'm having trouble connecting to the answer service. Please check your connection and try again.",
       numbers: null,
       chart_data: null,
@@ -87,8 +87,10 @@ const handleAsk = async (question: string): Promise<AskResponse> => {
   }
 };
 
-export default function Home() {
+function HomePageContent() {
   const router = useRouter();
+  const { fiscalYear, currentYear } = useFiscalYear();
+  const isLatestYear = fiscalYear === currentYear;
 
   const [budgetSummary, setBudgetSummary] = useState(initialBudgetSummary);
   const [ministries, setMinistries] = useState<Ministry[]>(initialMinistries);
@@ -112,8 +114,11 @@ export default function Home() {
     })),
   );
 
+  const isSurplus = budgetSummary.deficit_surplus >= 0;
+
   useEffect(() => {
     const fetchData = async () => {
+      const fy = fiscalYearSearchParam(fiscalYear);
       try {
         const [
           budgetRes,
@@ -127,12 +132,12 @@ export default function Home() {
           hotTopicsRes,
           newsRes,
         ] = await Promise.allSettled([
-          fetch(`${API_BASE}/budget/summary`),
+          fetch(`${API_BASE}/budget/summary${fy}`),
           fetch(`${API_BASE}/budget/historical`),
-          fetch(`${API_BASE}/budget/sector-breakdown`),
-          fetch(`${API_BASE}/ministries`),
-          fetch(`${API_BASE}/revenue`),
-          fetch(`${API_BASE}/debt`),
+          fetch(`${API_BASE}/budget/sector-breakdown${fy}`),
+          fetch(`${API_BASE}/ministries${fy}`),
+          fetch(`${API_BASE}/revenue${fy}`),
+          fetch(`${API_BASE}/debt/overview${fy}`),
           fetch(`${API_BASE}/economic/comparison`),
           fetch(`${API_BASE}/polls/active`),
           fetch(`${API_BASE}/hot-topics/reports`),
@@ -259,7 +264,7 @@ export default function Home() {
     };
 
     fetchData();
-  }, []);
+  }, [fiscalYear]);
 
   const healthMinistry = useMemo(
     () =>
@@ -300,12 +305,15 @@ export default function Home() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <Calendar className="w-4 h-4" />
-          <span>Fiscal Year 2025/26</span>
-          <span className="mx-2">•</span>
-          <FileText className="w-4 h-4" />
-          <span>Last updated: May 28, 2025</span>
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-2">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Calendar className="w-4 h-4" />
+            <span>Fiscal Year {budgetSummary.fiscal_year}</span>
+            <span className="mx-2">•</span>
+            <FileText className="w-4 h-4" />
+            <span>Source: {budgetSummary.source_document}</span>
+          </div>
+          <FiscalYearSelector />
         </div>
         <h1 className="text-3xl md:text-4xl font-bold text-[var(--ocean)] mb-2">
           <span className="font-bold text-[var(--ocean)]">
@@ -322,7 +330,7 @@ export default function Home() {
           Real-time insights into the Bahamas national budget. See where your money goes, 
           track trends, and ask questions about government spending.
         </p>
-        {/* Historic Milestone Banner */}
+        {/* Budget availability banner */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -330,10 +338,27 @@ export default function Home() {
           className="mt-4 bg-gradient-to-r from-turquoise/10 to-yellow/10 border border-turquoise/20 rounded-lg p-4"
         >
           <div className="flex items-center gap-3">
-            <TrendingUp className="w-6 h-6 text-turquoise" />
+            <FileText className="w-6 h-6 text-turquoise shrink-0" />
             <div>
-              <p className="font-semibold text-gray-900">🎉 Historic First: Balanced Budget with Surplus</p>
-              <p className="text-sm text-gray-600">For the first time since Independence, The Bahamas has achieved a budget surplus of $75.5M</p>
+              {isLatestYear ? (
+                <>
+                  <p className="font-semibold text-gray-900">
+                    FY {budgetSummary.fiscal_year} budget is now live
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Dive in — explore ministries, revenue, debt, and ask questions about the draft estimates.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="font-semibold text-gray-900">
+                    Viewing FY {budgetSummary.fiscal_year}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Browse published estimates for this fiscal year, or switch to the latest budget above.
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </motion.div>
@@ -344,7 +369,7 @@ export default function Home() {
         <StatCard
           title="Total Budget"
           value={budgetSummary.total_expenditure}
-          subtitle="Fiscal Year 2025/26"
+          subtitle={`Fiscal Year ${budgetSummary.fiscal_year}`}
           sourceDocument={budgetSummary.source_document}
           sourcePage={budgetSummary.source_page}
           onClick={() => router.push('/ministries')}
@@ -352,21 +377,25 @@ export default function Home() {
         <StatCard
           title="Revenue"
           value={budgetSummary.total_revenue}
-          subtitle="Projected for FY2025/26"
+          subtitle={`Projected for FY${budgetSummary.fiscal_year}`}
           sourceDocument={budgetSummary.source_document}
           onClick={() => router.push('/revenue')}
         />
         <StatCard
           title="National Debt"
           value={budgetSummary.national_debt}
-          subtitle={`${budgetSummary.debt_to_gdp_ratio}% of GDP (down from 88.7%)`}
+          subtitle={`${budgetSummary.debt_to_gdp_ratio}% of GDP`}
           sourceDocument={budgetSummary.source_document}
           onClick={() => router.push('/debt')}
         />
         <StatCard
-          title="Budget Surplus"
-          value={budgetSummary.deficit_surplus}
-          subtitle="First surplus since Independence! 🎉"
+          title={isSurplus ? 'Budget Surplus' : 'Budget Deficit'}
+          value={Math.abs(budgetSummary.deficit_surplus)}
+          subtitle={
+            isLatestYear
+              ? 'From draft estimates'
+              : `FY ${budgetSummary.fiscal_year} estimate`
+          }
           sourceDocument={budgetSummary.source_document}
           onClick={() => router.push('/revenue')}
         />
@@ -446,7 +475,7 @@ export default function Home() {
             title="Health & wellness"
             subtitle="Hospitals, clinics, and public health."
             icon={HeartPulse}
-            primaryStatLabel="Allocation 2025/26"
+            primaryStatLabel={`Allocation ${budgetSummary.fiscal_year}`}
             primaryStatValue={
               healthMinistry
                 ? formatCurrency(healthMinistry.allocation)
@@ -571,16 +600,23 @@ export default function Home() {
         <div>
           <h3 className="font-semibold text-gray-900 mb-1">About this data</h3>
           <p className="text-sm text-gray-600">
-            All figures are sourced from the official <strong>Bahamas Budget 2025/26</strong> documents 
-            presented to Parliament on May 28, 2025 by Prime Minister and Minister of Finance 
-            Hon. Philip Edward Davis KC, MP. Data includes the Budget Communication and Budget Book 
-            (Draft Estimates of Revenue & Expenditure). Ask questions below to explore more.
+            All figures are sourced from the official <strong>Bahamas Budget {budgetSummary.fiscal_year}</strong> documents
+            published by the Ministry of Finance. Data includes draft estimates and budget communications where available.
+            Ask questions below to explore more — answers are scoped to the selected fiscal year.
           </p>
         </div>
       </motion.div>
 
       {/* Ask Bar */}
-      <AskBar onAsk={handleAsk} />
+      <AskBar onAsk={createAskHandler(fiscalYear)} />
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="max-w-7xl mx-auto px-4 py-8">Loading dashboard…</div>}>
+      <HomePageContent />
+    </Suspense>
   );
 }

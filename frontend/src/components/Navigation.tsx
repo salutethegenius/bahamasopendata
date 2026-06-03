@@ -18,8 +18,9 @@ import {
   BarChart3,
   ChevronDown,
   Flame,
+  History,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 type NavItem = {
   id: string;
@@ -40,6 +41,7 @@ const budgetNavItems: NavItem[] = [
   { id: 'debt', href: '/debt', label: 'Debt', icon: CreditCard, domain: 'debt' },
   { id: 'map', href: '/map', label: 'Map', icon: Map, domain: 'geography' },
   { id: 'ministries', href: '/ministries', label: 'Ministries', icon: Building2, domain: 'ministries' },
+  { id: 'past-budgets', href: '/budget/history', label: 'Past Budgets', icon: History, domain: 'budget' },
 ];
 
 const tailNavItems: NavItem[] = [
@@ -52,10 +54,23 @@ export default function Navigation() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [budgetOpen, setBudgetOpen] = useState(false);
+  const budgetCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const openBudgetMenu = () => {
+    if (budgetCloseTimer.current) {
+      clearTimeout(budgetCloseTimer.current);
+      budgetCloseTimer.current = null;
+    }
+    setBudgetOpen(true);
+  };
+
+  const closeBudgetMenu = () => {
+    budgetCloseTimer.current = setTimeout(() => setBudgetOpen(false), 120);
+  };
 
   const isBudgetActive = budgetNavItems.some(
     (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
-  );
+  ) || pathname.startsWith('/budget/');
 
   return (
     <>
@@ -92,7 +107,7 @@ export default function Navigation() {
                     {item.label}
                     {isActive && (
                       <motion.div
-                        layoutId="nav-indicator"
+                        layoutId={`nav-indicator-${item.id}`}
                         className="absolute bottom-0 left-0 right-0 h-0.5 bg-turquoise"
                       />
                     )}
@@ -103,49 +118,57 @@ export default function Navigation() {
               {/* National Budget dropdown */}
               <div
                 className="relative"
-                onMouseEnter={() => setBudgetOpen(true)}
-                onMouseLeave={() => setBudgetOpen(false)}
+                onMouseEnter={openBudgetMenu}
+                onMouseLeave={closeBudgetMenu}
               >
                 <button
                   type="button"
+                  aria-expanded={budgetOpen}
+                  aria-haspopup="true"
                   className={`
                     relative px-3 py-2 rounded-lg text-sm font-medium transition-colors
                     flex items-center gap-2
                     ${isBudgetActive || budgetOpen
-                      ? 'text-turquoise'
+                      ? 'text-turquoise bg-turquoise/5'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                     }
                   `}
                 >
                   <LayoutDashboard className="w-4 h-4" />
                   National Budget
-                  <ChevronDown className="w-3 h-3" />
+                  <ChevronDown
+                    className={`w-3 h-3 transition-transform duration-150 ${budgetOpen ? 'rotate-180' : ''}`}
+                  />
                   {isBudgetActive && (
                     <motion.div
-                      layoutId="nav-indicator"
+                      layoutId="nav-indicator-budget"
                       className="absolute bottom-0 left-0 right-0 h-0.5 bg-turquoise"
                     />
                   )}
                 </button>
                 {budgetOpen && (
-                  <div className="absolute right-0 mt-2 w-52 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50">
-                    {budgetNavItems.map((item) => {
-                      const isActive = pathname === item.href;
-                      const Icon = item.icon;
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          className={`
-                            flex items-center gap-2 px-3 py-2 text-sm
-                            ${isActive ? 'text-turquoise bg-turquoise/5' : 'text-gray-700 hover:bg-gray-100'}
-                          `}
-                        >
-                          <Icon className="w-4 h-4" />
-                          {item.label}
-                        </Link>
-                      );
-                    })}
+                  <div className="absolute right-0 top-full z-50 w-52 pt-2">
+                    <div className="rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                      {budgetNavItems.map((item) => {
+                        const isActive = pathname === item.href;
+                        const Icon = item.icon;
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            className={`
+                              flex items-center gap-2 px-3 py-2 text-sm transition-colors
+                              ${isActive
+                                ? 'bg-turquoise/5 text-turquoise'
+                                : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'}
+                            `}
+                          >
+                            <Icon className="w-4 h-4" />
+                            {item.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
@@ -170,7 +193,7 @@ export default function Navigation() {
                     {item.label}
                     {isActive && (
                       <motion.div
-                        layoutId="nav-indicator"
+                        layoutId={`nav-indicator-${item.id}`}
                         className="absolute bottom-0 left-0 right-0 h-0.5 bg-turquoise"
                       />
                     )}

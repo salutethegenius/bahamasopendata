@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import StatCard from '@/components/StatCard';
+import FiscalYearSelector from '@/components/FiscalYearSelector';
 import { formatCurrency } from '@/lib/format';
+import { fiscalYearSearchParam, useFiscalYear, CURRENT_FISCAL_YEAR } from '@/lib/fiscal-year';
 import styles from '@/app/v2/v2.module.css';
 import { Creditor as DebtCreditor, DebtSummary as DebtSummaryType, RepaymentSchedule as RepaymentScheduleType } from '@/types';
 import { 
@@ -51,6 +53,15 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
 
 export default function DebtPage() {
+  return (
+    <Suspense fallback={<div className="max-w-7xl mx-auto px-4 py-8">Loading debt…</div>}>
+      <DebtPageContent />
+    </Suspense>
+  );
+}
+
+function DebtPageContent() {
+  const { fiscalYear } = useFiscalYear();
   const [view, setView] = useState<'overview' | 'creditors' | 'schedule' | 'historical'>('overview');
   const [summary, setSummary] = useState<DebtSummaryType>({
     total_debt: 11_500_000_000,
@@ -60,7 +71,7 @@ export default function DebtPage() {
     annual_interest_cost: 580_000_000,
     change_yoy: 1.8,
     last_updated: new Date().toISOString(),
-    source_document: "Debt Report 2024-25.pdf",
+    source_document: 'FY2026-27_Draft_Estimates_of_Revenue_and_Expenditure.pdf',
   });
   const [creditorData, setCreditorData] = useState(creditors);
   const [scheduleData, setScheduleData] = useState(repaymentSchedule);
@@ -69,9 +80,10 @@ export default function DebtPage() {
   useEffect(() => {
     const fetchDebt = async () => {
       try {
+        const fy = fiscalYearSearchParam(fiscalYear);
         const [summaryRes, creditorsRes, scheduleRes, historicalRes] = await Promise.allSettled([
-          fetch(`${API_BASE}/debt/overview`),
-          fetch(`${API_BASE}/debt/creditors`),
+          fetch(`${API_BASE}/debt/overview${fy}`),
+          fetch(`${API_BASE}/debt/creditors${fy}`),
           fetch(`${API_BASE}/debt/repayment-schedule`),
           fetch(`${API_BASE}/debt/historical`),
         ]);
@@ -125,7 +137,7 @@ export default function DebtPage() {
     };
 
     void fetchDebt();
-  }, []);
+  }, [fiscalYear]);
 
   const domesticTotal = summary.domestic_debt || creditorData.filter(c => c.category === 'domestic').reduce((sum, c) => sum + c.amount, 0);
   const externalTotal = summary.external_debt || creditorData.filter(c => c.category !== 'domestic').reduce((sum, c) => sum + c.amount, 0);
@@ -141,15 +153,18 @@ export default function DebtPage() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
+        className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between"
       >
-        <div className={styles['section-eyebrow']}>Debt &amp; borrowing</div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          National <span className="text-turquoise">Debt</span>
-        </h1>
-        <p className="text-gray-600">
-          A clear, honest view of the nation&apos;s debt — domestic and external obligations.
-        </p>
+        <div>
+          <div className={styles['section-eyebrow']}>Debt &amp; borrowing</div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            National <span className="text-turquoise">Debt</span>
+          </h1>
+          <p className="text-gray-600">
+            A clear, honest view of the nation&apos;s debt — domestic and external obligations.
+          </p>
+        </div>
+        <FiscalYearSelector />
       </motion.div>
 
       {/* Summary Stats */}

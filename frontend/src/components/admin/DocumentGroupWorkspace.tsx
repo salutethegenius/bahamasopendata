@@ -203,7 +203,9 @@ export default function DocumentGroupWorkspace({
     JSON.stringify(details.expectedExample, null, 2),
   );
   const [reviewNotes, setReviewNotes] = useState('');
-  const [openManualPanel, setOpenManualPanel] = useState<'pdf' | 'json' | 'review'>('pdf');
+  const [openManualPanel, setOpenManualPanel] = useState<'pdf' | 'json' | 'review'>(
+    mode === 'manual' || mode === 'files' ? 'review' : 'pdf',
+  );
   const pageSize = 6;
 
   const loadDocumentReview = useCallback(async (filename: string) => {
@@ -571,6 +573,23 @@ export default function DocumentGroupWorkspace({
               </p>
             </Link>
           </div>
+
+          {documents.some(
+            (document) =>
+              document.publish_status === 'pending' || document.review_status === 'pending_review',
+          ) ? (
+            <div className="mt-6 rounded-[24px] border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-6 text-amber-900">
+              <p className="font-semibold">Documents waiting for approval or publish</p>
+              <p className="mt-1">
+                Open{' '}
+                <Link href={`${typeBasePath}/manual`} className="font-semibold underline">
+                  Manual admin
+                </Link>
+                , expand <strong>Review saved documents</strong>, select your file, then use{' '}
+                <strong>Approve document</strong> and <strong>Publish document</strong>.
+              </p>
+            </div>
+          ) : null}
 
           <div className="mt-6">
             <Link
@@ -1115,6 +1134,17 @@ export default function DocumentGroupWorkspace({
                               >
                                 Publish document
                               </button>
+                              {!selectedReview?.submission.can_publish ? (
+                                <p className="mt-3 text-sm leading-6 text-[#0A2342]/60">
+                                  {selectedReviewStatus === 'approved'
+                                    ? 'This document is approved. If Publish is still disabled, click Refresh review or make sure the backend API is running.'
+                                    : 'Click Approve document first. Then Publish will become available to push data to the live dashboard.'}
+                                </p>
+                              ) : selectedReview?.submission.publish_status === 'pending' ? (
+                                <p className="mt-3 text-sm leading-6 text-[#0A2342]/60">
+                                  Approved and ready — click Publish document to update the public budget data.
+                                </p>
+                              ) : null}
                             </div>
                           </div>
                         ) : (

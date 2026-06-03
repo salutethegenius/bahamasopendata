@@ -15,9 +15,11 @@ import {
 import { X, FileText, TrendingUp, Users, Building, Wallet, AlertCircle } from 'lucide-react';
 
 import MinistryCard from '@/components/MinistryCard';
+import FiscalYearSelector from '@/components/FiscalYearSelector';
 import ResponsiveContainer from '@/components/SafeResponsiveContainer';
 import { Ministry, MinistryDetail } from '@/types';
 import { formatCurrency, formatPercent } from '@/lib/format';
+import { fiscalYearSearchParam, useFiscalYear } from '@/lib/fiscal-year';
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
@@ -45,6 +47,7 @@ function createFallbackDetail(ministry: Ministry): MinistryDetail {
 }
 
 function MinistriesPageContent() {
+  const { fiscalYear } = useFiscalYear();
   const [selectedMinistry, setSelectedMinistry] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'allocation' | 'change'>('allocation');
@@ -59,7 +62,8 @@ function MinistriesPageContent() {
         setIsLoading(true);
         setError(null);
 
-        const response = await fetch(`${API_BASE}/ministries`);
+        const fy = fiscalYearSearchParam(fiscalYear);
+        const response = await fetch(`${API_BASE}/ministries${fy}`);
         if (!response.ok) {
           throw new Error('Failed to load ministry allocations.');
         }
@@ -75,7 +79,9 @@ function MinistriesPageContent() {
         const detailEntries = await Promise.all(
           payload.map(async (ministry) => {
             try {
-              const detailResponse = await fetch(`${API_BASE}/ministries/${ministry.id}`);
+              const detailResponse = await fetch(
+                `${API_BASE}/ministries/${ministry.id}${fy}`,
+              );
               if (!detailResponse.ok) {
                 return [ministry.id, createFallbackDetail(ministry)] as const;
               }
@@ -101,7 +107,7 @@ function MinistriesPageContent() {
     };
 
     void fetchMinistries();
-  }, []);
+  }, [fiscalYear]);
 
   const filteredMinistries = useMemo(() => {
     return ministries
@@ -147,14 +153,17 @@ function MinistriesPageContent() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
+        className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between"
       >
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Ministry <span className="text-turquoise">Allocations</span>
-        </h1>
-        <p className="text-gray-600">
-          Explore published budget allocations for government ministries and departments.
-        </p>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Ministry <span className="text-turquoise">Allocations</span>
+          </h1>
+          <p className="text-gray-600">
+            Explore published budget allocations for government ministries and departments.
+          </p>
+        </div>
+        <FiscalYearSelector />
       </motion.div>
 
       {isLoading && (

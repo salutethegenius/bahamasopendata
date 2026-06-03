@@ -31,18 +31,18 @@ class BudgetSummary(BaseModel):
 
 
 FALLBACK_SUMMARY = BudgetSummary(
-    fiscal_year="2025/26",
-    total_revenue=3_896_324_553,
-    total_expenditure=3_820_844_050,
-    recurrent_expenditure=3_444_518_797,
-    capital_expenditure=376_325_253,
-    deficit_surplus=75_480_503,
-    national_debt=11_386_500_000,
-    debt_to_gdp_ratio=68.9,
-    gdp=16_525_700_000,
-    last_updated=date(2025, 5, 28),
-    source_document="Bahamas BudgetFINAL_2025-2026_.pdf",
-    source_page=34,
+    fiscal_year="2026/27",
+    total_revenue=4_362_850_850,
+    total_expenditure=3_820_900_000,
+    recurrent_expenditure=3_447_700_000,
+    capital_expenditure=373_200_000,
+    deficit_surplus=541_950_850,
+    national_debt=11_096_700_000,
+    debt_to_gdp_ratio=59.9,
+    gdp=17_633_000_000,
+    last_updated=date(2026, 6, 3),
+    source_document="FY2026-27_Draft_Estimates_of_Revenue_and_Expenditure.pdf",
+    source_page=6,
 )
 
 FALLBACK_HISTORICAL = [
@@ -139,6 +139,19 @@ async def _latest_document_name(db: AsyncSession, fiscal_year: str, document_typ
     result = await db.execute(statement)
     document = result.scalars().first()
     return document.filename if document else None
+
+
+FALLBACK_YEARS = ["2025/26", "2026/27"]
+
+
+@router.get("/years")
+async def get_budget_years(db: AsyncSession = Depends(get_db)):
+    """List fiscal years with published budget data, newest last."""
+    years = await _get_finance_years(db)
+    return {
+        "years": years or FALLBACK_YEARS,
+        "current_year": years[-1] if years else FALLBACK_YEARS[-1],
+    }
 
 
 @router.get("/summary", response_model=BudgetSummary)
@@ -268,7 +281,10 @@ async def get_historical_budgets(years: int = 10, db: AsyncSession = Depends(get
 
 
 @router.get("/sector-breakdown")
-async def get_sector_breakdown(db: AsyncSession = Depends(get_db)):
+async def get_sector_breakdown(
+    fiscal_year: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
+):
     """Get expenditure breakdown by major sectors."""
     fiscal_years = await _get_finance_years(db)
     if not fiscal_years:
@@ -280,7 +296,9 @@ async def get_sector_breakdown(db: AsyncSession = Depends(get_db)):
             "source_page": 71,
         }
 
-    target_year = fiscal_years[-1]
+    target_year = fiscal_year or fiscal_years[-1]
+    if target_year not in fiscal_years:
+        target_year = fiscal_years[-1]
     result = await db.execute(
         select(
             Ministry.name,

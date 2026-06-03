@@ -1,19 +1,19 @@
 import type { Ministry } from '@/types';
+import { CURRENT_FISCAL_YEAR } from '@/lib/fiscal-year';
 
-// Real data from Bahamas Budget 2025/26
+// Fallback dashboard data until API responses load
 export const initialBudgetSummary = {
-  fiscal_year: '2025/26',
-  total_revenue: 3_896_324_553,
-  total_expenditure: 3_820_844_050,
-  recurrent_expenditure: 3_444_518_797,
-  capital_expenditure: 376_325_253,
-  // SURPLUS - First balanced budget in independent Bahamas!
-  deficit_surplus: 75_480_503,
-  national_debt: 11_386_500_000,
-  debt_to_gdp_ratio: 68.9,
-  gdp: 16_525_700_000,
-  source_document: 'Bahamas BudgetFINAL_2025-2026_.pdf',
-  source_page: 34,
+  fiscal_year: CURRENT_FISCAL_YEAR,
+  total_revenue: 4_362_850_850,
+  total_expenditure: 3_820_900_000,
+  recurrent_expenditure: 3_447_700_000,
+  capital_expenditure: 373_200_000,
+  deficit_surplus: 541_950_850,
+  national_debt: 11_096_700_000,
+  debt_to_gdp_ratio: 59.9,
+  gdp: 17_633_000_000,
+  source_document: 'FY2026-27_Draft_Estimates_of_Revenue_and_Expenditure.pdf',
+  source_page: 6,
 };
 
 // Real ministry allocations from Budget Book 2025/26 (Pages 71-72)

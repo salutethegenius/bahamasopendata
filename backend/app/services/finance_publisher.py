@@ -181,6 +181,16 @@ async def delete_published_document_rows(db: AsyncSession, filename: str) -> dic
     return {"documents": 1, "finance_rows": 1}
 
 
+def _normalize_ministry_name(value: str) -> str:
+    """Loosen name matching for budget-book variants (And vs &, punctuation)."""
+    return (
+        value.lower()
+        .replace("&", "and")
+        .replace("  ", " ")
+        .strip()
+    )
+
+
 async def _get_or_create_ministry(
     db: AsyncSession,
     *,
@@ -188,15 +198,25 @@ async def _get_or_create_ministry(
     code: str | None = None,
     sector: str | None = None,
 ) -> Ministry:
-    result = await db.execute(select(Ministry).where(func.lower(Ministry.name) == name.lower()))
-    ministry = result.scalars().first()
+    normalized_target = _normalize_ministry_name(name)
+    result = await db.execute(select(Ministry))
+    ministry = next(
+        (row for row in result.scalars().all() if _normalize_ministry_name(row.name) == normalized_target),
+        None,
+    )
     if ministry is None and code:
-        result = await db.execute(select(Ministry).where(Ministry.code == code))
+        result = await db.execute(select(Ministry).where(Ministry.code == str(code)))
         ministry = result.scalars().first()
 
     if ministry is None:
+        proposed_code = str(code) if code else infer_ministry_code(name)
+        if not code:
+            existing_code = await db.execute(select(Ministry).where(Ministry.code == proposed_code))
+            if existing_code.scalars().first():
+                proposed_code = slugify_name(name).upper()[:12]
+
         ministry = Ministry(
-            code=code or infer_ministry_code(name),
+            code=proposed_code,
             name=name,
             sector=sector,
         )
@@ -242,9 +262,21 @@ async def _publish_budget_like_document(
     ministry_names = list(dict.fromkeys(normalized_payload.get("ministries") or []))
     extracted_items = normalized_payload.get("extracted_items") or []
 
+    ministry_codes: dict[str, str | None] = {}
+    for raw_item in extracted_items:
+        if _normalize_category(raw_item.get("category")) != "ministry_allocation":
+            continue
+        label = str(raw_item.get("label") or "")
+        if label:
+            ministry_codes[label] = raw_item.get("ministry_code")
+
     ministries: dict[str, Ministry] = {}
     for ministry_name in ministry_names:
-        ministries[ministry_name] = await _get_or_create_ministry(db, name=ministry_name)
+        ministries[ministry_name] = await _get_or_create_ministry(
+            db,
+            name=ministry_name,
+            code=ministry_codes.get(ministry_name),
+        )
 
     allocation_rollups: dict[str, dict[str, float]] = defaultdict(
         lambda: {

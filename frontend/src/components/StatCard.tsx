@@ -71,11 +71,17 @@ export default function StatCard({
       </div>
 
       {sourceDocument && (
-        <div className="mt-4 pt-3 border-t border-gray-100">
-          <button className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-turquoise transition-colors">
-            <FileText className="w-3 h-3" />
-            <span>{sourceDocument}{sourcePage ? `, p.${sourcePage}` : ''}</span>
-          </button>
+        <div className="mt-3 pt-2 border-t border-gray-100 min-w-0">
+          <div
+            className="flex items-start gap-1 min-w-0 text-[10px] leading-snug text-gray-400"
+            title={`${sourceDocument}${sourcePage ? `, p.${sourcePage}` : ''}`}
+          >
+            <FileText className="w-2.5 h-2.5 shrink-0 mt-0.5" />
+            <span className="line-clamp-2 break-all">
+              {sourceDocument}
+              {sourcePage ? `, p.${sourcePage}` : ''}
+            </span>
+          </div>
         </div>
       )}
     </motion.div>

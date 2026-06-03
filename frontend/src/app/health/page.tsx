@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   BarChart,
@@ -17,6 +17,7 @@ import { formatCurrency, formatPercent } from '@/lib/format';
 import { Activity, HeartPulse, FileText, AlertCircle, MapPin } from 'lucide-react';
 import AskBar from '@/components/AskBar';
 import ResponsiveContainer from '@/components/SafeResponsiveContainer';
+import { fiscalYearSearchParam, useFiscalYear } from '@/lib/fiscal-year';
 import { islands as fallbackIslands, type Island } from '@/data/islands';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
@@ -30,6 +31,15 @@ type SectorBreakdownResponse = {
 };
 
 export default function HealthPage() {
+  return (
+    <Suspense fallback={<div className="max-w-7xl mx-auto px-4 py-8">Loading health data…</div>}>
+      <HealthPageContent />
+    </Suspense>
+  );
+}
+
+function HealthPageContent() {
+  const { fiscalYear } = useFiscalYear();
   const [detail, setDetail] = useState<MinistryDetail | null>(null);
   const [sectorData, setSectorData] = useState<SectorBreakdownResponse | null>(null);
   const [totalPublishedAllocations, setTotalPublishedAllocations] = useState(0);
@@ -57,9 +67,10 @@ export default function HealthPage() {
         setIsLoading(true);
         setError(null);
 
+        const fy = fiscalYearSearchParam(fiscalYear);
         const [ministriesRes, sectorRes, islandsRes] = await Promise.all([
-          fetch(`${API_BASE}/ministries`),
-          fetch(`${API_BASE}/budget/sector-breakdown`),
+          fetch(`${API_BASE}/ministries${fy}`),
+          fetch(`${API_BASE}/budget/sector-breakdown${fy}`),
           fetch(`${API_BASE}/islands`),
         ]);
 
@@ -86,7 +97,7 @@ export default function HealthPage() {
           throw new Error('No published health ministry allocation was found.');
         }
 
-        const ministryRes = await fetch(`${API_BASE}/ministries/${healthMinistry.id}`);
+        const ministryRes = await fetch(`${API_BASE}/ministries/${healthMinistry.id}${fy}`);
         if (!ministryRes.ok) {
           throw new Error('Failed to load Ministry of Health detail.');
         }
@@ -110,7 +121,7 @@ export default function HealthPage() {
     };
 
     fetchData();
-  }, []);
+  }, [fiscalYear]);
 
   const healthSector = sectorData?.sectors.find(
     (s) => s.name.toLowerCase() === 'health',
@@ -132,7 +143,7 @@ export default function HealthPage() {
   const handleAsk = async (question: string): Promise<AskResponse> => {
     try {
       const { askQuestion } = await import('@/lib/api');
-      return await askQuestion(question);
+      return await askQuestion(question, fiscalYear);
     } catch (err) {
       return {
         answer:
@@ -171,7 +182,7 @@ export default function HealthPage() {
         {detail && (
           <p className="text-sm text-gray-500 flex items-center gap-2">
             <Activity className="w-4 h-4 text-turquoise" />
-            <span>Ministry of Health &amp; Wellness – Budget 2025/26</span>
+            <span>Ministry of Health &amp; Wellness – Budget {sectorData?.fiscal_year ?? fiscalYear}</span>
           </p>
         )}
       </motion.div>
@@ -198,7 +209,7 @@ export default function HealthPage() {
           {/* Key health tiles */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <p className="text-sm text-gray-500">Total Allocation 2025/26</p>
+              <p className="text-sm text-gray-500">Total Allocation {sectorData?.fiscal_year ?? fiscalYear}</p>
               <p className="text-2xl md:text-3xl font-bold text-gray-900 tabular-nums">
                 {formatCurrency(detail.allocation, true)}
               </p>

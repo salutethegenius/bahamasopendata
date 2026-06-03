@@ -107,14 +107,18 @@ async def _latest_source_document(db: AsyncSession, fiscal_year: str) -> str:
 
 
 @router.get("", response_model=list[Ministry])
-async def get_ministries(db: AsyncSession = Depends(get_db)):
+async def get_ministries(
+    fiscal_year: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
+):
     """Get all ministries with allocations and YoY change."""
     years = await _ministry_years(db)
     if not years:
         return FALLBACK_MINISTRIES
 
-    current_year = years[-1]
-    previous_year = years[-2] if len(years) > 1 else None
+    current_year = fiscal_year if fiscal_year in years else years[-1]
+    current_index = years.index(current_year)
+    previous_year = years[current_index - 1] if current_index > 0 else None
 
     current_result = await db.execute(
         select(MinistryModel, MinistryAllocation)
@@ -167,7 +171,11 @@ async def get_ministries(db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/{ministry_id}", response_model=MinistryDetail)
-async def get_ministry_detail(ministry_id: str, db: AsyncSession = Depends(get_db)):
+async def get_ministry_detail(
+    ministry_id: str,
+    fiscal_year: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
+):
     """Get detailed breakdown for a specific ministry."""
     years = await _ministry_years(db)
     if not years:
@@ -194,7 +202,7 @@ async def get_ministry_detail(ministry_id: str, db: AsyncSession = Depends(get_d
     if ministry_row is None:
         raise HTTPException(status_code=404, detail="Ministry not found")
 
-    current_year = years[-1]
+    current_year = fiscal_year if fiscal_year in years else years[-1]
     allocation_result = await db.execute(
         select(MinistryAllocation).where(
             MinistryAllocation.ministry_id == ministry_row.id,

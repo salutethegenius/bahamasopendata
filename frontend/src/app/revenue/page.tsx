@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import StatCard from '@/components/StatCard';
+import FiscalYearSelector from '@/components/FiscalYearSelector';
 import { formatCurrency, formatPercent } from '@/lib/format';
+import { fiscalYearSearchParam, useFiscalYear, CURRENT_FISCAL_YEAR } from '@/lib/fiscal-year';
 import { RevenueBreakdown } from '@/types';
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -43,9 +45,18 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
 
 export default function RevenuePage() {
+  return (
+    <Suspense fallback={<div className="max-w-7xl mx-auto px-4 py-8">Loading revenue…</div>}>
+      <RevenuePageContent />
+    </Suspense>
+  );
+}
+
+function RevenuePageContent() {
+  const { fiscalYear } = useFiscalYear();
   const [view, setView] = useState<'breakdown' | 'monthly' | 'historical'>('breakdown');
   const [breakdown, setBreakdown] = useState<RevenueBreakdown>({
-    fiscal_year: "2024/25",
+    fiscal_year: CURRENT_FISCAL_YEAR,
     total_revenue: revenueData.reduce((sum, r) => sum + r.amount, 0),
     sources: revenueData.map((item) => ({
       name: item.name,
@@ -54,7 +65,7 @@ export default function RevenuePage() {
       change_yoy: item.change,
     })),
     last_updated: new Date().toISOString(),
-    source_document: "Budget Book 2024-25.pdf",
+    source_document: 'FY2026-27_Draft_Estimates_of_Revenue_and_Expenditure.pdf',
   });
   const [monthly, setMonthly] = useState(monthlyData);
   const [historical, setHistorical] = useState(historicalData);
@@ -62,9 +73,10 @@ export default function RevenuePage() {
   useEffect(() => {
     const fetchRevenue = async () => {
       try {
+        const fy = fiscalYearSearchParam(fiscalYear);
         const [breakdownRes, monthlyRes, historicalRes] = await Promise.allSettled([
-          fetch(`${API_BASE}/revenue`),
-          fetch(`${API_BASE}/revenue/monthly`),
+          fetch(`${API_BASE}/revenue${fy}`),
+          fetch(`${API_BASE}/revenue/monthly${fy}`),
           fetch(`${API_BASE}/revenue/historical`),
         ]);
 
@@ -107,7 +119,7 @@ export default function RevenuePage() {
     };
 
     void fetchRevenue();
-  }, []);
+  }, [fiscalYear]);
 
   const revenueChartData = breakdown.sources.map((source, index) => ({
     name: source.name,
@@ -123,14 +135,21 @@ export default function RevenuePage() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
+        className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between"
       >
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Government <span className="text-turquoise">Revenue</span>
-        </h1>
-        <p className="text-gray-600">
-          Where the money comes from — tax collections, fees, and other government income.
-        </p>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Government <span className="text-turquoise">Revenue</span>
+          </h1>
+          <p className="text-gray-600">
+            Where the money comes from — tax collections, fees, and other government income.
+          </p>
+          <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
+            <Calendar className="w-4 h-4" />
+            <span>Fiscal Year {breakdown.fiscal_year}</span>
+          </div>
+        </div>
+        <FiscalYearSelector />
       </motion.div>
 
       {/* Summary Stats */}
@@ -262,7 +281,7 @@ export default function RevenuePage() {
             <h3 className="text-lg font-semibold text-gray-900">Monthly Collection (Millions)</h3>
             <div className="flex items-center gap-2 text-sm text-gray-500">
               <Calendar className="w-4 h-4" />
-              <span>FY 2024/25</span>
+              <span>FY {breakdown.fiscal_year}</span>
             </div>
           </div>
           <div className="h-[400px]">
