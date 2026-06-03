@@ -20,7 +20,10 @@ import {
 } from '@/types';
 import { initialBudgetSummary, initialMinistries } from '@/data/budget';
 import { XAxis, YAxis, Tooltip, LineChart, Line, CartesianGrid } from 'recharts';
-import { TrendingUp, Calendar, FileText, AlertCircle, HeartPulse, DollarSign, BarChart3, Newspaper, Flame, Building2 } from 'lucide-react';
+import { TrendingUp, Calendar, FileText, AlertCircle, HeartPulse, DollarSign, BarChart3, Newspaper, Flame, Building2, Wrench } from 'lucide-react';
+
+// Flip to false to restore the live dashboard.
+const MAINTENANCE_MODE = true;
 import { newsItems } from '@/data/news';
 
 type HotTopicSummary = {
@@ -296,6 +299,36 @@ function HomePageContent() {
   );
 
   const firstHotTopic = hotTopics && hotTopics.length > 0 ? hotTopics[0] : null;
+
+  if (MAINTENANCE_MODE) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center px-4 py-16">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-xl w-full text-center bg-white rounded-2xl border border-gray-200 shadow-sm p-10"
+        >
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-turquoise/10">
+            <Wrench className="h-8 w-8 text-turquoise" />
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-[var(--ocean)] mb-3">
+            We&apos;ll be right back
+          </h1>
+          <p className="text-lg text-gray-600 mb-2">
+            We&apos;re working on adding the new budget for you!
+          </p>
+          <p className="text-sm text-gray-500">
+            Bahamas Open Data is updating with the latest fiscal year figures.
+            Please check back shortly.
+          </p>
+          <div className="mt-8 flex items-center justify-center gap-2 text-xs uppercase tracking-[0.2em] text-turquoise font-semibold">
+            <span className="h-1.5 w-1.5 rounded-full bg-turquoise animate-pulse" />
+            Updating now
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
