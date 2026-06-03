@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Sora, DM_Mono } from "next/font/google";
 import "./globals.css";
-import ConditionalNavigation from "@/components/ConditionalNavigation";
-import ConditionalFooter from "@/components/ConditionalFooter";
+import MaintenanceGate from "@/components/MaintenanceGate";
 
 const sora = Sora({
   variable: "--font-sora",
@@ -41,11 +40,7 @@ export default function RootLayout({
       <body
         className={`${sora.variable} ${dmMono.variable} antialiased bg-gray-50`}
       >
-        <ConditionalNavigation />
-        <main className="min-h-screen">
-          {children}
-        </main>
-        <ConditionalFooter />
+        <MaintenanceGate>{children}</MaintenanceGate>
       </body>
     </html>
   );
