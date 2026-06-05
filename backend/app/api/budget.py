@@ -31,18 +31,18 @@ class BudgetSummary(BaseModel):
 
 
 FALLBACK_SUMMARY = BudgetSummary(
-    fiscal_year="2026/27",
-    total_revenue=4_362_850_850,
-    total_expenditure=3_820_900_000,
-    recurrent_expenditure=3_447_700_000,
-    capital_expenditure=373_200_000,
-    deficit_surplus=541_950_850,
-    national_debt=11_096_700_000,
-    debt_to_gdp_ratio=59.9,
-    gdp=17_633_000_000,
-    last_updated=date(2026, 6, 3),
-    source_document="FY2026-27_Draft_Estimates_of_Revenue_and_Expenditure.pdf",
-    source_page=6,
+    fiscal_year="2025/26",
+    total_revenue=3_896_300_000,
+    total_expenditure=3_820_800_000,
+    recurrent_expenditure=3_444_500_000,
+    capital_expenditure=376_300_000,
+    deficit_surplus=75_500_000,
+    national_debt=11_386_500_000,
+    debt_to_gdp_ratio=68.9,
+    gdp=16_525_700_000,
+    last_updated=date(2025, 5, 28),
+    source_document="Bahamas BudgetFINAL(2025-2026).pdf",
+    source_page=34,
 )
 
 FALLBACK_HISTORICAL = [
@@ -166,15 +166,30 @@ async def _latest_document_name(db: AsyncSession, fiscal_year: str, document_typ
 
 
 FALLBACK_YEARS = ["2025/26", "2026/27"]
+# Years still shown in the selector but paused until their data is verified.
+PAUSED_YEARS = {"2026/27"}
+DEFAULT_CURRENT_YEAR = "2025/26"
 
 
 @router.get("/years")
 async def get_budget_years(db: AsyncSession = Depends(get_db)):
-    """List fiscal years with published budget data, newest last."""
-    years = await _get_finance_years(db)
+    """List fiscal years with budget data, newest last.
+
+    Paused years (e.g. unverified) remain in the list so the UI can show them
+    as disabled, but they are never returned as the default ``current_year``.
+    """
+    db_years = await _get_finance_years(db)
+    merged = sorted(set(db_years) | set(FALLBACK_YEARS), key=_fy_sort_key)
+    selectable = [year for year in merged if year not in PAUSED_YEARS]
+    if DEFAULT_CURRENT_YEAR in selectable:
+        current_year = DEFAULT_CURRENT_YEAR
+    elif selectable:
+        current_year = selectable[-1]
+    else:
+        current_year = merged[-1]
     return {
-        "years": years or FALLBACK_YEARS,
-        "current_year": years[-1] if years else FALLBACK_YEARS[-1],
+        "years": merged,
+        "current_year": current_year,
     }
 
 

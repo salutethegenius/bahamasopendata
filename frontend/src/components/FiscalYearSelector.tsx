@@ -1,7 +1,7 @@
 'use client';
 
 import { Calendar } from 'lucide-react';
-import { useFiscalYear } from '@/lib/fiscal-year';
+import { isFiscalYearDisabled, useFiscalYear } from '@/lib/fiscal-year';
 
 type FiscalYearSelectorProps = {
   className?: string;
@@ -24,11 +24,15 @@ export default function FiscalYearSelector({
         className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm outline-none transition focus:border-turquoise focus:ring-2 focus:ring-turquoise/20"
         aria-label="Select fiscal year"
       >
-        {[...years].reverse().map((year) => (
-          <option key={year} value={year}>
-            FY {year}
-          </option>
-        ))}
+        {[...years].reverse().map((year) => {
+          const disabled = isFiscalYearDisabled(year);
+          return (
+            <option key={year} value={year} disabled={disabled}>
+              FY {year}
+              {disabled ? ' (coming soon)' : ''}
+            </option>
+          );
+        })}
       </select>
     </label>
   );
