@@ -316,6 +316,8 @@ export default function DocumentGroupWorkspace({
         documentType,
         fiscalYear: pdfFiscalYear || undefined,
         sourceUrl: pdfSourceUrl || undefined,
+        autoProcess: true,
+        enableAiScan: true,
       });
       setActionMessage(
         response.duplicate
@@ -371,7 +373,7 @@ export default function DocumentGroupWorkspace({
     }
   }
 
-  async function handleProcessSelected(enableAiScan: boolean) {
+  async function handleProcessSelected(enableAiScan: boolean, force = false) {
     if (!selectedDocument) {
       return;
     }
@@ -384,12 +386,16 @@ export default function DocumentGroupWorkspace({
         run_parser: true,
         enable_ai_scan: enableAiScan,
         enable_search_indexing: false,
-        force: false,
+        force,
       });
       setActionMessage(
         enableAiScan
-          ? 'AI cleanup finished for the selected document.'
-          : 'The selected document was read again successfully.',
+          ? force
+            ? 'AI cleanup re-ran from scratch for the selected document.'
+            : 'AI cleanup finished for the selected document.'
+          : force
+            ? 'The selected document was re-read from scratch.'
+            : 'The selected document was read again successfully.',
       );
       await loadDocuments();
       await loadDocumentReview(selectedDocument.filename);
@@ -1044,11 +1050,26 @@ export default function DocumentGroupWorkspace({
                               </button>
                               <button
                                 type="button"
+                                onClick={() => void handleProcessSelected(false, true)}
+                                className="inline-flex items-center rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 hover:border-amber-300"
+                              >
+                                Re-read file (force)
+                              </button>
+                              <button
+                                type="button"
                                 onClick={() => void handleProcessSelected(true)}
                                 className="inline-flex items-center gap-2 rounded-2xl bg-[#00CED1] px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(0,206,209,0.22)] hover:bg-[#00b8bb]"
                               >
                                 <Sparkles className="h-4 w-4" />
                                 Use AI cleanup
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => void handleProcessSelected(true, true)}
+                                className="inline-flex items-center gap-2 rounded-2xl border border-[#00CED1]/30 bg-[#00CED1]/10 px-4 py-3 text-sm font-semibold text-[#0A2342] hover:border-[#00CED1]/50"
+                              >
+                                <Sparkles className="h-4 w-4 text-[#00CED1]" />
+                                Re-run AI cleanup (force)
                               </button>
                               <button
                                 type="button"

@@ -8,7 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_db
-from app.db.models import Document, Revenue
+from app.db.models import BudgetItem, Document, Revenue
 
 router = APIRouter()
 
@@ -86,6 +86,27 @@ async def _revenue_years(db: AsyncSession) -> list[str]:
     return sorted({value for value in result.scalars().all() if value}, key=_fy_sort_key)
 
 
+async def _total_revenue_for_year(db: AsyncSession, fiscal_year: str) -> float:
+    """Prefer the budget-book headline total; fall back to summing revenue source rows."""
+    headline_result = await db.execute(
+        select(BudgetItem.amount)
+        .where(
+            BudgetItem.fiscal_year == fiscal_year,
+            func.lower(BudgetItem.item_name) == "total revenue",
+        )
+        .order_by(BudgetItem.amount.desc())
+        .limit(1)
+    )
+    headline = headline_result.scalar()
+    if headline is not None:
+        return float(headline)
+
+    total_result = await db.execute(
+        select(func.coalesce(func.sum(Revenue.amount), 0.0)).where(Revenue.fiscal_year == fiscal_year)
+    )
+    return float(total_result.scalar() or 0.0)
+
+
 async def _latest_source_document(db: AsyncSession, fiscal_year: str) -> str:
     result = await db.execute(
         select(Document.filename)
@@ -107,10 +128,7 @@ async def get_revenue_breakdown(
     if not target_year:
         return FALLBACK_BREAKDOWN
 
-    total_result = await db.execute(
-        select(func.coalesce(func.sum(Revenue.amount), 0.0)).where(Revenue.fiscal_year == target_year)
-    )
-    total_revenue = float(total_result.scalar() or 0.0)
+    total_revenue = await _total_revenue_for_year(db, target_year)
     if not total_revenue:
         return FALLBACK_BREAKDOWN
 

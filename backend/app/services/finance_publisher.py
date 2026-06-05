@@ -72,6 +72,18 @@ DEBT_FIELD_ALIASES = {
     "annual_interest_cost": "annual_interest",
 }
 
+# Headline revenue rows from budget books — skip when building Revenue breakdown rows.
+AGGREGATE_REVENUE_LABELS = {
+    "recurrent revenue",
+    "capital revenue",
+    "total revenue",
+}
+
+REVENUE_SKIP_LABEL_FRAGMENTS = (
+    "borrowing",
+    "proceeds from borrow",
+)
+
 
 @dataclass
 class PublishResult:
@@ -252,6 +264,111 @@ def _resolve_item_ministry_name(item: dict[str, Any], ministry_names: list[str])
     return None
 
 
+def _is_aggregate_revenue_label(label: str) -> bool:
+    lowered = label.strip().lower()
+    if lowered in AGGREGATE_REVENUE_LABELS:
+        return True
+    return any(fragment in lowered for fragment in REVENUE_SKIP_LABEL_FRAGMENTS)
+
+
+async def _publish_revenue_from_extracted_items(
+    db: AsyncSession,
+    document_row: Document,
+    extracted_items: list[dict[str, Any]],
+    fiscal_year: str | None,
+) -> int:
+    """Write Revenue rows from budget-book line items (non-headline sources only)."""
+    count = 0
+    for raw_item in extracted_items:
+        if _normalize_category(raw_item.get("category")) != "revenue":
+            continue
+        amount = _coerce_float(raw_item.get("amount"))
+        if amount is None:
+            continue
+        label = str(raw_item.get("label") or raw_item.get("name") or "").strip()
+        if not label or _is_aggregate_revenue_label(label):
+            continue
+        db.add(
+            Revenue(
+                fiscal_year=fiscal_year,
+                period=raw_item.get("period") or "annual",
+                source_name=label,
+                source_category=_normalize_category(raw_item.get("category")),
+                amount=amount,
+                budget_estimate=_coerce_float(raw_item.get("budget_estimate")),
+                source_document_id=document_row.id,
+                source_page=raw_item.get("source_page"),
+            )
+        )
+        count += 1
+    await db.flush()
+    return count
+
+
+async def _publish_debt_from_extracted_items(
+    db: AsyncSession,
+    document_row: Document,
+    extracted_items: list[dict[str, Any]],
+    fiscal_year: str | None,
+    doc_meta: dict[str, Any],
+) -> dict[str, int]:
+    """Write Debt/Creditor rows embedded in a budget-book normalization payload."""
+    summary_values: dict[str, float] = {}
+    creditor_count = 0
+
+    for raw_item in extracted_items:
+        amount = _coerce_float(raw_item.get("amount"))
+        category = _normalize_category(raw_item.get("category"))
+        label = slugify_name(str(raw_item.get("label") or ""))
+        normalized_field = None
+        if category in DEBT_FIELD_ALIASES:
+            normalized_field = DEBT_FIELD_ALIASES[category]
+        elif label in DEBT_FIELD_ALIASES:
+            normalized_field = DEBT_FIELD_ALIASES[label]
+
+        if normalized_field and amount is not None:
+            summary_values[normalized_field] = amount
+            continue
+
+        if amount is None:
+            continue
+
+        if category and category.startswith("creditor"):
+            creditor_category = category.split(":", 1)[1] if ":" in category else raw_item.get("creditor_category")
+            db.add(
+                Creditor(
+                    name=str(raw_item.get("label") or raw_item.get("name") or "Unknown creditor"),
+                    category=creditor_category or "other",
+                    fiscal_year=fiscal_year,
+                    amount_owed=amount,
+                    interest_rate=_coerce_float(raw_item.get("interest_rate")),
+                    source_document_id=document_row.id,
+                )
+            )
+            creditor_count += 1
+
+    debt_rows = 0
+    if "total_debt" in summary_values:
+        db.add(
+            Debt(
+                fiscal_year=fiscal_year,
+                as_of_date=_resolve_latest_timestamp(doc_meta).date(),
+                total_debt=summary_values["total_debt"],
+                domestic_debt=summary_values.get("domestic_debt"),
+                external_debt=summary_values.get("external_debt"),
+                gdp=summary_values.get("gdp"),
+                debt_to_gdp_ratio=summary_values.get("debt_to_gdp_ratio"),
+                annual_interest=summary_values.get("annual_interest"),
+                source_document_id=document_row.id,
+                source_page=None,
+            )
+        )
+        debt_rows = 1
+
+    await db.flush()
+    return {"debt_rows": debt_rows, "creditors": creditor_count}
+
+
 async def _publish_budget_like_document(
     db: AsyncSession,
     document_row: Document,
@@ -365,11 +482,27 @@ async def _publish_budget_like_document(
         )
         allocation_count += 1
 
+    revenue_count = await _publish_revenue_from_extracted_items(
+        db,
+        document_row,
+        extracted_items,
+        fiscal_year,
+    )
+    debt_counts = await _publish_debt_from_extracted_items(
+        db,
+        document_row,
+        extracted_items,
+        fiscal_year,
+        doc_meta,
+    )
+
     await db.flush()
     return {
         "ministries": len(ministries),
         "ministry_allocations": allocation_count,
         "budget_items": budget_item_count,
+        "revenue_rows": revenue_count,
+        **debt_counts,
     }
 
 
@@ -410,64 +543,13 @@ async def _publish_debt_document(
 ) -> dict[str, int]:
     fiscal_year = normalized_payload.get("fiscal_year") or doc_meta.get("fiscal_year")
     extracted_items = normalized_payload.get("extracted_items") or []
-    summary_values: dict[str, float] = {}
-    creditor_count = 0
-
-    for raw_item in extracted_items:
-        amount = _coerce_float(raw_item.get("amount"))
-        category = _normalize_category(raw_item.get("category"))
-        label = slugify_name(str(raw_item.get("label") or ""))
-        normalized_field = None
-        if category in DEBT_FIELD_ALIASES:
-            normalized_field = DEBT_FIELD_ALIASES[category]
-        elif label in DEBT_FIELD_ALIASES:
-            normalized_field = DEBT_FIELD_ALIASES[label]
-
-        if normalized_field and amount is not None:
-            summary_values[normalized_field] = amount
-            continue
-
-        if amount is None:
-            continue
-
-        if category and category.startswith("creditor"):
-            creditor_category = category.split(":", 1)[1] if ":" in category else raw_item.get("creditor_category")
-            db.add(
-                Creditor(
-                    name=str(raw_item.get("label") or raw_item.get("name") or "Unknown creditor"),
-                    category=creditor_category or "other",
-                    fiscal_year=fiscal_year,
-                    amount_owed=amount,
-                    interest_rate=_coerce_float(raw_item.get("interest_rate")),
-                    source_document_id=document_row.id,
-                )
-            )
-            creditor_count += 1
-
-    if "total_debt" in summary_values:
-        db.add(
-            Debt(
-                fiscal_year=fiscal_year,
-                as_of_date=_resolve_latest_timestamp(doc_meta).date(),
-                total_debt=summary_values["total_debt"],
-                domestic_debt=summary_values.get("domestic_debt"),
-                external_debt=summary_values.get("external_debt"),
-                gdp=summary_values.get("gdp"),
-                debt_to_gdp_ratio=summary_values.get("debt_to_gdp_ratio"),
-                annual_interest=summary_values.get("annual_interest"),
-                source_document_id=document_row.id,
-                source_page=None,
-            )
-        )
-        debt_rows = 1
-    else:
-        debt_rows = 0
-
-    await db.flush()
-    return {
-        "debt_rows": debt_rows,
-        "creditors": creditor_count,
-    }
+    return await _publish_debt_from_extracted_items(
+        db,
+        document_row,
+        extracted_items,
+        fiscal_year,
+        doc_meta,
+    )
 
 
 def _coerce_int(value: Any) -> int | None:

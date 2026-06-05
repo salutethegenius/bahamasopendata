@@ -2,7 +2,7 @@
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -105,7 +105,26 @@ async def _get_finance_years(db: AsyncSession) -> list[str]:
     return sorted(years, key=_fy_sort_key)
 
 
+async def _headline_budget_item_amount(db: AsyncSession, fiscal_year: str, item_name: str) -> float | None:
+    """Read a single headline total stored as a budget-book line item."""
+    result = await db.execute(
+        select(BudgetItem.amount)
+        .where(
+            BudgetItem.fiscal_year == fiscal_year,
+            func.lower(BudgetItem.item_name) == item_name.lower(),
+        )
+        .order_by(BudgetItem.amount.desc())
+        .limit(1)
+    )
+    value = result.scalar()
+    return float(value) if value is not None else None
+
+
 async def _sum_revenue_for_year(db: AsyncSession, fiscal_year: str) -> float:
+    headline_total = await _headline_budget_item_amount(db, fiscal_year, "Total Revenue")
+    if headline_total:
+        return headline_total
+
     result = await db.execute(
         select(func.coalesce(func.sum(Revenue.amount), 0.0)).where(Revenue.fiscal_year == fiscal_year)
     )
@@ -113,6 +132,11 @@ async def _sum_revenue_for_year(db: AsyncSession, fiscal_year: str) -> float:
 
 
 async def _sum_expenditure_for_year(db: AsyncSession, fiscal_year: str) -> float:
+    recurrent = await _headline_budget_item_amount(db, fiscal_year, "Recurrent Expenditure")
+    capital = await _headline_budget_item_amount(db, fiscal_year, "Capital Expenditure")
+    if recurrent is not None and capital is not None:
+        return recurrent + capital
+
     result = await db.execute(
         select(func.coalesce(func.sum(MinistryAllocation.total_allocation), 0.0)).where(
             MinistryAllocation.fiscal_year == fiscal_year
@@ -173,20 +197,26 @@ async def get_budget_summary(
     debt_row = debt_result.scalars().first()
 
     if not total_revenue and not total_expenditure and debt_row is None:
-        return FALLBACK_SUMMARY if target_year == FALLBACK_SUMMARY.fiscal_year else FALLBACK_SUMMARY
+        if target_year == FALLBACK_SUMMARY.fiscal_year:
+            return FALLBACK_SUMMARY
+        raise HTTPException(status_code=404, detail=f"No published budget data for fiscal year {target_year}")
 
-    recurrent_expenditure = await _sum_budget_items_for_year(
-        db,
-        target_year,
-        {"recurrent_expenditure", "salary", "salaries", "program", "programs", "grant", "grants"},
-    )
-    capital_expenditure = await _sum_budget_items_for_year(
-        db,
-        target_year,
-        {"capital", "capital_expenditure", "capital_project", "capital_projects"},
-    )
+    recurrent_expenditure = await _headline_budget_item_amount(db, target_year, "Recurrent Expenditure")
+    capital_expenditure = await _headline_budget_item_amount(db, target_year, "Capital Expenditure")
 
-    if not recurrent_expenditure and not capital_expenditure:
+    if recurrent_expenditure is None and capital_expenditure is None:
+        recurrent_expenditure = await _sum_budget_items_for_year(
+            db,
+            target_year,
+            {"recurrent_expenditure", "salary", "salaries", "program", "programs", "grant", "grants"},
+        )
+        capital_expenditure = await _sum_budget_items_for_year(
+            db,
+            target_year,
+            {"capital", "capital_expenditure", "capital_project", "capital_projects"},
+        )
+
+    if recurrent_expenditure is None and capital_expenditure is None:
         recurrent_result = await db.execute(
             select(func.coalesce(func.sum(MinistryAllocation.recurrent_expenditure), 0.0)).where(
                 MinistryAllocation.fiscal_year == target_year
@@ -209,14 +239,21 @@ async def get_budget_summary(
     gdp = debt_row.gdp if debt_row else FALLBACK_SUMMARY.gdp
     national_debt = debt_row.total_debt if debt_row else FALLBACK_SUMMARY.national_debt
 
+    resolved_recurrent = recurrent_expenditure if recurrent_expenditure is not None else 0.0
+    resolved_capital = capital_expenditure if capital_expenditure is not None else 0.0
+    use_fallback_fields = target_year == FALLBACK_SUMMARY.fiscal_year
+
     return BudgetSummary(
         fiscal_year=target_year,
-        total_revenue=total_revenue or FALLBACK_SUMMARY.total_revenue,
-        total_expenditure=total_expenditure or FALLBACK_SUMMARY.total_expenditure,
-        recurrent_expenditure=recurrent_expenditure or FALLBACK_SUMMARY.recurrent_expenditure,
-        capital_expenditure=capital_expenditure or FALLBACK_SUMMARY.capital_expenditure,
-        deficit_surplus=(total_revenue or FALLBACK_SUMMARY.total_revenue)
-        - (total_expenditure or FALLBACK_SUMMARY.total_expenditure),
+        total_revenue=total_revenue
+        or (FALLBACK_SUMMARY.total_revenue if use_fallback_fields else 0.0),
+        total_expenditure=total_expenditure
+        or (FALLBACK_SUMMARY.total_expenditure if use_fallback_fields else 0.0),
+        recurrent_expenditure=resolved_recurrent
+        or (FALLBACK_SUMMARY.recurrent_expenditure if use_fallback_fields else 0.0),
+        capital_expenditure=resolved_capital
+        or (FALLBACK_SUMMARY.capital_expenditure if use_fallback_fields else 0.0),
+        deficit_surplus=total_revenue - total_expenditure,
         national_debt=national_debt,
         debt_to_gdp_ratio=debt_to_gdp_ratio,
         gdp=gdp,
