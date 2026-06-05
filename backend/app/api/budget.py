@@ -281,38 +281,60 @@ async def get_budget_priorities():
 
 @router.get("/historical")
 async def get_historical_budgets(years: int = 10, db: AsyncSession = Depends(get_db)):
-    """Get historical budget data for trend analysis."""
-    fiscal_years = await _get_finance_years(db)
-    if not fiscal_years:
-        return {
-            "years": FALLBACK_HISTORICAL[-years:],
-            "source_document": FALLBACK_SUMMARY.source_document,
-            "source_page": 34,
-        }
+    """Get historical budget data for trend analysis.
 
-    historical_rows: list[dict[str, float | str | None]] = []
-    for fiscal_year in fiscal_years[-years:]:
+    Always starts from the official published history (``FALLBACK_HISTORICAL``)
+    so the trend chart keeps showing prior fiscal years, then overlays live
+    database figures for any year that has published data. This prevents the
+    multi-year trend from collapsing to a single year once a new budget is
+    published into the database.
+    """
+    fiscal_years = await _get_finance_years(db)
+
+    merged: dict[str, dict[str, float | str | None]] = {
+        str(row["year"]): dict(row) for row in FALLBACK_HISTORICAL
+    }
+
+    for fiscal_year in fiscal_years:
         debt_result = await db.execute(
             select(Debt).where(Debt.fiscal_year == fiscal_year).order_by(Debt.created_at.desc())
         )
         debt_row = debt_result.scalars().first()
-        historical_rows.append(
-            {
-                "year": fiscal_year,
-                "revenue": await _sum_revenue_for_year(db, fiscal_year),
-                "expenditure": await _sum_expenditure_for_year(db, fiscal_year),
-                "debt": debt_row.total_debt if debt_row else 0.0,
-                "debt_gdp": debt_row.debt_to_gdp_ratio if debt_row else None,
-            }
-        )
+        revenue = await _sum_revenue_for_year(db, fiscal_year)
+        expenditure = await _sum_expenditure_for_year(db, fiscal_year)
 
-    return {
-        "years": historical_rows or FALLBACK_HISTORICAL[-years:],
-        "source_document": await _latest_document_name(
+        existing = merged.get(fiscal_year, {"year": fiscal_year})
+        debt_value = debt_row.total_debt if debt_row else existing.get("debt")
+        debt_gdp_value = debt_row.debt_to_gdp_ratio if debt_row else existing.get("debt_gdp")
+
+        # Keep the official headline debt for the current draft year when the
+        # Debt table has no row yet, so the debt line doesn't drop to zero.
+        if (debt_value in (None, 0, 0.0)) and fiscal_year == FALLBACK_SUMMARY.fiscal_year:
+            debt_value = FALLBACK_SUMMARY.national_debt
+            debt_gdp_value = FALLBACK_SUMMARY.debt_to_gdp_ratio
+
+        merged[fiscal_year] = {
+            "year": fiscal_year,
+            "revenue": revenue or existing.get("revenue", 0.0),
+            "expenditure": expenditure or existing.get("expenditure", 0.0),
+            "debt": debt_value if debt_value is not None else 0.0,
+            "debt_gdp": debt_gdp_value,
+        }
+
+    ordered = sorted(merged.values(), key=lambda row: _fy_sort_key(str(row["year"])))
+    trimmed = ordered[-years:]
+
+    source_document = FALLBACK_SUMMARY.source_document
+    if fiscal_years:
+        source_document = await _latest_document_name(
             db,
             fiscal_years[-1],
             ("budget_book", "budget_communication", "capital_estimates", "mid_year_statement"),
-        ) or FALLBACK_SUMMARY.source_document,
+        ) or FALLBACK_SUMMARY.source_document
+
+    return {
+        "years": trimmed,
+        "source_document": source_document,
         "source_page": None,
     }
 
