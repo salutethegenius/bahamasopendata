@@ -172,7 +172,7 @@ function HomePageContent() {
             debt_to_gdp_ratio: 0,
             gdp: 0,
             source_document: '',
-            source_page: undefined,
+            source_page: 0,
           });
           setMinistries([]);
           setSectorData([]);
