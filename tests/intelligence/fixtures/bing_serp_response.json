@@ -1,0 +1,26 @@
+{
+  "_type": "SearchResponse",
+  "queryContext": { "originalQuery": "bank account bahamas" },
+  "webPages": {
+    "value": [
+      {
+        "id": "https://api.bing.microsoft.com/api/v7/#WebPages.0",
+        "name": "Open a Bank Account | Commonwealth Bank",
+        "url": "https://www.combankltd.com/personal/bank-accounts",
+        "snippet": "Open a personal bank account in The Bahamas."
+      },
+      {
+        "id": "https://api.bing.microsoft.com/api/v7/#WebPages.1",
+        "name": "Banking in The Bahamas — Guide",
+        "url": "https://example.com/bahamas-banking-guide",
+        "snippet": "General guide."
+      },
+      {
+        "id": "https://api.bing.microsoft.com/api/v7/#WebPages.2",
+        "name": "RBC Caribbean Banking",
+        "url": "https://www.rbcroyalbank.com/caribbean/",
+        "snippet": "RBC in the Caribbean."
+      }
+    ]
+  }
+}

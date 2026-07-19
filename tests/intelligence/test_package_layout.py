@@ -19,7 +19,12 @@ def test_key_modules_importable():
         "ingestion.intelligence.logging_config",
         "ingestion.intelligence.capture.registry",
         "ingestion.intelligence.social.wayback",
+        "ingestion.intelligence.social.youtube",
+        "ingestion.intelligence.social.instagram",
+        "ingestion.intelligence.social.facebook",
+        "ingestion.intelligence.social.tiktok",
         "ingestion.intelligence.web.similarweb",
+        "ingestion.intelligence.web.bing_serp",
     ]
     for dotted in modules:
         importlib.import_module(dotted)
