@@ -23,6 +23,8 @@ def test_key_modules_importable():
         "ingestion.intelligence.social.instagram",
         "ingestion.intelligence.social.facebook",
         "ingestion.intelligence.social.tiktok",
+        "ingestion.intelligence.social.twitter",
+        "ingestion.intelligence.social.socialblade",
         "ingestion.intelligence.web.similarweb",
         "ingestion.intelligence.web.bing_serp",
     ]

@@ -9,7 +9,15 @@ from ingestion.intelligence.capture.registry import ScrapeStatus, mark_capture
 from ingestion.intelligence.cohort import get_cohort_entry, load_cohort_file
 from ingestion.intelligence.errors import CaptureError
 from ingestion.intelligence.logging_config import get_logger
-from ingestion.intelligence.social import facebook, instagram, tiktok, wayback, youtube
+from ingestion.intelligence.social import (
+    facebook,
+    instagram,
+    socialblade,
+    tiktok,
+    twitter,
+    wayback,
+    youtube,
+)
 from ingestion.intelligence.types import CaptureResult, Platform
 from ingestion.intelligence.web import bing_serp, similarweb
 
@@ -21,6 +29,8 @@ SCRAPERS: dict[str, Callable[..., Awaitable[CaptureResult]]] = {
     "facebook": facebook.capture,
     "tiktok": tiktok.capture,
     "bing_serp": bing_serp.capture,
+    "twitter": twitter.capture,
+    "socialblade": socialblade.capture,
 }
 
 logger = get_logger(__name__)
