@@ -96,6 +96,9 @@ function MinistriesPageContent() {
 
         setMinistryDetails(Object.fromEntries(detailEntries));
       } catch (fetchError) {
+        setMinistries([]);
+        setMinistryDetails({});
+        setSelectedMinistry(null);
         setError(
           fetchError instanceof Error
             ? fetchError.message

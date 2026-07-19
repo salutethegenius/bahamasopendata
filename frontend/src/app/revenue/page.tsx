@@ -82,6 +82,14 @@ function RevenuePageContent() {
 
         if (breakdownRes.status === 'fulfilled' && breakdownRes.value.ok) {
           setBreakdown(await breakdownRes.value.json());
+        } else {
+          setBreakdown({
+            fiscal_year: fiscalYear,
+            total_revenue: 0,
+            sources: [],
+            last_updated: new Date().toISOString(),
+            source_document: '',
+          });
         }
 
         if (monthlyRes.status === 'fulfilled' && monthlyRes.value.ok) {

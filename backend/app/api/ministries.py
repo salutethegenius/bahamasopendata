@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.fiscal_year import fy_sort_key, resolve_fiscal_year
 from app.db.database import get_db
 from app.db.models import BudgetItem, Document, Ministry as MinistryModel, MinistryAllocation
 from app.services.finance_publisher import slugify_name
@@ -78,18 +79,9 @@ def _infer_sector(name: str | None) -> str:
     return "Other"
 
 
-def _fy_sort_key(fiscal_year: str | None) -> int:
-    if not fiscal_year:
-        return 0
-    try:
-        return int(str(fiscal_year).split("/")[0])
-    except ValueError:
-        return 0
-
-
 async def _ministry_years(db: AsyncSession) -> list[str]:
     result = await db.execute(select(MinistryAllocation.fiscal_year))
-    years = sorted({year for year in result.scalars().all() if year}, key=_fy_sort_key)
+    years = sorted({year for year in result.scalars().all() if year}, key=fy_sort_key)
     return years
 
 
@@ -113,10 +105,10 @@ async def get_ministries(
 ):
     """Get all ministries with allocations and YoY change."""
     years = await _ministry_years(db)
-    if not years:
+    current_year = resolve_fiscal_year(fiscal_year, years, resource="ministry allocations")
+    if not current_year:
         return FALLBACK_MINISTRIES
 
-    current_year = fiscal_year if fiscal_year in years else years[-1]
     current_index = years.index(current_year)
     previous_year = years[current_index - 1] if current_index > 0 else None
 
@@ -178,7 +170,8 @@ async def get_ministry_detail(
 ):
     """Get detailed breakdown for a specific ministry."""
     years = await _ministry_years(db)
-    if not years:
+    current_year = resolve_fiscal_year(fiscal_year, years, resource="ministry allocations")
+    if not current_year:
         fallback = next((item for item in FALLBACK_MINISTRIES if item.id == ministry_id), None)
         if fallback:
             return MinistryDetail(
@@ -201,8 +194,6 @@ async def get_ministry_detail(
     ministry_row = next((row for row in ministries if slugify_name(row.name) == ministry_id or (row.code or "").lower() == ministry_id.lower()), None)
     if ministry_row is None:
         raise HTTPException(status_code=404, detail="Ministry not found")
-
-    current_year = fiscal_year if fiscal_year in years else years[-1]
     allocation_result = await db.execute(
         select(MinistryAllocation).where(
             MinistryAllocation.ministry_id == ministry_row.id,

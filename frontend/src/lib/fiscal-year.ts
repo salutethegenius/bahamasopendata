@@ -22,7 +22,9 @@ function fyOrder(year: string): number {
 }
 
 function mergeFiscalYears(apiYears: string[]): string[] {
-  const merged = new Set<string>([...DEFAULT_FISCAL_YEARS, ...apiYears]);
+  // Prefer published years from the API so the selector never offers empty years.
+  const source = apiYears.length > 0 ? apiYears : DEFAULT_FISCAL_YEARS;
+  const merged = new Set<string>([...source, ...DISABLED_FISCAL_YEARS]);
   return [...merged].sort((a, b) => fyOrder(a) - fyOrder(b));
 }
 

@@ -2,11 +2,12 @@
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.fiscal_year import fy_sort_key, resolve_fiscal_year
 from app.db.database import get_db
 from app.db.models import BudgetItem, Document, Revenue
 
@@ -72,18 +73,20 @@ FALLBACK_HISTORICAL = {
 }
 
 
-def _fy_sort_key(fiscal_year: str | None) -> int:
-    if not fiscal_year:
-        return 0
-    try:
-        return int(str(fiscal_year).split("/")[0])
-    except ValueError:
-        return 0
-
-
 async def _revenue_years(db: AsyncSession) -> list[str]:
-    result = await db.execute(select(Revenue.fiscal_year))
-    return sorted({value for value in result.scalars().all() if value}, key=_fy_sort_key)
+    """Years with revenue source rows and/or budget-book revenue headlines."""
+    years: set[str] = set()
+    revenue_result = await db.execute(select(Revenue.fiscal_year))
+    years.update(value for value in revenue_result.scalars().all() if value)
+    headline_result = await db.execute(
+        select(BudgetItem.fiscal_year).where(
+            func.lower(BudgetItem.item_name).in_(
+                ("total revenue", "recurrent revenue", "capital revenue")
+            )
+        )
+    )
+    years.update(value for value in headline_result.scalars().all() if value)
+    return sorted(years, key=fy_sort_key)
 
 
 async def _total_revenue_for_year(db: AsyncSession, fiscal_year: str) -> float:
@@ -124,12 +127,17 @@ async def get_revenue_breakdown(
 ):
     """Get complete revenue breakdown by source."""
     years = await _revenue_years(db)
-    target_year = fiscal_year or (years[-1] if years else None)
+    target_year = resolve_fiscal_year(fiscal_year, years, resource="revenue data")
     if not target_year:
         return FALLBACK_BREAKDOWN
 
     total_revenue = await _total_revenue_for_year(db, target_year)
     if not total_revenue:
+        if fiscal_year:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No published revenue data for fiscal year {fiscal_year}",
+            )
         return FALLBACK_BREAKDOWN
 
     source_result = await db.execute(
@@ -138,7 +146,7 @@ async def get_revenue_breakdown(
         .group_by(Revenue.source_name)
         .order_by(func.sum(Revenue.amount).desc())
     )
-    previous_year = years[-2] if len(years) > 1 else None
+    previous_year = years[years.index(target_year) - 1] if years.index(target_year) > 0 else None
     previous_result = await db.execute(
         select(Revenue.source_name, func.coalesce(func.sum(Revenue.amount), 0.0))
         .where(Revenue.fiscal_year == previous_year)
@@ -176,7 +184,7 @@ async def get_revenue_monthly(
 ):
     """Get monthly revenue collection data."""
     years = await _revenue_years(db)
-    target_year = fiscal_year or (years[-1] if years else None)
+    target_year = resolve_fiscal_year(fiscal_year, years, resource="monthly revenue data")
     if not target_year:
         return FALLBACK_MONTHLY
 
@@ -192,7 +200,13 @@ async def get_revenue_monthly(
     )
     rows = result.all()
     if not rows:
-        return FALLBACK_MONTHLY
+        # Monthly series is often absent from budget books; return empty for the year
+        # rather than a different year's fallback mock data.
+        return {
+            "fiscal_year": target_year,
+            "monthly_data": [],
+            "source_document": await _latest_source_document(db, target_year),
+        }
 
     monthly_map: dict[str, dict[str, float | str]] = {}
     for period, source_name, amount in rows:

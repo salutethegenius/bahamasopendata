@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.fiscal_year import fy_sort_key, resolve_fiscal_year
 from app.db.database import get_db
 from app.db.models import BudgetItem, Debt, Document, Ministry, MinistryAllocation, Revenue
 
@@ -89,21 +90,12 @@ def _infer_sector(name: str | None) -> str:
     return "Other"
 
 
-def _fy_sort_key(fiscal_year: str | None) -> int:
-    if not fiscal_year:
-        return 0
-    try:
-        return int(str(fiscal_year).split("/")[0])
-    except ValueError:
-        return 0
-
-
 async def _get_finance_years(db: AsyncSession) -> list[str]:
     years: set[str] = set()
-    for model in (Revenue, MinistryAllocation, Debt):
+    for model in (Revenue, MinistryAllocation, Debt, BudgetItem):
         result = await db.execute(select(model.fiscal_year))
         years.update(value for value in result.scalars().all() if value)
-    return sorted(years, key=_fy_sort_key)
+    return sorted(years, key=fy_sort_key)
 
 
 async def _headline_budget_item_amount(db: AsyncSession, fiscal_year: str, item_name: str) -> float | None:
@@ -174,22 +166,27 @@ DEFAULT_CURRENT_YEAR = "2026/27"
 
 @router.get("/years")
 async def get_budget_years(db: AsyncSession = Depends(get_db)):
-    """List fiscal years with budget data, newest last.
+    """List fiscal years that have published finance data, newest last.
 
-    Paused years (e.g. unverified) remain in the list so the UI can show them
-    as disabled, but they are never returned as the default ``current_year``.
+    Paused years remain listed (disabled in the UI) when they have data, but
+    are never returned as ``current_year``. When the DB is empty, fall back to
+    the configured year list so the selector can still render.
     """
     db_years = await _get_finance_years(db)
-    merged = sorted(set(db_years) | set(FALLBACK_YEARS), key=_fy_sort_key)
-    selectable = [year for year in merged if year not in PAUSED_YEARS]
+    years = db_years or list(FALLBACK_YEARS)
+    # Surface paused years that are configured but not yet published, as disabled.
+    merged = sorted(set(years) | set(PAUSED_YEARS), key=fy_sort_key)
+    selectable = [year for year in merged if year not in PAUSED_YEARS and year in set(years)]
+    if not selectable:
+        selectable = [year for year in merged if year not in PAUSED_YEARS]
     if DEFAULT_CURRENT_YEAR in selectable:
         current_year = DEFAULT_CURRENT_YEAR
     elif selectable:
         current_year = selectable[-1]
     else:
-        current_year = merged[-1]
+        current_year = merged[-1] if merged else DEFAULT_CURRENT_YEAR
     return {
-        "years": merged,
+        "years": years if db_years else merged,
         "current_year": current_year,
     }
 
@@ -201,7 +198,7 @@ async def get_budget_summary(
 ):
     """Get the budget summary for a fiscal year."""
     years = await _get_finance_years(db)
-    target_year = fiscal_year or (years[-1] if years else None)
+    target_year = resolve_fiscal_year(fiscal_year, years, resource="budget data")
     if not target_year:
         return FALLBACK_SUMMARY
 
@@ -337,7 +334,7 @@ async def get_historical_budgets(years: int = 10, db: AsyncSession = Depends(get
             "debt_gdp": debt_gdp_value,
         }
 
-    ordered = sorted(merged.values(), key=lambda row: _fy_sort_key(str(row["year"])))
+    ordered = sorted(merged.values(), key=lambda row: fy_sort_key(str(row["year"])))
     trimmed = ordered[-years:]
 
     source_document = FALLBACK_SUMMARY.source_document
@@ -362,7 +359,8 @@ async def get_sector_breakdown(
 ):
     """Get expenditure breakdown by major sectors."""
     fiscal_years = await _get_finance_years(db)
-    if not fiscal_years:
+    target_year = resolve_fiscal_year(fiscal_year, fiscal_years, resource="sector breakdown")
+    if not target_year:
         return {
             "fiscal_year": FALLBACK_SUMMARY.fiscal_year,
             "sectors": FALLBACK_SECTORS,
@@ -371,9 +369,6 @@ async def get_sector_breakdown(
             "source_page": 71,
         }
 
-    target_year = fiscal_year or fiscal_years[-1]
-    if target_year not in fiscal_years:
-        target_year = fiscal_years[-1]
     result = await db.execute(
         select(
             Ministry.name,

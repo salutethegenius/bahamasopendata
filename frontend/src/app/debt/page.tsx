@@ -90,6 +90,18 @@ function DebtPageContent() {
 
         if (summaryRes.status === 'fulfilled' && summaryRes.value.ok) {
           setSummary(await summaryRes.value.json());
+        } else {
+          setSummary({
+            total_debt: 0,
+            domestic_debt: 0,
+            external_debt: 0,
+            debt_to_gdp_ratio: 0,
+            annual_interest_cost: 0,
+            change_yoy: 0,
+            last_updated: new Date().toISOString(),
+            source_document: '',
+          });
+          setCreditorData([]);
         }
 
         if (creditorsRes.status === 'fulfilled' && creditorsRes.value.ok) {

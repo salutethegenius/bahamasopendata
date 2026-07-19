@@ -48,7 +48,26 @@
       "chunk_count": 329,
       "embedding_status": "success",
       "embedding_count": 329,
-      "embedded_at": "2025-12-16T01:02:20.465796"
+      "embedded_at": "2025-12-16T01:02:20.465796",
+      "normalization_status": "success",
+      "normalized_at": "2026-07-19T12:42:14.836514",
+      "review_status": "approved",
+      "submitted_at": "2026-07-19T12:42:14.836514",
+      "publish_status": "success",
+      "published_at": "2026-07-19T12:42:16.107671",
+      "publish_result": {
+        "status": "success",
+        "published_records": {
+          "documents": 1,
+          "ministries": 20,
+          "ministry_allocations": 20,
+          "budget_items": 63,
+          "revenue_rows": 0,
+          "debt_rows": 1,
+          "creditors": 0
+        },
+        "warnings": []
+      }
     },
     {
       "filename": "Budget_Communication_25_26_final_1.pdf",

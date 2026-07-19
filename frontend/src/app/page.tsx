@@ -98,6 +98,7 @@ function HomePageContent() {
   const [sectorData, setSectorData] = useState(initialSectorData);
   const [historicalData, setHistoricalData] =
     useState(initialHistoricalData);
+  const [yearUnavailable, setYearUnavailable] = useState(false);
   const [incomeComparisons, setIncomeComparisons] = useState<
     IncomeComparison[] | null
   >(null);
@@ -116,10 +117,12 @@ function HomePageContent() {
   );
 
   const isSurplus = budgetSummary.deficit_surplus >= 0;
+  const displayFiscalYear = budgetSummary.fiscal_year || fiscalYear;
 
   useEffect(() => {
     const fetchData = async () => {
       const fy = fiscalYearSearchParam(fiscalYear);
+      setYearUnavailable(false);
       try {
         const [
           budgetRes,
@@ -154,6 +157,25 @@ function HomePageContent() {
             ...prev,
             ...json,
           }));
+        } else {
+          // Do not keep the previous year's totals when this FY has no publish.
+          setYearUnavailable(true);
+          setBudgetSummary({
+            ...initialBudgetSummary,
+            fiscal_year: fiscalYear,
+            total_revenue: 0,
+            total_expenditure: 0,
+            recurrent_expenditure: 0,
+            capital_expenditure: 0,
+            deficit_surplus: 0,
+            national_debt: 0,
+            debt_to_gdp_ratio: 0,
+            gdp: 0,
+            source_document: '',
+            source_page: undefined,
+          });
+          setMinistries([]);
+          setSectorData([]);
         }
 
         if (
@@ -202,6 +224,8 @@ function HomePageContent() {
               })),
             );
           }
+        } else if (sectorRes.status === 'fulfilled') {
+          setSectorData([]);
         }
 
         if (
@@ -212,6 +236,8 @@ function HomePageContent() {
           if (Array.isArray(json)) {
             setMinistries(json);
           }
+        } else if (ministriesRes.status === 'fulfilled') {
+          setMinistries([]);
         }
 
         if (revenueRes.status === 'fulfilled' && revenueRes.value.ok) {
@@ -309,10 +335,10 @@ function HomePageContent() {
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-2">
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <Calendar className="w-4 h-4" />
-            <span>Fiscal Year {budgetSummary.fiscal_year}</span>
+            <span>Fiscal Year {displayFiscalYear}</span>
             <span className="mx-2">•</span>
             <FileText className="w-4 h-4" />
-            <span>Source: {budgetSummary.source_document}</span>
+            <span>Source: {budgetSummary.source_document || '—'}</span>
           </div>
           <FiscalYearSelector />
         </div>
@@ -341,10 +367,19 @@ function HomePageContent() {
           <div className="flex items-center gap-3">
             <FileText className="w-6 h-6 text-turquoise shrink-0" />
             <div>
-              {isLatestYear ? (
+              {yearUnavailable ? (
                 <>
                   <p className="font-semibold text-gray-900">
-                    FY {budgetSummary.fiscal_year} budget is now live
+                    FY {fiscalYear} is not published yet
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Switch to a published fiscal year above, or check back after this budget is published.
+                  </p>
+                </>
+              ) : isLatestYear ? (
+                <>
+                  <p className="font-semibold text-gray-900">
+                    FY {displayFiscalYear} budget is now live
                   </p>
                   <p className="text-sm text-gray-600">
                     Dive in — explore ministries, revenue, debt, and ask questions about the draft estimates.
@@ -353,7 +388,7 @@ function HomePageContent() {
               ) : (
                 <>
                   <p className="font-semibold text-gray-900">
-                    Viewing FY {budgetSummary.fiscal_year}
+                    Viewing FY {displayFiscalYear}
                   </p>
                   <p className="text-sm text-gray-600">
                     Browse published estimates for this fiscal year, or switch to the latest budget above.
@@ -370,7 +405,7 @@ function HomePageContent() {
         <StatCard
           title="Total Budget"
           value={budgetSummary.total_expenditure}
-          subtitle={`Fiscal Year ${budgetSummary.fiscal_year}`}
+          subtitle={`Fiscal Year ${displayFiscalYear}`}
           sourceDocument={budgetSummary.source_document}
           sourcePage={budgetSummary.source_page}
           onClick={() => router.push('/ministries')}
@@ -378,7 +413,7 @@ function HomePageContent() {
         <StatCard
           title="Revenue"
           value={budgetSummary.total_revenue}
-          subtitle={`Projected for FY${budgetSummary.fiscal_year}`}
+          subtitle={`Projected for FY${displayFiscalYear}`}
           sourceDocument={budgetSummary.source_document}
           onClick={() => router.push('/revenue')}
         />
@@ -395,7 +430,7 @@ function HomePageContent() {
           subtitle={
             isLatestYear
               ? 'From draft estimates'
-              : `FY ${budgetSummary.fiscal_year} estimate`
+              : `FY ${displayFiscalYear} estimate`
           }
           sourceDocument={budgetSummary.source_document}
           onClick={() => router.push('/revenue')}
@@ -476,7 +511,7 @@ function HomePageContent() {
             title="Health & wellness"
             subtitle="Hospitals, clinics, and public health."
             icon={HeartPulse}
-            primaryStatLabel={`Allocation ${budgetSummary.fiscal_year}`}
+            primaryStatLabel={`Allocation ${displayFiscalYear}`}
             primaryStatValue={
               healthMinistry
                 ? formatCurrency(healthMinistry.allocation)
@@ -601,7 +636,7 @@ function HomePageContent() {
         <div>
           <h3 className="font-semibold text-gray-900 mb-1">About this data</h3>
           <p className="text-sm text-gray-600">
-            All figures are sourced from the official <strong>Bahamas Budget {budgetSummary.fiscal_year}</strong> documents
+            All figures are sourced from the official <strong>Bahamas Budget {displayFiscalYear}</strong> documents
             published by the Ministry of Finance. Data includes draft estimates and budget communications where available.
             Ask questions below to explore more — answers are scoped to the selected fiscal year.
           </p>

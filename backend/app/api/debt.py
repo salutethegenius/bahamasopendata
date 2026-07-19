@@ -2,11 +2,12 @@
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.fiscal_year import fy_sort_key, resolve_fiscal_year
 from app.db.database import get_db
 from app.db.models import Creditor as CreditorModel, Debt, Document
 
@@ -90,18 +91,9 @@ FALLBACK_HISTORICAL = {
 }
 
 
-def _fy_sort_key(fiscal_year: str | None) -> int:
-    if not fiscal_year:
-        return 0
-    try:
-        return int(str(fiscal_year).split("/")[0])
-    except ValueError:
-        return 0
-
-
 async def _debt_years(db: AsyncSession) -> list[str]:
     result = await db.execute(select(Debt.fiscal_year))
-    return sorted({value for value in result.scalars().all() if value}, key=_fy_sort_key)
+    return sorted({value for value in result.scalars().all() if value}, key=fy_sort_key)
 
 
 async def _latest_document_name(db: AsyncSession, fiscal_year: str) -> str:
@@ -121,10 +113,10 @@ async def get_debt_summary(
 ):
     """Get national debt summary."""
     years = await _debt_years(db)
-    if not years:
+    current_year = resolve_fiscal_year(fiscal_year, years, resource="debt data")
+    if not current_year:
         return FALLBACK_SUMMARY
 
-    current_year = fiscal_year if fiscal_year in years else years[-1]
     current_index = years.index(current_year)
     previous_year = years[current_index - 1] if current_index > 0 else None
     current_result = await db.execute(
@@ -132,7 +124,10 @@ async def get_debt_summary(
     )
     current_row = current_result.scalars().first()
     if current_row is None:
-        return FALLBACK_SUMMARY
+        raise HTTPException(
+            status_code=404,
+            detail=f"No published debt data for fiscal year {current_year}",
+        )
 
     previous_result = await db.execute(
         select(Debt).where(Debt.fiscal_year == previous_year).order_by(Debt.created_at.desc())
@@ -169,10 +164,10 @@ async def get_creditors(
 ):
     """Get breakdown of major creditors."""
     years = await _debt_years(db)
-    if not years:
+    current_year = resolve_fiscal_year(fiscal_year, years, resource="creditor data")
+    if not current_year:
         return FALLBACK_CREDITORS
 
-    current_year = fiscal_year if fiscal_year in years else years[-1]
     debt_result = await db.execute(select(Debt).where(Debt.fiscal_year == current_year).order_by(Debt.created_at.desc()))
     debt_row = debt_result.scalars().first()
     total_debt = float(debt_row.total_debt or 0.0) if debt_row else 0.0

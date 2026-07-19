@@ -1,0 +1,544 @@
+{
+  "source_document": "Bahamas BudgetFINAL(2025-2026).pdf",
+  "title": "FY2025/2026 Draft Estimates of Revenue & Expenditure",
+  "document_type": "budget_book",
+  "fiscal_year": "2025/26",
+  "executive_summary": "FY2025/26 budget: total revenue of $3.90B and total expenditure of $3.82B (recurrent $3.44B, capital $376.3M), yielding a fiscal surplus of $75.5M. Government debt of $11.39B at 68.9% of GDP.",
+  "ministries": [
+    "Ministry Of The Public Service",
+    "Office Of The Attorney General And Ministry Of Legal Affairs",
+    "Ministry Of Foreign Affairs",
+    "Ministry Of Finance",
+    "Ministry Of National Security",
+    "Ministry Of Immigration And National Insurance",
+    "Ministry Of Works And Family Island Affairs",
+    "Ministry Of Education And Technical And Vocational Training",
+    "Ministry Of Energy And Transport",
+    "Ministry Of Social Services, Information And Broadcasting",
+    "Ministry Of Housing And Urban Renewal",
+    "Ministry Of Youth, Sports And Culture",
+    "Ministry Of Economic Affairs",
+    "Ministry Of Agriculture And Marine Resources",
+    "Ministry Of Health And Wellness",
+    "Ministry Of Tourism, Investments And Aviation",
+    "Ministry Of Labour And The Public Service",
+    "Ministry Of The Environment And Natural Resources",
+    "Ministry For Grand Bahama",
+    "Ministry Of Disaster Risk Management"
+  ],
+  "extracted_items": [
+    {
+      "label": "Recurrent Revenue",
+      "amount": 3887100000,
+      "currency": "BSD",
+      "category": "revenue",
+      "ministry_code": null,
+      "source_page": 34
+    },
+    {
+      "label": "Capital Revenue",
+      "amount": 9200000,
+      "currency": "BSD",
+      "category": "revenue",
+      "ministry_code": null,
+      "source_page": 34
+    },
+    {
+      "label": "Total Revenue",
+      "amount": 3896300000,
+      "currency": "BSD",
+      "category": "revenue",
+      "ministry_code": null,
+      "source_page": 34
+    },
+    {
+      "label": "Recurrent Expenditure",
+      "amount": 3444500000,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": null,
+      "source_page": 34
+    },
+    {
+      "label": "Capital Expenditure",
+      "amount": 376300000,
+      "currency": "BSD",
+      "category": "capital_expenditure",
+      "ministry_code": null,
+      "source_page": 34
+    },
+    {
+      "label": "GDP",
+      "amount": 16525700000,
+      "currency": "BSD",
+      "category": "gdp",
+      "ministry_code": null,
+      "source_page": 34
+    },
+    {
+      "label": "National Debt",
+      "amount": 11386500000,
+      "currency": "BSD",
+      "category": "total_debt",
+      "ministry_code": null,
+      "source_page": 34
+    },
+    {
+      "label": "Debt to GDP Ratio",
+      "amount": 68.9,
+      "currency": "percent",
+      "category": "debt_to_gdp_ratio",
+      "ministry_code": null,
+      "source_page": 34
+    },
+    {
+      "label": "Annual Interest",
+      "amount": 668000000,
+      "currency": "BSD",
+      "category": "annual_interest",
+      "ministry_code": null,
+      "source_page": 34
+    },
+    {
+      "label": "Governor General And Staff",
+      "amount": 2091499,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "001",
+      "source_page": 71
+    },
+    {
+      "label": "Department Of The Auditor General",
+      "amount": 2772585,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "004",
+      "source_page": 71
+    },
+    {
+      "label": "Ministry Of The Public Service",
+      "amount": 377252242,
+      "currency": "BSD",
+      "category": "ministry_allocation",
+      "ministry_code": "005",
+      "source_page": 71
+    },
+    {
+      "label": "Cabinet Office",
+      "amount": 12223929,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "006",
+      "source_page": 71
+    },
+    {
+      "label": "Office Of The Attorney General And Ministry Of Legal Affairs",
+      "amount": 47058491,
+      "currency": "BSD",
+      "category": "ministry_allocation",
+      "ministry_code": "007",
+      "source_page": 71
+    },
+    {
+      "label": "Office Of The Judiciary",
+      "amount": 5891206,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "008",
+      "source_page": 71
+    },
+    {
+      "label": "Registrar General'S Department",
+      "amount": 7050314,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "010",
+      "source_page": 71
+    },
+    {
+      "label": "Bahamas Department Of Correctional Services",
+      "amount": 39392852,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "011",
+      "source_page": 71
+    },
+    {
+      "label": "Parliamentary Registration Department",
+      "amount": 3996662,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "012",
+      "source_page": 71
+    },
+    {
+      "label": "Ministry Of Foreign Affairs",
+      "amount": 54967437,
+      "currency": "BSD",
+      "category": "ministry_allocation",
+      "ministry_code": "013",
+      "source_page": 71
+    },
+    {
+      "label": "Office Of The Prime Minister",
+      "amount": 22236232,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "014",
+      "source_page": 71
+    },
+    {
+      "label": "Bahamas Information Services",
+      "amount": 2657221,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "016",
+      "source_page": 71
+    },
+    {
+      "label": "Government Printing Department",
+      "amount": 1522982,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "017",
+      "source_page": 71
+    },
+    {
+      "label": "Department Of Local Government",
+      "amount": 30354360,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "018",
+      "source_page": 71
+    },
+    {
+      "label": "Department Of Physical Planning",
+      "amount": 1089726,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "019",
+      "source_page": 71
+    },
+    {
+      "label": "Department Of Lands And Surveys",
+      "amount": 2603366,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "020",
+      "source_page": 71
+    },
+    {
+      "label": "Ministry Of Finance",
+      "amount": 362694099,
+      "currency": "BSD",
+      "category": "ministry_allocation",
+      "ministry_code": "021",
+      "source_page": 71
+    },
+    {
+      "label": "Treasury Department",
+      "amount": 81276723,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "022",
+      "source_page": 71
+    },
+    {
+      "label": "Customs Department",
+      "amount": 42022775,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "023",
+      "source_page": 71
+    },
+    {
+      "label": "Public Debt Servicing - Interest And Other Charges",
+      "amount": 689545978,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "026",
+      "source_page": 71
+    },
+    {
+      "label": "Department Of Inland Revenue",
+      "amount": 11385192,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "028",
+      "source_page": 71
+    },
+    {
+      "label": "Ministry Of National Security",
+      "amount": 20413364,
+      "currency": "BSD",
+      "category": "ministry_allocation",
+      "ministry_code": "029",
+      "source_page": 71
+    },
+    {
+      "label": "Ministry Of Immigration And National Insurance",
+      "amount": 38277970,
+      "currency": "BSD",
+      "category": "ministry_allocation",
+      "ministry_code": "030",
+      "source_page": 71
+    },
+    {
+      "label": "The Royal Bahamas Police Force",
+      "amount": 134036300,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "031",
+      "source_page": 71
+    },
+    {
+      "label": "The Royal Bahamas Defence Force",
+      "amount": 77530944,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "032",
+      "source_page": 71
+    },
+    {
+      "label": "Ministry Of Works And Family Island Affairs",
+      "amount": 48213665,
+      "currency": "BSD",
+      "category": "ministry_allocation",
+      "ministry_code": "033",
+      "source_page": 71
+    },
+    {
+      "label": "Department Of Public Works",
+      "amount": 21048349,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "034",
+      "source_page": 71
+    },
+    {
+      "label": "Department Of Education",
+      "amount": 216361556,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "035",
+      "source_page": 71
+    },
+    {
+      "label": "Department Of Archives",
+      "amount": 835758,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "037",
+      "source_page": 71
+    },
+    {
+      "label": "Ministry Of Education And Technical And Vocational Training",
+      "amount": 137052342,
+      "currency": "BSD",
+      "category": "ministry_allocation",
+      "ministry_code": "038",
+      "source_page": 71
+    },
+    {
+      "label": "Ministry Of Energy And Transport",
+      "amount": 14797812,
+      "currency": "BSD",
+      "category": "ministry_allocation",
+      "ministry_code": "040",
+      "source_page": 71
+    },
+    {
+      "label": "Ministry Of Social Services, Information And Broadcasting",
+      "amount": 19168559,
+      "currency": "BSD",
+      "category": "ministry_allocation",
+      "ministry_code": "043",
+      "source_page": 72
+    },
+    {
+      "label": "Department Of Social Services",
+      "amount": 53074475,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "044",
+      "source_page": 72
+    },
+    {
+      "label": "Ministry Of Housing And Urban Renewal",
+      "amount": 11052750,
+      "currency": "BSD",
+      "category": "ministry_allocation",
+      "ministry_code": "045",
+      "source_page": 72
+    },
+    {
+      "label": "Ministry Of Youth, Sports And Culture",
+      "amount": 27117021,
+      "currency": "BSD",
+      "category": "ministry_allocation",
+      "ministry_code": "047",
+      "source_page": 72
+    },
+    {
+      "label": "Department Of Labour",
+      "amount": 4456587,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "048",
+      "source_page": 72
+    },
+    {
+      "label": "Ministry Of Economic Affairs",
+      "amount": 7039789,
+      "currency": "BSD",
+      "category": "ministry_allocation",
+      "ministry_code": "049",
+      "source_page": 72
+    },
+    {
+      "label": "Post Office Department",
+      "amount": 11011451,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "051",
+      "source_page": 72
+    },
+    {
+      "label": "Port Department",
+      "amount": 9363905,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "053",
+      "source_page": 72
+    },
+    {
+      "label": "Department Of Road Traffic",
+      "amount": 8042891,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "054",
+      "source_page": 72
+    },
+    {
+      "label": "Department Of Meteorology",
+      "amount": 2652975,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "055",
+      "source_page": 72
+    },
+    {
+      "label": "Ministry Of Agriculture And Marine Resources",
+      "amount": 35414725,
+      "currency": "BSD",
+      "category": "ministry_allocation",
+      "ministry_code": "056",
+      "source_page": 72
+    },
+    {
+      "label": "Department Of Agriculture",
+      "amount": 6066673,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "057",
+      "source_page": 72
+    },
+    {
+      "label": "Department Of Marine Resources",
+      "amount": 3004463,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "058",
+      "source_page": 72
+    },
+    {
+      "label": "Ministry Of Health And Wellness",
+      "amount": 355119623,
+      "currency": "BSD",
+      "category": "ministry_allocation",
+      "ministry_code": "060",
+      "source_page": 72
+    },
+    {
+      "label": "Department Of Environmental Health Services",
+      "amount": 61844996,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "065",
+      "source_page": 72
+    },
+    {
+      "label": "Department Of Public Health",
+      "amount": 60631875,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "066",
+      "source_page": 72
+    },
+    {
+      "label": "Ministry Of Tourism, Investments And Aviation",
+      "amount": 123395161,
+      "currency": "BSD",
+      "category": "ministry_allocation",
+      "ministry_code": "067",
+      "source_page": 72
+    },
+    {
+      "label": "Ministry Of Labour And The Public Service",
+      "amount": 4478941,
+      "currency": "BSD",
+      "category": "ministry_allocation",
+      "ministry_code": "070",
+      "source_page": 72
+    },
+    {
+      "label": "Ministry Of The Environment And Natural Resources",
+      "amount": 11731934,
+      "currency": "BSD",
+      "category": "ministry_allocation",
+      "ministry_code": "072",
+      "source_page": 72
+    },
+    {
+      "label": "Department Of Information, Communications And Technology",
+      "amount": 37317355,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "073",
+      "source_page": 72
+    },
+    {
+      "label": "Ministry For Grand Bahama",
+      "amount": 19761874,
+      "currency": "BSD",
+      "category": "ministry_allocation",
+      "ministry_code": "074",
+      "source_page": 72
+    },
+    {
+      "label": "Ministry Of Disaster Risk Management",
+      "amount": 60518380,
+      "currency": "BSD",
+      "category": "ministry_allocation",
+      "ministry_code": "075",
+      "source_page": 72
+    },
+    {
+      "label": "Office Of The Director Of Public Prosecutions",
+      "amount": 3598463,
+      "currency": "BSD",
+      "category": "recurrent_expenditure",
+      "ministry_code": "076",
+      "source_page": 72
+    }
+  ],
+  "notable_topics": [
+    "balanced budget",
+    "fiscal surplus",
+    "debt reduction",
+    "ministry allocations"
+  ],
+  "warnings": [],
+  "confidence": 0.95,
+  "needs_review": false
+}
