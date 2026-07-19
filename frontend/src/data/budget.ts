@@ -1,58 +1,57 @@
 import type { Ministry } from '@/types';
 import { CURRENT_FISCAL_YEAR } from '@/lib/fiscal-year';
 
-// Fallback dashboard data until API responses load
+// Fallback dashboard data until API responses load (FY2026/27 Draft Estimates)
 export const initialBudgetSummary = {
   fiscal_year: CURRENT_FISCAL_YEAR,
-  total_revenue: 3_896_300_000,
-  total_expenditure: 3_820_800_000,
-  recurrent_expenditure: 3_444_500_000,
-  capital_expenditure: 376_300_000,
-  deficit_surplus: 75_500_000,
-  national_debt: 11_386_500_000,
-  debt_to_gdp_ratio: 68.9,
-  gdp: 16_525_700_000,
-  source_document: 'Bahamas BudgetFINAL(2025-2026).pdf',
-  source_page: 34,
+  total_revenue: 4_362_850_850,
+  total_expenditure: 4_139_779_656,
+  recurrent_expenditure: 3_723_979_656,
+  capital_expenditure: 415_800_000,
+  deficit_surplus: 223_071_194,
+  national_debt: 11_096_700_000,
+  debt_to_gdp_ratio: 59.9,
+  gdp: 18_515_700_000,
+  source_document: 'FY2026-27_Draft_Estimates_of_Revenue_and_Expenditure.pdf',
+  source_page: 9,
 };
 
-// Real ministry allocations from Budget Book 2025/26 (Pages 71-72)
+// Ministry allocations from Draft Estimates 2026/27 (agency summary)
 export const initialMinistries: Ministry[] = [
   {
     id: 'health',
     name: 'Ministry of Health & Wellness',
-    allocation: 355_119_623,
-    previous_year_allocation: 332_747_117,
-    change_percent: 6.7,
-    sparkline: [288.4, 263.2, 332.7, 355.1],
+    allocation: 400_228_827,
+    previous_year_allocation: 355_119_623,
+    change_percent: 12.7,
+    sparkline: [263.2, 332.7, 355.1, 400.2],
     sector: 'Health',
   },
   {
     id: 'finance',
     name: 'Ministry of Finance',
-    allocation: 362_694_099,
-    previous_year_allocation: 346_639_187,
-    change_percent: 4.6,
-    sparkline: [177.5, 178.8, 346.6, 362.7],
+    allocation: 369_040_488,
+    previous_year_allocation: 362_694_099,
+    change_percent: 1.8,
+    sparkline: [178.8, 346.6, 362.7, 369.0],
     sector: 'Finance',
   },
   {
     id: 'education',
-    name: 'Ministry of Education',
-    allocation: 137_052_342,
-    previous_year_allocation: 123_252_555,
-    change_percent: 11.2,
-    sparkline: [114.7, 91.4, 123.3, 137.1],
+    name: 'Ministry of Education, Science and Technology',
+    allocation: 141_904_237,
+    previous_year_allocation: 137_052_342,
+    change_percent: 3.5,
+    sparkline: [91.4, 123.3, 137.1, 141.9],
     sector: 'Education',
   },
   {
     id: 'police',
     name: 'Royal Bahamas Police Force',
-    allocation: 134_036_300,
-    previous_year_allocation: 126_644_406,
-    change_percent: 5.8,
-    sparkline: [126.5, 100.9, 126.6, 134.0],
+    allocation: 141_390_647,
+    previous_year_allocation: 134_036_300,
+    change_percent: 5.5,
+    sparkline: [100.9, 126.6, 134.0, 141.4],
     sector: 'Security',
   },
 ];
-

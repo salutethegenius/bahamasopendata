@@ -9,8 +9,8 @@ const API_BASE =
 export const FY_QUERY_PARAM = 'fy';
 export const DEFAULT_FISCAL_YEARS = ['2025/26', '2026/27'];
 // Years shown in the selector but not yet selectable (data not trusted/verified).
-export const DISABLED_FISCAL_YEARS = ['2026/27'];
-export const CURRENT_FISCAL_YEAR = '2025/26';
+export const DISABLED_FISCAL_YEARS: string[] = [];
+export const CURRENT_FISCAL_YEAR = '2026/27';
 
 export function isFiscalYearDisabled(year: string): boolean {
   return DISABLED_FISCAL_YEARS.includes(year);

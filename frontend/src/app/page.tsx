@@ -47,18 +47,18 @@ type DashboardNewsItem = {
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
 
-// Real sector breakdown from Budget 2025/26
+// Sector breakdown fallback — API replaces once loaded
 const initialSectorData = [
-  { name: "Public Debt Service", value: 689_545_978, color: "#ef4444" },
-  { name: "Health", value: 477_596_494, color: "#FCD116" },
-  { name: "Education", value: 353_413_898, color: "#00CED1" },
-  { name: "Security", value: 231_980_608, color: "#3b82f6" },
-  { name: "Tourism", value: 123_395_161, color: "#8b5cf6" },
-  { name: "Social Services", value: 72_243_034, color: "#10b981" },
-  { name: "Other", value: 1_496_343_624, color: "#6b7280" },
+  { name: "Public Debt Service", value: 732_203_258, color: "#ef4444" },
+  { name: "Health", value: 400_228_827, color: "#FCD116" },
+  { name: "Education", value: 383_555_171, color: "#00CED1" },
+  { name: "Security", value: 247_645_168, color: "#3b82f6" },
+  { name: "Tourism", value: 98_089_530, color: "#8b5cf6" },
+  { name: "Social Services", value: 64_224_852, color: "#10b981" },
+  { name: "Other", value: 1_213_832_850, color: "#6b7280" },
 ];
 
-// Real historical data from Fiscal Summary (Page 34)
+// Historical data from Fiscal Summary + FY2026/27 Draft Estimates
 const initialHistoricalData = [
   { year: "2020/21", revenue: 1.91, expenditure: 3.24, debt: 9.93, debt_gdp: 88.7 },
   { year: "2021/22", revenue: 2.61, expenditure: 3.33, debt: 10.79, debt_gdp: 83.2 },
@@ -66,6 +66,7 @@ const initialHistoricalData = [
   { year: "2023/24", revenue: 3.07, expenditure: 3.26, debt: 11.31, debt_gdp: 72.7 },
   { year: "2024/25", revenue: 3.54, expenditure: 3.61, debt: 11.46, debt_gdp: 71.4 },
   { year: "2025/26", revenue: 3.89, expenditure: 3.82, debt: 11.39, debt_gdp: 68.9 },
+  { year: "2026/27", revenue: 4.36, expenditure: 4.14, debt: 11.10, debt_gdp: 59.9 },
 ];
 
 // Real API ask function - lazy load to avoid SSR issues

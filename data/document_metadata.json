@@ -172,11 +172,25 @@
       "extracted_at": "2026-06-03T14:25:33.993253",
       "chunk_count": 344,
       "normalization_status": "success",
-      "normalized_at": "2026-06-03T14:38:22.906757",
+      "normalized_at": "2026-07-19T12:21:24.749008",
       "review_status": "approved",
       "submitted_at": "2026-06-03T14:38:22.906757",
       "publish_status": "success",
-      "published_at": "2026-06-03T15:28:19.625294"
+      "published_at": "2026-07-19T12:24:00.021723",
+      "notes": "Headline fiscal-summary fields corrected to FY2026/27 Forecast column (2026-07-19). Prior publish had used FY2025/26 Budget column for several page-6 amounts.",
+      "publish_result": {
+        "status": "success",
+        "published_records": {
+          "documents": 1,
+          "ministries": 25,
+          "ministry_allocations": 24,
+          "budget_items": 88,
+          "revenue_rows": 21,
+          "debt_rows": 1,
+          "creditors": 0
+        },
+        "warnings": []
+      }
     }
   ]
 }

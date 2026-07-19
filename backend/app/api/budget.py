@@ -31,18 +31,18 @@ class BudgetSummary(BaseModel):
 
 
 FALLBACK_SUMMARY = BudgetSummary(
-    fiscal_year="2025/26",
-    total_revenue=3_896_300_000,
-    total_expenditure=3_820_800_000,
-    recurrent_expenditure=3_444_500_000,
-    capital_expenditure=376_300_000,
-    deficit_surplus=75_500_000,
-    national_debt=11_386_500_000,
-    debt_to_gdp_ratio=68.9,
-    gdp=16_525_700_000,
-    last_updated=date(2025, 5, 28),
-    source_document="Bahamas BudgetFINAL(2025-2026).pdf",
-    source_page=34,
+    fiscal_year="2026/27",
+    total_revenue=4_362_850_850,
+    total_expenditure=4_139_779_656,
+    recurrent_expenditure=3_723_979_656,
+    capital_expenditure=415_800_000,
+    deficit_surplus=223_071_194,
+    national_debt=11_096_700_000,
+    debt_to_gdp_ratio=59.9,
+    gdp=18_515_700_000,
+    last_updated=date(2026, 5, 28),
+    source_document="FY2026-27_Draft_Estimates_of_Revenue_and_Expenditure.pdf",
+    source_page=9,
 )
 
 FALLBACK_HISTORICAL = [
@@ -52,17 +52,18 @@ FALLBACK_HISTORICAL = [
     {"year": "2023/24", "revenue": 3_069_100_000, "expenditure": 3_263_100_000, "debt": 11_313_800_000, "debt_gdp": 72.7},
     {"year": "2024/25", "revenue": 3_537_000_000, "expenditure": 3_613_100_000, "debt": 11_461_000_000, "debt_gdp": 71.4},
     {"year": "2025/26", "revenue": 3_887_100_000, "expenditure": 3_820_800_000, "debt": 11_386_500_000, "debt_gdp": 68.9},
+    {"year": "2026/27", "revenue": 4_357_000_000, "expenditure": 4_139_779_656, "debt": 11_096_700_000, "debt_gdp": 59.9},
 ]
 
 FALLBACK_SECTORS = [
-    {"name": "Education", "amount": 353_413_898, "color": "#00CED1"},
-    {"name": "Health", "amount": 477_596_494, "color": "#FCD116"},
-    {"name": "National Security", "amount": 231_980_608, "color": "#3b82f6"},
-    {"name": "Public Debt Service", "amount": 689_545_978, "color": "#ef4444"},
-    {"name": "Social Services", "amount": 72_243_034, "color": "#10b981"},
-    {"name": "Works & Infrastructure", "amount": 69_262_014, "color": "#f59e0b"},
-    {"name": "Tourism", "amount": 123_395_161, "color": "#8b5cf6"},
-    {"name": "Other", "amount": 1_427_081_610, "color": "#6b7280"},
+    {"name": "Education", "amount": 383_555_171, "color": "#00CED1"},
+    {"name": "Health", "amount": 400_228_827, "color": "#FCD116"},
+    {"name": "National Security", "amount": 247_645_168, "color": "#3b82f6"},
+    {"name": "Public Debt Service", "amount": 732_203_258, "color": "#ef4444"},
+    {"name": "Social Services", "amount": 64_224_852, "color": "#10b981"},
+    {"name": "Works & Infrastructure", "amount": 42_227_120, "color": "#f59e0b"},
+    {"name": "Tourism", "amount": 98_089_530, "color": "#8b5cf6"},
+    {"name": "Other", "amount": 1_171_605_730, "color": "#6b7280"},
 ]
 
 
@@ -167,8 +168,8 @@ async def _latest_document_name(db: AsyncSession, fiscal_year: str, document_typ
 
 FALLBACK_YEARS = ["2025/26", "2026/27"]
 # Years still shown in the selector but paused until their data is verified.
-PAUSED_YEARS = {"2026/27"}
-DEFAULT_CURRENT_YEAR = "2025/26"
+PAUSED_YEARS: set[str] = set()
+DEFAULT_CURRENT_YEAR = "2026/27"
 
 
 @router.get("/years")
