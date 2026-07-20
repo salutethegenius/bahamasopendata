@@ -27,6 +27,9 @@ def test_key_modules_importable():
         "ingestion.intelligence.social.socialblade",
         "ingestion.intelligence.web.similarweb",
         "ingestion.intelligence.web.bing_serp",
+        "ingestion.intelligence.web.ahrefs_free",
+        "ingestion.intelligence.web.pagespeed",
+        "ingestion.intelligence.web.structured_data",
     ]
     for dotted in modules:
         importlib.import_module(dotted)

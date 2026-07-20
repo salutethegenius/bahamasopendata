@@ -19,7 +19,13 @@ from ingestion.intelligence.social import (
     youtube,
 )
 from ingestion.intelligence.types import CaptureResult, Platform
-from ingestion.intelligence.web import bing_serp, similarweb
+from ingestion.intelligence.web import (
+    ahrefs_free,
+    bing_serp,
+    pagespeed,
+    similarweb,
+    structured_data,
+)
 
 SCRAPERS: dict[str, Callable[..., Awaitable[CaptureResult]]] = {
     "wayback": wayback.capture,
@@ -31,6 +37,9 @@ SCRAPERS: dict[str, Callable[..., Awaitable[CaptureResult]]] = {
     "bing_serp": bing_serp.capture,
     "twitter": twitter.capture,
     "socialblade": socialblade.capture,
+    "ahrefs_free": ahrefs_free.capture,
+    "pagespeed": pagespeed.capture,
+    "structured_data": structured_data.capture,
 }
 
 logger = get_logger(__name__)

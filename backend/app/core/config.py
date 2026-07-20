@@ -71,6 +71,9 @@ class Settings(BaseSettings):
     # Bing Web Search v7 (Intelligence imprint non-branded SERP capture)
     BING_SEARCH_API_KEY: str = ""
 
+    # Google PageSpeed Insights (Intelligence imprint; may reuse YOUTUBE_API_KEY)
+    PAGESPEED_API_KEY: str = ""
+
     # CORS
     CORS_ORIGINS: list[str] = [
         "http://localhost:3000",
