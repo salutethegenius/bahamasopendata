@@ -72,10 +72,10 @@ Pydantic contracts (`Platform`, `SourceProvenance`, `SocialMetric`, `PostMetric`
 
 **Runtime reality (2026-07-19)**
 
-- Scrapers registered: `wayback`, `youtube`, `similarweb`, `instagram`, `facebook`, `tiktok`, `bing_serp`, `twitter`, `socialblade`, `ahrefs_free`, `pagespeed`, `structured_data`
+- Scrapers registered: `wayback`, `youtube`, `similarweb`, `instagram`, `facebook`, `tiktok`, `twitter`, `socialblade`, `ahrefs_free`, `pagespeed`, `structured_data` (`bing_serp` unregistered — API discontinued)
 - Full cohort capture for `2026-08-15` finished `complete=6` (log: `data/intelligence/logs/full_cohort_2026-08-15.log`)
 - Strong signals: Facebook likes-as-followers, YouTube API subs, PageSpeed on reachable hosts, Instagram followers where meta tags exist
-- Systemic soft/hard fails to triage next: Similarweb 403 across cohort; `BING_SEARCH_API_KEY` unset; Ahrefs client-rendered nulls; Wayback ±7d empty for Aug 15 seeds; domain reachability for Fidelity / CIBC / Bank of The Bahamas
+- Cohort notes: Fidelity `domain: null` (no public marketing site); Bank of The Bahamas homepages via `www.`; Similarweb 403 **accepted Issue 01 gap**; Ahrefs often client-rendered nulls; Wayback backfill Oct 2025 – Jul 2026 completed (0 in-window snapshots; log `data/intelligence/logs/wayback_backfill_oct2025_jul2026.log`)
 - Design tokens drafted; no `frontend/src/app/intelligence/` or `backend/app/api/intelligence.py` yet  
 
 ---
@@ -93,12 +93,15 @@ backend/.venv/bin/python ingestion/intelligence/run_capture.py \
 backend/.venv/bin/python ingestion/intelligence/run_validate.py \
   --trial data/intelligence/exports/example_trial.json --apply
 
+backend/.venv/bin/python ingestion/intelligence/run_wayback_backfill.py --dry-run
+backend/.venv/bin/python ingestion/intelligence/run_wayback_backfill.py
+
 pytest tests/intelligence/ -q
 ```
 
 `--bank` and `--scrapers` are **repeatable** (not comma-separated). Omit `--bank` for all cohort banks; omit `--scrapers` for every key in `SCRAPERS`.
 
-Required secrets (see `.env.example` / `backend/.env`): `YOUTUBE_API_KEY`, `BING_SEARCH_API_KEY`, `PAGESPEED_API_KEY` (falls back to YouTube key).
+Required secrets (see `.env.example` / `backend/.env`): `YOUTUBE_API_KEY`, `PAGESPEED_API_KEY` (falls back to YouTube key). Bing Search is discontinued for Issue 01 (`bing_serp` not in `SCRAPERS`).
 
 ---
 
@@ -115,13 +118,13 @@ flowchart LR
   surface --> release["Public_drop_Oct5"]
 ```
 
-1. **Triage cohort capture gaps** — add `BING_SEARCH_API_KEY`; decide Similarweb 403 strategy; verify/fix domains for `fidelitybahamas.com`, `cibcfcib.com`, `bankbahamas.com`.  
-2. **Wayback backfill (Aug 1–20)** — historical follower trajectories for Oct 2025 – Jul 2026 via `wayback` scraper across capture dates (Aug 15 ±7d was empty for most seeds).  
-3. **Live capture cadence** — weekly from Aug 1; daily on the final two weeks before Sep 13. Prefer one merged `run_capture` invocation (separate scraper runs overwrite processed JSON).  
+1. **Live capture cadence** — weekly from Aug 1; daily on the final two weeks before Sep 13. Prefer one merged `run_capture` invocation (separate scraper runs overwrite processed JSON).  
+2. **Wayback follow-up (optional)** — month-midpoint backfill Oct 2025 – Jul 2026 completed with **zero** in-window FB/IG snapshots; decide whether to widen `CDX_WINDOW_DAYS` beyond ±7 or accept sparse history.  
+3. **Revisit Similarweb post-Issue 01** if a public traffic source returns (403 accepted for now).  
 4. **Delta validation (Sep 14–27)** — drop Rival IQ / SEMrush trial JSON under `data/intelligence/exports/`; run `run_validate.py --apply`; flag >5% variance.  
 5. **Freeze dataset Sep 28** for Issue 01 publication.  
-6. **Surface:** build `frontend/src/app/intelligence/` (design tokens via `[data-imprint="intelligence"]`) + `backend/app/api/intelligence.py` against locked shapes. **No Postgres / Alembic in Issue 01.**  
-7. **Press pre-brief** Sep 28 – Oct 2; **public drop Oct 5** (report + dataset + open-source code).  
+6. **Surface:** `frontend/src/app/intelligence/` + `backend/app/api/intelligence.py` against locked shapes. **No Postgres / Alembic in Issue 01.**  
+7. **Press pre-brief** Sep 28 – Oct 2; **public drop Oct 5**.  
 
 ---
 

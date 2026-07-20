@@ -30,7 +30,7 @@ def _cohort_entry(domain: str | None = "combankltd.com") -> CohortEntry:
 
 
 def test_homepage_url():
-    assert pagespeed.homepage_url("combankltd.com") == "https://combankltd.com/"
+    assert pagespeed.homepage_url("combankltd.com") == "https://www.combankltd.com/"
 
 
 def test_parse_lighthouse_categories():
@@ -53,7 +53,7 @@ async def test_capture_returns_web_metric(monkeypatch, tmp_path):
 
     async def fake_fetch(client, api_key, page_url):
         assert api_key == "test-key"
-        assert page_url == "https://combankltd.com/"
+        assert page_url == "https://www.combankltd.com/"
         return payload, 200
 
     monkeypatch.setattr(pagespeed, "_fetch_pagespeed", fake_fetch)
@@ -86,5 +86,5 @@ async def test_fetch_pagespeed_raises_on_429():
     async with httpx.AsyncClient(transport=transport) as client:
         with pytest.raises(CaptureError, match="429"):
             await pagespeed._fetch_pagespeed(
-                client, "key", "https://combankltd.com/"
+                client, "key", "https://www.combankltd.com/"
             )

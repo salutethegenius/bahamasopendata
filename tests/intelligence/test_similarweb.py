@@ -46,6 +46,14 @@ def test_overview_url():
     )
 
 
+def test_homepage_url_prefers_www():
+    assert similarweb.homepage_url("bankbahamas.com") == "https://www.bankbahamas.com/"
+    assert (
+        similarweb.homepage_url("bankbahamas.com", prefer_www=False)
+        == "https://bankbahamas.com/"
+    )
+
+
 def test_latest_monthly_visits_picks_newest_month():
     visits = similarweb.latest_monthly_visits(
         {"2026-05-01": 45000, "2026-07-01": 52000, "2026-06-01": 48000}

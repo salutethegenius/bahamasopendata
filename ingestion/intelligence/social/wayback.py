@@ -145,6 +145,10 @@ def _pick_nearest_cdx_timestamp(rows: list, capture_date: date) -> Optional[str]
     return best_timestamp
 
 
+_CDX_RETRIES = 3
+_CDX_RETRY_SLEEP_SECONDS = 45.0
+
+
 async def _fetch_cdx_timestamp(
     client: httpx.AsyncClient,
     seed_url: str,
@@ -160,14 +164,23 @@ async def _fetch_cdx_timestamp(
         "filter": "statuscode:200",
         "collapse": "timestamp:8",
     }
-    response = await client.get(CDX_API, params=params)
-    if response.status_code in {429, 503}:
-        raise CaptureError(
-            f"Wayback CDX rate-limited or unavailable ({response.status_code})"
-        )
-    response.raise_for_status()
-    rows = response.json()
-    return _pick_nearest_cdx_timestamp(rows, capture_date)
+    last_status = 0
+    for attempt in range(1, _CDX_RETRIES + 1):
+        response = await client.get(CDX_API, params=params)
+        last_status = response.status_code
+        if response.status_code in {429, 503}:
+            if attempt < _CDX_RETRIES:
+                await asyncio.sleep(_CDX_RETRY_SLEEP_SECONDS * attempt)
+                continue
+            raise CaptureError(
+                f"Wayback CDX rate-limited or unavailable ({response.status_code})"
+            )
+        response.raise_for_status()
+        rows = response.json()
+        return _pick_nearest_cdx_timestamp(rows, capture_date)
+    raise CaptureError(
+        f"Wayback CDX rate-limited or unavailable ({last_status})"
+    )
 
 
 async def _fetch_snapshot_html(
@@ -177,12 +190,21 @@ async def _fetch_snapshot_html(
 ) -> tuple[str, str, int]:
     """Fetch archived HTML; return body, archive URL, and HTTP status."""
     archive_url = f"{ARCHIVE_BASE}/{timestamp}/{seed_url}"
-    response = await client.get(archive_url, follow_redirects=True)
-    if response.status_code in {429, 503}:
-        raise CaptureError(
-            f"Wayback snapshot rate-limited or unavailable ({response.status_code})"
-        )
-    return response.text, archive_url, response.status_code
+    last_status = 0
+    for attempt in range(1, _CDX_RETRIES + 1):
+        response = await client.get(archive_url, follow_redirects=True)
+        last_status = response.status_code
+        if response.status_code in {429, 503}:
+            if attempt < _CDX_RETRIES:
+                await asyncio.sleep(_CDX_RETRY_SLEEP_SECONDS * attempt)
+                continue
+            raise CaptureError(
+                f"Wayback snapshot rate-limited or unavailable ({response.status_code})"
+            )
+        return response.text, archive_url, response.status_code
+    raise CaptureError(
+        f"Wayback snapshot rate-limited or unavailable ({last_status})"
+    )
 
 
 def _raw_artifact_path(bank_id: str, capture_date: date, platform: Platform) -> Path:

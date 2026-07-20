@@ -30,13 +30,9 @@ from ingestion.intelligence.types import (
     SourceProvenance,
     WebMetric,
 )
-from ingestion.intelligence.web.similarweb import normalize_domain
+from ingestion.intelligence.web.similarweb import homepage_url
 
 _SCHEMA_HOSTS = ("schema.org", "www.schema.org")
-
-
-def homepage_url(domain: str) -> str:
-    return f"https://{normalize_domain(domain)}/"
 
 
 def _local_type_name(raw: str) -> Optional[str]:

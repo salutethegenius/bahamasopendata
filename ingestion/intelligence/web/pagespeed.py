@@ -29,7 +29,7 @@ from ingestion.intelligence.types import (
     SourceProvenance,
     WebMetric,
 )
-from ingestion.intelligence.web.similarweb import normalize_domain
+from ingestion.intelligence.web.similarweb import homepage_url
 
 PAGESPEED_API = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
 DEFAULT_STRATEGY = "mobile"
@@ -52,11 +52,6 @@ def _get_api_key() -> str:
         if key:
             return key
     return ""
-
-
-def homepage_url(domain: str) -> str:
-    """Canonical https homepage URL for the domain."""
-    return f"https://{normalize_domain(domain)}/"
 
 
 def parse_lighthouse_categories(

@@ -7,6 +7,11 @@ branded share) stay ``None``.
 
 When CloudFront / WAF blocks the free endpoint (HTTP 403/429 or HTML challenge
 body), raises ``CaptureError`` — never substitutes synthetic traffic figures.
+
+.. note::
+   **Issue 01:** the free endpoint returns HTTP 403 for the banking cohort
+   (Jul 2026). We accept missing ``organic_traffic_est`` rather than invent
+   numbers or automate a browser bypass. Module stays registered for retry.
 """
 from __future__ import annotations
 
@@ -42,6 +47,17 @@ def normalize_domain(domain: str) -> str:
     if not value or "." not in value:
         raise ValueError(f"invalid domain: {domain!r}")
     return value
+
+
+def homepage_url(domain: str, *, prefer_www: bool = True) -> str:
+    """Canonical https homepage URL.
+
+    Prefers ``www.`` because some cohort hosts (e.g. Bank of The Bahamas) have
+    no apex DNS A/AAAA record while ``www.`` resolves and serves the site.
+    """
+    bare = normalize_domain(domain)
+    host = f"www.{bare}" if prefer_www else bare
+    return f"https://{host}/"
 
 
 def overview_url(domain: str) -> str:

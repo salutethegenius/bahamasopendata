@@ -21,12 +21,13 @@ from ingestion.intelligence.social import (
 from ingestion.intelligence.types import CaptureResult, Platform
 from ingestion.intelligence.web import (
     ahrefs_free,
-    bing_serp,
     pagespeed,
     similarweb,
     structured_data,
 )
 
+# bing_serp kept in web/ + tests but not registered: Bing Web Search API
+# discontinued for this imprint (Issue 01).
 SCRAPERS: dict[str, Callable[..., Awaitable[CaptureResult]]] = {
     "wayback": wayback.capture,
     "youtube": youtube.capture,
@@ -34,7 +35,6 @@ SCRAPERS: dict[str, Callable[..., Awaitable[CaptureResult]]] = {
     "instagram": instagram.capture,
     "facebook": facebook.capture,
     "tiktok": tiktok.capture,
-    "bing_serp": bing_serp.capture,
     "twitter": twitter.capture,
     "socialblade": socialblade.capture,
     "ahrefs_free": ahrefs_free.capture,

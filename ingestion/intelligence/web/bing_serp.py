@@ -1,5 +1,9 @@
 """Bing Web Search API — non-branded query visibility.
 
+.. note::
+   **Not registered in Issue 01.** Bing Web Search API is discontinued for
+   this imprint; module retained for tests / possible future replacement.
+
 Runs a fixed set of Bahamian banking queries that contain **no bank brand
 names**, then measures whether the bank's ``cohort.domain`` appears in the
 organic web results. Emits one ``WebMetric`` with:
