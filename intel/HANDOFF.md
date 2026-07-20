@@ -19,7 +19,8 @@ Self-contained handoff for the next agent. Contracts and data shapes live in the
 1. [intel/bod-intelligence-architecture.md](bod-intelligence-architecture.md) — build plan, module contracts, registry, methodology gates, §8 build order  
 2. [intel/bod-intelligence-design-tokens.md](bod-intelligence-design-tokens.md) — `/intelligence` visual tokens (deferred until data shape locks)  
 3. [ingestion/intelligence/cohort.yaml](../ingestion/intelligence/cohort.yaml) — source of truth for banks, handles, `series_token`, methodology rules  
-4. [REPO_AUDIT.md](../REPO_AUDIT.md) — import style, path constants, logging, embedding reuse conventions  
+4. [ingestion/intelligence/methodology.md](../ingestion/intelligence/methodology.md) — grounded capture transparency notes  
+5. [REPO_AUDIT.md](../REPO_AUDIT.md) — import style, path constants, logging, embedding reuse conventions  
 
 ---
 
@@ -38,16 +39,17 @@ Site budget work is live on `main`. Do **not** redo unless asked:
 
 ```
 ingestion/intelligence/
-  cohort.yaml, cohort.py, types.py, errors.py, logging_config.py, run_capture.py
-  social/     wayback.py (real) + facebook, instagram, youtube, tiktok, twitter, socialblade (stubs)
-  web/        similarweb, ahrefs_free, bing_serp, pagespeed, structured_data (stubs)
-  capture/    orchestrator.py, registry.py, delta_validator.py (stub)
+  cohort.yaml, cohort.py, types.py, errors.py, logging_config.py
+  run_capture.py, run_validate.py, methodology.md
+  social/     wayback, facebook, instagram, youtube, tiktok, twitter, socialblade
+  web/        similarweb, ahrefs_free, bing_serp, pagespeed, structured_data
+  capture/    orchestrator.py, registry.py, delta_validator.py
 
 data/intelligence/
   raw/  processed/  exports/  logs/capture.log  registry.json
 
 tests/intelligence/
-  test_types.py  test_registry.py  test_wayback.py  fixtures/  …
+  test_*.py per module + fixtures/
 ```
 
 Pydantic contracts (`Platform`, `SourceProvenance`, `SocialMetric`, `PostMetric`, `WebMetric`, `CaptureResult`) are in `types.py` — see architecture §3.
@@ -62,30 +64,41 @@ Pydantic contracts (`Platform`, `SourceProvenance`, `SocialMetric`, `PostMetric`
 | 2 Cohort verification | Done (`197f1c7`) |
 | 3 `types.py` + tests | Done |
 | 4 `registry.py` + tests | Done |
-| 5 `wayback.py` + fixtures | Done (only real scraper) |
-| 6 Orchestrator + `run_capture.py` | Done — only `"wayback"` in `SCRAPERS` |
-| 7 Remaining scrapers | Not started (1–2 line stubs) |
-| 8 `delta_validator.py` | Stub only |
-| 9 `methodology.md` | Missing |
+| 5 `wayback.py` + fixtures | Done |
+| 6 Orchestrator + `run_capture.py` | Done — all 12 keys in `SCRAPERS` |
+| 7 Remaining scrapers | **Done** (youtube → structured_data; fixture tests under `tests/intelligence/`) |
+| 8 `delta_validator.py` | **Done** (+ `run_validate.py`, tests) |
+| 9 `methodology.md` | **Drafted** (grounded in Jul 2026 capture behaviour) |
 
-**Runtime reality**
+**Runtime reality (2026-07-19)**
 
-- `data/intelligence/registry.json` = `{"captures": []}`  
-- Trial RBC processed JSONs exist under `processed/2024-05-15/` and `processed/2026-05-15/` but are not in the registry (Wayback: no snapshot in ±7 day window)  
+- Scrapers registered: `wayback`, `youtube`, `similarweb`, `instagram`, `facebook`, `tiktok`, `bing_serp`, `twitter`, `socialblade`, `ahrefs_free`, `pagespeed`, `structured_data`
+- Full cohort capture for `2026-08-15` finished `complete=6` (log: `data/intelligence/logs/full_cohort_2026-08-15.log`)
+- Strong signals: Facebook likes-as-followers, YouTube API subs, PageSpeed on reachable hosts, Instagram followers where meta tags exist
+- Systemic soft/hard fails to triage next: Similarweb 403 across cohort; `BING_SEARCH_API_KEY` unset; Ahrefs client-rendered nulls; Wayback ±7d empty for Aug 15 seeds; domain reachability for Fidelity / CIBC / Bank of The Bahamas
 - Design tokens drafted; no `frontend/src/app/intelligence/` or `backend/app/api/intelligence.py` yet  
 
 ---
 
 ## How to run
 
-From repo root (`PYTHONPATH` includes repo root — `run_capture.py` inserts it):
+From repo root (`run_capture.py` / `run_validate.py` insert repo root on `sys.path`):
 
 ```bash
-python ingestion/intelligence/run_capture.py --date 2026-08-15 --bank rbc_bahamas --scrapers wayback
+backend/.venv/bin/python ingestion/intelligence/run_capture.py --date 2026-08-15
+backend/.venv/bin/python ingestion/intelligence/run_capture.py \
+  --date 2026-08-15 --bank commonwealth_bank \
+  --scrapers ahrefs_free --scrapers pagespeed --scrapers structured_data
+
+backend/.venv/bin/python ingestion/intelligence/run_validate.py \
+  --trial data/intelligence/exports/example_trial.json --apply
+
 pytest tests/intelligence/ -q
 ```
 
-`--bank` and `--scrapers` are repeatable; omit `--bank` for all cohort banks; omit `--scrapers` for every key in `SCRAPERS`.
+`--bank` and `--scrapers` are **repeatable** (not comma-separated). Omit `--bank` for all cohort banks; omit `--scrapers` for every key in `SCRAPERS`.
+
+Required secrets (see `.env.example` / `backend/.env`): `YOUTUBE_API_KEY`, `BING_SEARCH_API_KEY`, `PAGESPEED_API_KEY` (falls back to YouTube key).
 
 ---
 
@@ -93,23 +106,22 @@ pytest tests/intelligence/ -q
 
 ```mermaid
 flowchart LR
-  done["Steps_1_to_6_done"] --> next["Implement_remaining_scrapers"]
-  next --> capture["Weekly_live_capture_Aug"]
-  capture --> validate["Delta_validation_Sep"]
+  scrapersDone["Scrapers_and_validator_done"] --> cohortCapture["Full_cohort_live_capture"]
+  cohortCapture --> wayback["Wayback_backfill_Aug"]
+  wayback --> weekly["Weekly_live_capture_Aug"]
+  weekly --> validate["Delta_validation_Sep"]
   validate --> freeze["Lock_dataset_Sep28"]
   freeze --> surface["Frontend_backend_mid_Aug_Sep"]
   surface --> release["Public_drop_Oct5"]
 ```
 
-1. **Implement scrapers** in order: `youtube` → `similarweb` → `instagram` → `facebook` → `tiktok` → `bing_serp` → rest (`twitter`, `socialblade`, `ahrefs_free`, `pagespeed`, `structured_data`). Each must export `async def capture(bank_id, cohort_entry, capture_date) -> CaptureResult` (architecture §2). Register each in `capture/orchestrator.py` `SCRAPERS`. Ship fixture tests under `tests/intelligence/` per module.  
-2. **Wire real captures** into `registry.json` and `data/intelligence/processed/{date}/{bank_id}.json` (orchestrator already writes processed + `mark_capture`).  
-3. **Wayback backfill (Aug 1–20)** for Oct 2025 – Jul 2026 follower trajectories.  
-4. **Live capture:** weekly `run_capture` from Aug 1; daily on the final two weeks before Sep 13.  
-5. **Implement `delta_validator.py`** + Rival IQ (Sep 14–27) / SEMrush (Sep 21–27) trial comparison; flag >5% variance.  
-6. **Draft `methodology.md`** after first real data lands (grounded language).  
-7. **Freeze dataset Sep 28** for Issue 01 publication.  
-8. **Surface:** build `frontend/src/app/intelligence/` (design tokens via `[data-imprint="intelligence"]`) + `backend/app/api/intelligence.py` against locked shapes. **No Postgres / Alembic in Issue 01.**  
-9. **Press pre-brief** Sep 28 – Oct 2; **public drop Oct 5** (report + dataset + open-source code).  
+1. **Triage cohort capture gaps** — add `BING_SEARCH_API_KEY`; decide Similarweb 403 strategy; verify/fix domains for `fidelitybahamas.com`, `cibcfcib.com`, `bankbahamas.com`.  
+2. **Wayback backfill (Aug 1–20)** — historical follower trajectories for Oct 2025 – Jul 2026 via `wayback` scraper across capture dates (Aug 15 ±7d was empty for most seeds).  
+3. **Live capture cadence** — weekly from Aug 1; daily on the final two weeks before Sep 13. Prefer one merged `run_capture` invocation (separate scraper runs overwrite processed JSON).  
+4. **Delta validation (Sep 14–27)** — drop Rival IQ / SEMrush trial JSON under `data/intelligence/exports/`; run `run_validate.py --apply`; flag >5% variance.  
+5. **Freeze dataset Sep 28** for Issue 01 publication.  
+6. **Surface:** build `frontend/src/app/intelligence/` (design tokens via `[data-imprint="intelligence"]`) + `backend/app/api/intelligence.py` against locked shapes. **No Postgres / Alembic in Issue 01.**  
+7. **Press pre-brief** Sep 28 – Oct 2; **public drop Oct 5** (report + dataset + open-source code).  
 
 ---
 

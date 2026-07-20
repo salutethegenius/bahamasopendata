@@ -53,6 +53,20 @@ def test_parse_ahrefs_metrics_empty():
     assert any("client-rendered" in err for err in errors)
 
 
+def test_merge_ahrefs_metrics_prefers_non_null():
+    empty = ahrefs_free.parse_ahrefs_metrics("<html></html>")
+    filled = ahrefs_free.parse_ahrefs_metrics(
+        (FIXTURES / "ahrefs_free.html").read_text()
+    )
+    authority, backlinks, referring, errors = ahrefs_free.merge_ahrefs_metrics(
+        empty, filled
+    )
+    assert authority == 42
+    assert backlinks == 1234
+    assert referring == 56
+    assert not any("client-rendered" in err for err in errors)
+
+
 @pytest.mark.asyncio
 async def test_capture_returns_web_metric(monkeypatch, tmp_path):
     html = (FIXTURES / "ahrefs_free.html").read_text()
@@ -61,7 +75,10 @@ async def test_capture_returns_web_metric(monkeypatch, tmp_path):
     )
     monkeypatch.setattr(ahrefs_free, "REPO_ROOT", tmp_path)
 
+    fetched: list[str] = []
+
     async def fake_fetch(client, url):
+        fetched.append(url)
         return html, 200, url
 
     monkeypatch.setattr(ahrefs_free, "_fetch_html", fake_fetch)
@@ -70,6 +87,9 @@ async def test_capture_returns_web_metric(monkeypatch, tmp_path):
         "commonwealth_bank", _cohort_entry(), CAPTURE_DATE
     )
 
+    assert len(fetched) == 2
+    assert any("website-authority-checker" in url for url in fetched)
+    assert any("backlink-checker" in url for url in fetched)
     assert result.attempted_platforms == [Platform.WEBSITE]
     metric = result.web_metrics[0]
     assert metric.authority_score == 42
@@ -77,6 +97,7 @@ async def test_capture_returns_web_metric(monkeypatch, tmp_path):
     assert metric.referring_domains == 56
     assert metric.source.method == "scrape"
     assert "ahrefs_free" in result.raw_artifacts
+    assert "ahrefs_free_backlinks" in result.raw_artifacts
 
 
 @pytest.mark.asyncio

@@ -18,6 +18,7 @@ def test_key_modules_importable():
         "ingestion.intelligence.types",
         "ingestion.intelligence.logging_config",
         "ingestion.intelligence.capture.registry",
+        "ingestion.intelligence.capture.delta_validator",
         "ingestion.intelligence.social.wayback",
         "ingestion.intelligence.social.youtube",
         "ingestion.intelligence.social.instagram",

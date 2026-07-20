@@ -47,16 +47,19 @@ _REFDOMAINS_JSON_RE = re.compile(
     r'"(?:refdomains|refDomains|referring_domains|referringDomains)"\s*:\s*(\d+)',
     re.IGNORECASE,
 )
+# Require the number immediately after the label (optional colon/dash).
+# Looser "within N chars" patterns false-positive on Ahrefs CSS class digits
+# near the marketing "Domain Rating" SVG alt text.
 _DOMAIN_RATING_TEXT_RE = re.compile(
-    r"Domain\s*Rating[^0-9]{0,40}(\d{1,3})",
+    r"Domain\s*Rating\s*[:\-]?\s*(\d{1,3})\b",
     re.IGNORECASE,
 )
 _BACKLINKS_TEXT_RE = re.compile(
-    r"([\d,]+)\s+backlinks?\b",
+    r"\b([\d,]+)\s+backlinks?\b",
     re.IGNORECASE,
 )
 _REFDOMAINS_TEXT_RE = re.compile(
-    r"([\d,]+)\s+referring\s+domains?\b",
+    r"\b([\d,]+)\s+referring\s+domains?\b",
     re.IGNORECASE,
 )
 
@@ -133,13 +136,52 @@ def parse_ahrefs_metrics(html: str) -> tuple[Optional[int], Optional[int], Optio
     return authority, backlinks, referring, errors
 
 
-def _raw_artifact_path(bank_id: str, capture_date: date) -> Path:
+def merge_ahrefs_metrics(
+    *parsed: tuple[Optional[int], Optional[int], Optional[int], list[str]],
+) -> tuple[Optional[int], Optional[int], Optional[int], list[str]]:
+    """Prefer the first non-None value per field across free-tool page parses."""
+    authority: Optional[int] = None
+    backlinks: Optional[int] = None
+    referring: Optional[int] = None
+    errors: list[str] = []
+    for auth, backs, refs, errs in parsed:
+        if authority is None:
+            authority = auth
+        if backlinks is None:
+            backlinks = backs
+        if referring is None:
+            referring = refs
+        errors.extend(errs)
+    if authority is not None or backlinks is not None or referring is not None:
+        # Drop the all-null soft error once any page yielded a metric.
+        errors = [
+            err
+            for err in errors
+            if "client-rendered only" not in err
+            and not err.endswith("not found in HTML")
+        ]
+        if authority is None:
+            errors.append("ahrefs_free: Domain Rating not found in HTML")
+        if backlinks is None:
+            errors.append("ahrefs_free: backlink count not found in HTML")
+        if referring is None:
+            errors.append("ahrefs_free: referring domains not found in HTML")
+    else:
+        # Keep a single client-rendered note when every page was empty.
+        errors = [
+            "ahrefs_free: no Domain Rating / backlinks / referring domains "
+            "found in free-tool HTML (metrics may be client-rendered only)"
+        ]
+    return authority, backlinks, referring, errors
+
+
+def _raw_artifact_path(bank_id: str, capture_date: date, filename: str) -> Path:
     return (
         INTELLIGENCE_DATA_DIR
         / "raw"
         / capture_date.isoformat()
         / bank_id
-        / "ahrefs_free.html"
+        / filename
     )
 
 
@@ -166,8 +208,12 @@ async def capture(
     """
     Pull Ahrefs free-tool authority / backlink signals for the bank domain.
 
+    Fetches both the Website Authority Checker and Backlink Checker public
+    pages and merges whatever metrics are present in static HTML. Client-only
+    rendered values stay ``None`` — never invented.
+
     Returns CaptureResult with at most one WebMetric. Raises CaptureError on
-    rate-limit / hard HTTP failures — never invents DR or backlink counts.
+    rate-limit / hard HTTP failures.
     """
     raw_domain = (cohort_entry.domain or "").strip()
     if not raw_domain:
@@ -189,9 +235,9 @@ async def capture(
         )
 
     attempted_platforms = [Platform.WEBSITE]
-    errors: list[str] = []
     fetched_at = datetime.now(timezone.utc)
-    url = authority_checker_url(domain)
+    authority_url = authority_checker_url(domain)
+    backlink_url = backlink_checker_url(domain)
 
     headers = {
         "User-Agent": get_user_agent(),
@@ -200,24 +246,34 @@ async def capture(
     }
     async with httpx.AsyncClient(headers=headers, timeout=60.0) as client:
         try:
-            html, http_status, final_url = await _fetch_html(client, url)
+            authority_html, http_status, final_url = await _fetch_html(
+                client, authority_url
+            )
+            backlink_html, _, backlink_final = await _fetch_html(client, backlink_url)
         except CaptureError:
             raise
         except httpx.HTTPError as exc:
             raise CaptureError(f"Ahrefs free tool HTTP error: {exc}") from exc
 
-    artifact_path = _raw_artifact_path(bank_id, capture_date)
+    artifact_path = _raw_artifact_path(bank_id, capture_date, "ahrefs_free.html")
+    backlink_artifact = _raw_artifact_path(
+        bank_id, capture_date, "ahrefs_free_backlinks.html"
+    )
     artifact_path.parent.mkdir(parents=True, exist_ok=True)
-    artifact_path.write_text(html, encoding="utf-8")
-    # Also stash a tiny JSON sidecar summary for audit convenience.
-    authority, backlinks, referring, parse_errors = parse_ahrefs_metrics(html)
-    errors.extend(parse_errors)
+    artifact_path.write_text(authority_html, encoding="utf-8")
+    backlink_artifact.write_text(backlink_html, encoding="utf-8")
+
+    authority, backlinks, referring, errors = merge_ahrefs_metrics(
+        parse_ahrefs_metrics(authority_html),
+        parse_ahrefs_metrics(backlink_html),
+    )
     summary_path = artifact_path.with_suffix(".json")
     summary_path.write_text(
         json.dumps(
             {
                 "domain": domain,
                 "source_url": final_url,
+                "backlink_checker_url": backlink_final,
                 "authority_score": authority,
                 "backlinks": backlinks,
                 "referring_domains": referring,
@@ -229,6 +285,7 @@ async def capture(
 
     raw_artifacts = {
         "ahrefs_free": str(artifact_path.relative_to(REPO_ROOT)),
+        "ahrefs_free_backlinks": str(backlink_artifact.relative_to(REPO_ROOT)),
         "ahrefs_free_summary": str(summary_path.relative_to(REPO_ROOT)),
     }
 

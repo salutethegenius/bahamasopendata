@@ -4,9 +4,24 @@
       "capture_id": "rbc_bahamas_2026-08-15",
       "bank_id": "rbc_bahamas",
       "capture_date": "2026-08-15",
-      "platforms_captured": [],
+      "platforms_captured": [
+        "facebook",
+        "instagram",
+        "website",
+        "youtube"
+      ],
       "platforms_failed": [],
-      "raw_artifact_paths": {},
+      "raw_artifact_paths": {
+        "youtube_channel": "data/intelligence/raw/2026-08-15/rbc_bahamas/youtube_channel.json",
+        "instagram_profile": "data/intelligence/raw/2026-08-15/rbc_bahamas/instagram_profile.html",
+        "facebook_profile": "data/intelligence/raw/2026-08-15/rbc_bahamas/facebook_profile.html",
+        "socialblade_youtube": "data/intelligence/raw/2026-08-15/rbc_bahamas/socialblade_youtube.html",
+        "ahrefs_free": "data/intelligence/raw/2026-08-15/rbc_bahamas/ahrefs_free.html",
+        "ahrefs_free_backlinks": "data/intelligence/raw/2026-08-15/rbc_bahamas/ahrefs_free_backlinks.html",
+        "ahrefs_free_summary": "data/intelligence/raw/2026-08-15/rbc_bahamas/ahrefs_free.json",
+        "pagespeed": "data/intelligence/raw/2026-08-15/rbc_bahamas/pagespeed.json",
+        "structured_data": "data/intelligence/raw/2026-08-15/rbc_bahamas/structured_data.html"
+      },
       "processed_path": "data/intelligence/processed/2026-08-15/rbc_bahamas.json",
       "scrape_status": "complete",
       "validation_status": "pending",
@@ -18,11 +33,19 @@
       "bank_id": "commonwealth_bank",
       "capture_date": "2026-08-15",
       "platforms_captured": [
-        "website"
+        "facebook",
+        "instagram",
+        "website",
+        "youtube"
       ],
       "platforms_failed": [],
       "raw_artifact_paths": {
+        "youtube_channel": "data/intelligence/raw/2026-08-15/commonwealth_bank/youtube_channel.json",
+        "instagram_profile": "data/intelligence/raw/2026-08-15/commonwealth_bank/instagram_profile.html",
+        "facebook_profile": "data/intelligence/raw/2026-08-15/commonwealth_bank/facebook_profile.html",
+        "socialblade_youtube": "data/intelligence/raw/2026-08-15/commonwealth_bank/socialblade_youtube.html",
         "ahrefs_free": "data/intelligence/raw/2026-08-15/commonwealth_bank/ahrefs_free.html",
+        "ahrefs_free_backlinks": "data/intelligence/raw/2026-08-15/commonwealth_bank/ahrefs_free_backlinks.html",
         "ahrefs_free_summary": "data/intelligence/raw/2026-08-15/commonwealth_bank/ahrefs_free.json",
         "pagespeed": "data/intelligence/raw/2026-08-15/commonwealth_bank/pagespeed.json",
         "structured_data": "data/intelligence/raw/2026-08-15/commonwealth_bank/structured_data.html"
@@ -38,11 +61,22 @@
       "bank_id": "cibc_caribbean",
       "capture_date": "2026-08-15",
       "platforms_captured": [
-        "twitter"
+        "facebook",
+        "instagram",
+        "twitter",
+        "website",
+        "youtube"
       ],
       "platforms_failed": [],
       "raw_artifact_paths": {
-        "twitter_live": "data/intelligence/raw/2026-08-15/cibc_caribbean/twitter_live.html"
+        "youtube_channel": "data/intelligence/raw/2026-08-15/cibc_caribbean/youtube_channel.json",
+        "instagram_profile": "data/intelligence/raw/2026-08-15/cibc_caribbean/instagram_profile.html",
+        "facebook_profile": "data/intelligence/raw/2026-08-15/cibc_caribbean/facebook_profile.html",
+        "twitter_live": "data/intelligence/raw/2026-08-15/cibc_caribbean/twitter_live.html",
+        "socialblade_youtube": "data/intelligence/raw/2026-08-15/cibc_caribbean/socialblade_youtube.html",
+        "ahrefs_free": "data/intelligence/raw/2026-08-15/cibc_caribbean/ahrefs_free.html",
+        "ahrefs_free_backlinks": "data/intelligence/raw/2026-08-15/cibc_caribbean/ahrefs_free_backlinks.html",
+        "ahrefs_free_summary": "data/intelligence/raw/2026-08-15/cibc_caribbean/ahrefs_free.json"
       },
       "processed_path": "data/intelligence/processed/2026-08-15/cibc_caribbean.json",
       "scrape_status": "complete",
@@ -55,13 +89,70 @@
       "bank_id": "scotiabank_bahamas",
       "capture_date": "2026-08-15",
       "platforms_captured": [
+        "facebook",
+        "instagram",
+        "website",
         "youtube"
       ],
       "platforms_failed": [],
       "raw_artifact_paths": {
-        "socialblade_youtube": "data/intelligence/raw/2026-08-15/scotiabank_bahamas/socialblade_youtube.html"
+        "youtube_channel": "data/intelligence/raw/2026-08-15/scotiabank_bahamas/youtube_channel.json",
+        "instagram_profile": "data/intelligence/raw/2026-08-15/scotiabank_bahamas/instagram_profile.html",
+        "facebook_profile": "data/intelligence/raw/2026-08-15/scotiabank_bahamas/facebook_profile.html",
+        "socialblade_youtube": "data/intelligence/raw/2026-08-15/scotiabank_bahamas/socialblade_youtube.html",
+        "ahrefs_free": "data/intelligence/raw/2026-08-15/scotiabank_bahamas/ahrefs_free.html",
+        "ahrefs_free_backlinks": "data/intelligence/raw/2026-08-15/scotiabank_bahamas/ahrefs_free_backlinks.html",
+        "ahrefs_free_summary": "data/intelligence/raw/2026-08-15/scotiabank_bahamas/ahrefs_free.json",
+        "pagespeed": "data/intelligence/raw/2026-08-15/scotiabank_bahamas/pagespeed.json",
+        "structured_data": "data/intelligence/raw/2026-08-15/scotiabank_bahamas/structured_data.html"
       },
       "processed_path": "data/intelligence/processed/2026-08-15/scotiabank_bahamas.json",
+      "scrape_status": "complete",
+      "validation_status": "pending",
+      "validated_at": null,
+      "delta_variance_pct": null
+    },
+    {
+      "capture_id": "fidelity_bahamas_2026-08-15",
+      "bank_id": "fidelity_bahamas",
+      "capture_date": "2026-08-15",
+      "platforms_captured": [
+        "facebook",
+        "instagram",
+        "website"
+      ],
+      "platforms_failed": [],
+      "raw_artifact_paths": {
+        "instagram_profile": "data/intelligence/raw/2026-08-15/fidelity_bahamas/instagram_profile.html",
+        "facebook_profile": "data/intelligence/raw/2026-08-15/fidelity_bahamas/facebook_profile.html",
+        "ahrefs_free": "data/intelligence/raw/2026-08-15/fidelity_bahamas/ahrefs_free.html",
+        "ahrefs_free_backlinks": "data/intelligence/raw/2026-08-15/fidelity_bahamas/ahrefs_free_backlinks.html",
+        "ahrefs_free_summary": "data/intelligence/raw/2026-08-15/fidelity_bahamas/ahrefs_free.json"
+      },
+      "processed_path": "data/intelligence/processed/2026-08-15/fidelity_bahamas.json",
+      "scrape_status": "complete",
+      "validation_status": "pending",
+      "validated_at": null,
+      "delta_variance_pct": null
+    },
+    {
+      "capture_id": "bank_of_bahamas_2026-08-15",
+      "bank_id": "bank_of_bahamas",
+      "capture_date": "2026-08-15",
+      "platforms_captured": [
+        "facebook",
+        "instagram",
+        "website"
+      ],
+      "platforms_failed": [],
+      "raw_artifact_paths": {
+        "instagram_profile": "data/intelligence/raw/2026-08-15/bank_of_bahamas/instagram_profile.html",
+        "facebook_profile": "data/intelligence/raw/2026-08-15/bank_of_bahamas/facebook_profile.html",
+        "ahrefs_free": "data/intelligence/raw/2026-08-15/bank_of_bahamas/ahrefs_free.html",
+        "ahrefs_free_backlinks": "data/intelligence/raw/2026-08-15/bank_of_bahamas/ahrefs_free_backlinks.html",
+        "ahrefs_free_summary": "data/intelligence/raw/2026-08-15/bank_of_bahamas/ahrefs_free.json"
+      },
+      "processed_path": "data/intelligence/processed/2026-08-15/bank_of_bahamas.json",
       "scrape_status": "complete",
       "validation_status": "pending",
       "validated_at": null,

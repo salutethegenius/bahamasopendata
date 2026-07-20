@@ -71,21 +71,34 @@ def _collect_types_from_jsonld(node: Any, into: set[str]) -> None:
             _collect_types_from_jsonld(item, into)
 
 
+def _loads_jsonld(raw: str) -> Any | None:
+    """Parse JSON-LD text; tolerate UTF-8 BOM and trailing commas in objects."""
+    cleaned = raw.strip().lstrip("\ufeff")
+    if not cleaned:
+        return None
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError:
+        pass
+    # Some CMS exports leave a trailing comma before } or ].
+    repaired = re.sub(r",\s*([}\]])", r"\1", cleaned)
+    try:
+        return json.loads(repaired)
+    except json.JSONDecodeError:
+        return None
+
+
 def extract_jsonld_types(html: str) -> list[str]:
     """Return sorted unique schema.org types from JSON-LD script tags."""
     soup = BeautifulSoup(html, "html.parser")
     found: set[str] = set()
     for script in soup.find_all("script"):
-        script_type = (script.get("type") or "").lower()
+        script_type = (script.get("type") or "").lower().replace(" ", "")
         if "ld+json" not in script_type:
             continue
         raw = script.string or script.get_text() or ""
-        raw = raw.strip()
-        if not raw:
-            continue
-        try:
-            payload = json.loads(raw)
-        except json.JSONDecodeError:
+        payload = _loads_jsonld(raw)
+        if payload is None:
             continue
         _collect_types_from_jsonld(payload, found)
     return sorted(found)
@@ -106,12 +119,45 @@ def extract_microdata_types(html: str) -> list[str]:
     return sorted(found)
 
 
+def extract_rdfa_types(html: str) -> list[str]:
+    """Return sorted unique schema.org types from RDFa typeof attrs."""
+    soup = BeautifulSoup(html, "html.parser")
+    found: set[str] = set()
+    for element in soup.find_all(attrs={"typeof": True}):
+        raw = element.get("typeof")
+        if not isinstance(raw, str):
+            continue
+        for token in re.split(r"\s+", raw.strip()):
+            # RDFa often uses compact IRIs like schema:Organization.
+            if ":" in token and not token.startswith("http"):
+                prefix, local = token.split(":", 1)
+                if prefix.lower() in {"schema", "schema.org"}:
+                    name = _local_type_name(local)
+                    if name:
+                        found.add(name)
+                continue
+            name = _local_type_name(token)
+            if name:
+                found.add(name)
+    return sorted(found)
+
+
 def detect_schema_types(html: str) -> tuple[list[str], list[str]]:
-    """Return (types, soft_errors) combining JSON-LD and microdata."""
+    """Return (types, soft_errors) combining JSON-LD, microdata, and RDFa."""
     errors: list[str] = []
-    types = sorted(set(extract_jsonld_types(html) + extract_microdata_types(html)))
+    types = sorted(
+        set(
+            extract_jsonld_types(html)
+            + extract_microdata_types(html)
+            + extract_rdfa_types(html)
+        )
+    )
     if not types:
-        errors.append("structured_data: no schema.org types detected on homepage")
+        # Absence is a valid measurement — soft note, never invent types.
+        errors.append(
+            "structured_data: no schema.org types detected on homepage "
+            "(JSON-LD / microdata / RDFa)"
+        )
     return types, errors
 
 

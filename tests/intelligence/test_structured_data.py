@@ -31,7 +31,7 @@ def _cohort_entry(domain: str | None = "combankltd.com") -> CohortEntry:
 def test_detect_schema_types_from_fixture():
     html = (FIXTURES / "structured_data.html").read_text()
     types, errors = structured_data.detect_schema_types(html)
-    assert types == ["BankOrCreditUnion", "Organization"]
+    assert types == ["BankOrCreditUnion", "FinancialService", "Organization"]
     assert errors == []
 
 
@@ -39,6 +39,17 @@ def test_detect_schema_types_empty():
     types, errors = structured_data.detect_schema_types("<html><body>hi</body></html>")
     assert types == []
     assert any("no schema.org" in err for err in errors)
+
+
+def test_extract_rdfa_and_trailing_comma_jsonld():
+    html = """
+    <script type="application/ld+json">
+    {"@type": "BankOrCreditUnion", "name": "X",}
+    </script>
+    <div typeof="schema:ATM"></div>
+    """
+    assert "BankOrCreditUnion" in structured_data.extract_jsonld_types(html)
+    assert structured_data.extract_rdfa_types(html) == ["ATM"]
 
 
 @pytest.mark.asyncio
@@ -60,8 +71,12 @@ async def test_capture_returns_web_metric(monkeypatch, tmp_path):
 
     assert result.attempted_platforms == [Platform.WEBSITE]
     metric = result.web_metrics[0]
-    assert metric.ranking_keywords == 2
-    assert metric.top_keywords == ["BankOrCreditUnion", "Organization"]
+    assert metric.ranking_keywords == 3
+    assert metric.top_keywords == [
+        "BankOrCreditUnion",
+        "FinancialService",
+        "Organization",
+    ]
     assert metric.source.method == "scrape"
     assert "structured_data" in result.raw_artifacts
 
