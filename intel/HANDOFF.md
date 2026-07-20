@@ -94,7 +94,11 @@ backend/.venv/bin/python ingestion/intelligence/run_validate.py \
   --trial data/intelligence/exports/example_trial.json --apply
 
 backend/.venv/bin/python ingestion/intelligence/run_wayback_backfill.py --dry-run
-backend/.venv/bin/python ingestion/intelligence/run_wayback_backfill.py
+./scripts/run_intelligence_weekly_capture.sh 2026-08-01
+
+# Live snapshot (API + UI)
+# GET /api/v1/intelligence/snapshot
+# http://localhost:3000/intelligence
 
 pytest tests/intelligence/ -q
 ```
@@ -118,13 +122,11 @@ flowchart LR
   surface --> release["Public_drop_Oct5"]
 ```
 
-1. **Live capture cadence** — weekly from Aug 1; daily on the final two weeks before Sep 13. Prefer one merged `run_capture` invocation (separate scraper runs overwrite processed JSON).  
-2. **Wayback follow-up (optional)** — month-midpoint backfill Oct 2025 – Jul 2026 completed with **zero** in-window FB/IG snapshots; decide whether to widen `CDX_WINDOW_DAYS` beyond ±7 or accept sparse history.  
-3. **Revisit Similarweb post-Issue 01** if a public traffic source returns (403 accepted for now).  
-4. **Delta validation (Sep 14–27)** — drop Rival IQ / SEMrush trial JSON under `data/intelligence/exports/`; run `run_validate.py --apply`; flag >5% variance.  
-5. **Freeze dataset Sep 28** for Issue 01 publication.  
-6. **Surface:** `frontend/src/app/intelligence/` + `backend/app/api/intelligence.py` against locked shapes. **No Postgres / Alembic in Issue 01.**  
-7. **Press pre-brief** Sep 28 – Oct 2; **public drop Oct 5**.  
+1. **Live capture cadence** — from Aug 1 use `./scripts/run_intelligence_weekly_capture.sh` (cron example in script header); daily in the final two weeks before Sep 13. One merged run per date.  
+2. **Polish `/intelligence` surface** — scaffold live at `GET /api/v1/intelligence/snapshot` + `frontend/src/app/intelligence/`; expand charts/PDF later against locked shapes.  
+3. **Wayback follow-up (optional)** — backfill found zero in-window FB/IG snapshots; widen `CDX_WINDOW_DAYS` only with explicit methodology sign-off.  
+4. **Delta validation (Sep 14–27)** — Rival IQ / SEMrush + `run_validate.py --apply`; flag >5% variance.  
+5. **Freeze dataset Sep 28** → press pre-brief → **public drop Oct 5**.  
 
 ---
 

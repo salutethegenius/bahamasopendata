@@ -10,6 +10,10 @@ Grounded in the live scraper behaviour as of July 2026 (Banking Sector Issue 01)
 - **Public drop:** 2026-10-05
 - **Storage:** JSON-on-disk under `data/intelligence/` (no Postgres for Issue 01)
 
+## Thin-data market (Bahamas)
+
+Bahamian institutional digital footprints are uneven. Issue 01 publishes **confirmed public signals only** (today: Facebook for all six banks; Instagram / YouTube / PageSpeed where reachable). Empty cells for Ahrefs, Similarweb, Wayback density, schema.org, TikTok, and Bing are documented absences — not defects to paper over. The report and `/intelligence` UI must show `—` / `null`, never interpolated coverage.
+
 ## What we collect
 
 | Signal | Module | Method |
@@ -60,7 +64,7 @@ From 2026-09-14 we cross-check scraped values against Rival IQ (through 2026-09-
 
 | Phase | Window | Action |
 |---|---|---|
-| Live capture | Aug 1 → Sep 13 | Weekly `run_capture.py`; daily in final two weeks |
+| Live capture | Aug 1 → Sep 13 | Weekly `./scripts/run_intelligence_weekly_capture.sh`; daily in final two weeks |
 | Wayback backfill | Aug 1 → Aug 20 (tooling ready earlier) | `run_wayback_backfill.py` — month-midpoint (day 15) dates Oct 2025 – Jul 2026 |
 | Delta validation | Sep 14 → Sep 27 | Trial exports + `run_validate.py --apply` |
 | Lockdown | Sep 28 | Freeze `data/intelligence/` for Issue 01 |
@@ -81,3 +85,4 @@ Omit `--bank` for the full cohort. Omit `--scrapers` to run every registered scr
 ## Change log
 
 - **2026-07-19** — Scrapers landed; full-cohort `2026-08-15` run; Bing unregistered; Fidelity `domain: null`; homepage `www.` preference; Similarweb 403 accepted; Wayback backfill Oct 2025 – Jul 2026 completed (0 in-window snapshots).
+- **2026-07-20** — Thin-data acceptance explicit; weekly capture script; read-only `/intelligence` snapshot API + UI scaffold.

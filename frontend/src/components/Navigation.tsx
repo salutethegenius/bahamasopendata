@@ -48,6 +48,13 @@ const tailNavItems: NavItem[] = [
   { id: 'polls', href: '/polls', label: 'Polls', icon: BarChart3, domain: 'polls' },
   { id: 'news', href: '/news', label: 'News', icon: Newspaper, domain: 'news' },
   { id: 'hot', href: '/hot', label: 'Hot topics', icon: Flame, domain: 'hot' },
+  {
+    id: 'intelligence',
+    href: '/intelligence',
+    label: 'Intelligence',
+    icon: BarChart3,
+    domain: 'intelligence',
+  },
 ];
 
 export default function Navigation() {

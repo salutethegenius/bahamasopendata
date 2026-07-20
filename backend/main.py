@@ -19,6 +19,7 @@ from app.api import (
     future_updates,
     hot_topics,
     ingestion,
+    intelligence,
     islands,
     ministries,
     news,
@@ -181,6 +182,11 @@ app.include_router(documents.router, prefix=f"{settings.API_V1_PREFIX}/documents
 app.include_router(ingestion.router, prefix=f"{settings.API_V1_PREFIX}/ingestion", tags=["Ingestion"])
 app.include_router(hot_topics.router, prefix=f"{settings.API_V1_PREFIX}/hot-topics", tags=["Hot Topics"])
 app.include_router(polls.router, prefix=f"{settings.API_V1_PREFIX}/polls", tags=["Polls"])
+app.include_router(
+    intelligence.router,
+    prefix=f"{settings.API_V1_PREFIX}/intelligence",
+    tags=["Intelligence"],
+)
 
 
 @app.get("/")
