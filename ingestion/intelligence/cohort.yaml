@@ -84,7 +84,9 @@ cohort:
     short_name: "Fidelity"
     series_token: "--intel-series-4"  # #FB923C
     parent_group: null                   # Bahamian-listed
-    domain: "fidelitybahamas.com"
+    # No public marketing website as of Jul 2026 (online banking only).
+    # Web scrapers (pagespeed / structured_data / ahrefs / similarweb) soft-skip.
+    domain: null
     social:
       facebook: FidelityBankBahamas
       instagram: fidelity.bank
@@ -122,6 +124,8 @@ cohort:
     short_name: "Bank of The Bahamas"
     series_token: "--intel-series-6"  # #34D399
     parent_group: null                   # government-controlled, publicly listed (BISX: BOB)
+    # Apex bankbahamas.com has no public A/AAAA in some resolvers; www works.
+    # Homepage scrapers prefer https://www.{domain}/ via similarweb.homepage_url.
     domain: "bankbahamas.com"
     social:
       facebook: BOBBankofSolutions

@@ -65,6 +65,15 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-2.5-flash"
 
+    # YouTube Data API v3 (Intelligence imprint social capture)
+    YOUTUBE_API_KEY: str = ""
+
+    # Bing Web Search v7 (Intelligence imprint non-branded SERP capture)
+    BING_SEARCH_API_KEY: str = ""
+
+    # Google PageSpeed Insights (Intelligence imprint; may reuse YOUTUBE_API_KEY)
+    PAGESPEED_API_KEY: str = ""
+
     # CORS
     CORS_ORIGINS: list[str] = [
         "http://localhost:3000",

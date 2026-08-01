@@ -20,6 +20,7 @@ from app.api import (
     grand_bahama,
     hot_topics,
     ingestion,
+    intelligence,
     islands,
     ministries,
     news,
@@ -183,6 +184,11 @@ app.include_router(ingestion.router, prefix=f"{settings.API_V1_PREFIX}/ingestion
 app.include_router(hot_topics.router, prefix=f"{settings.API_V1_PREFIX}/hot-topics", tags=["Hot Topics"])
 app.include_router(grand_bahama.router, prefix=f"{settings.API_V1_PREFIX}/grand-bahama", tags=["Grand Bahama"])
 app.include_router(polls.router, prefix=f"{settings.API_V1_PREFIX}/polls", tags=["Polls"])
+app.include_router(
+    intelligence.router,
+    prefix=f"{settings.API_V1_PREFIX}/intelligence",
+    tags=["Intelligence"],
+)
 
 
 @app.get("/")

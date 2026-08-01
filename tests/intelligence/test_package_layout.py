@@ -18,8 +18,19 @@ def test_key_modules_importable():
         "ingestion.intelligence.types",
         "ingestion.intelligence.logging_config",
         "ingestion.intelligence.capture.registry",
+        "ingestion.intelligence.capture.delta_validator",
         "ingestion.intelligence.social.wayback",
+        "ingestion.intelligence.social.youtube",
+        "ingestion.intelligence.social.instagram",
+        "ingestion.intelligence.social.facebook",
+        "ingestion.intelligence.social.tiktok",
+        "ingestion.intelligence.social.twitter",
+        "ingestion.intelligence.social.socialblade",
         "ingestion.intelligence.web.similarweb",
+        "ingestion.intelligence.web.bing_serp",
+        "ingestion.intelligence.web.ahrefs_free",
+        "ingestion.intelligence.web.pagespeed",
+        "ingestion.intelligence.web.structured_data",
     ]
     for dotted in modules:
         importlib.import_module(dotted)

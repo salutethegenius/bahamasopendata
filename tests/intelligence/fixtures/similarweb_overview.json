@@ -1,0 +1,32 @@
+{
+  "SiteName": "combankltd.com",
+  "Title": "Commonwealth Bank",
+  "Description": "Fixture overview payload",
+  "GlobalRank": { "Rank": 123456 },
+  "Engagments": {
+    "BounceRate": "0.42",
+    "Month": "7",
+    "Year": "2026",
+    "PagePerVisit": "2.1",
+    "Visits": "50000",
+    "TimeOnSite": "90"
+  },
+  "EstimatedMonthlyVisits": {
+    "2026-05-01": 45000,
+    "2026-06-01": 48000,
+    "2026-07-01": 52000
+  },
+  "TrafficSources": {
+    "Direct": 0.4,
+    "Referrals": 0.1,
+    "Search": 0.35,
+    "Social": 0.1,
+    "Mail": 0.03,
+    "Paid Referrals": 0.02
+  },
+  "TopKeywords": [
+    { "Name": "commonwealth bank bahamas", "Volume": 1200, "Cpc": 1.1 },
+    { "Name": "combank online", "Volume": 800, "Cpc": 0.9 },
+    { "Name": "bahamas banking", "Volume": 600, "Cpc": 0.7 }
+  ]
+}

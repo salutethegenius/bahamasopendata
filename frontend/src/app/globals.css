@@ -81,6 +81,24 @@
   --color-info: var(--info);
   --font-sans: var(--font-sora), system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-dm-mono), monospace;
+  --color-intel-navy-900: var(--intel-navy-900, #08152b);
+  --color-intel-navy-800: var(--intel-navy-800, #0f2140);
+  --color-intel-navy-700: var(--intel-navy-700, #172e55);
+  --color-intel-graphite-600: var(--intel-graphite-600, #1e2a3e);
+  --color-intel-border: var(--intel-border, #243352);
+  --color-intel-turquoise-500: var(--intel-turquoise-500, #00ced1);
+  --color-intel-turquoise-300: var(--intel-turquoise-300, #5ee6e8);
+  --color-intel-yellow-400: var(--intel-yellow-400, #fcd116);
+  --color-intel-text-primary: var(--intel-text-primary, #f8fafc);
+  --color-intel-text-secondary: var(--intel-text-secondary, #94a3b8);
+  --color-intel-text-tertiary: var(--intel-text-tertiary, #64748b);
+  --color-intel-text-accent: var(--intel-text-accent, #00ced1);
+  --color-intel-series-1: var(--intel-series-1, #00ced1);
+  --color-intel-series-2: var(--intel-series-2, #fcd116);
+  --color-intel-series-3: var(--intel-series-3, #a78bfa);
+  --color-intel-series-4: var(--intel-series-4, #fb923c);
+  --color-intel-series-5: var(--intel-series-5, #f472b6);
+  --color-intel-series-6: var(--intel-series-6, #34d399);
 }
 
 body {
@@ -144,4 +162,37 @@ body {
 .card-hover:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================================
+   Intelligence imprint tokens — scoped to /intelligence routes
+   ============================================================ */
+
+[data-imprint="intelligence"] {
+  --intel-navy-900: #08152b;
+  --intel-navy-800: #0f2140;
+  --intel-navy-700: #172e55;
+  --intel-graphite-600: #1e2a3e;
+  --intel-border: #243352;
+  --intel-turquoise-500: #00ced1;
+  --intel-turquoise-300: #5ee6e8;
+  --intel-yellow-400: #fcd116;
+  --intel-text-primary: #f8fafc;
+  --intel-text-secondary: #94a3b8;
+  --intel-text-tertiary: #64748b;
+  --intel-text-accent: #00ced1;
+  --intel-data-positive: #10b981;
+  --intel-data-negative: #f43f5e;
+  --intel-data-neutral: #94a3b8;
+  --intel-data-warning: #f59e0b;
+  --intel-series-1: #00ced1;
+  --intel-series-2: #fcd116;
+  --intel-series-3: #a78bfa;
+  --intel-series-4: #fb923c;
+  --intel-series-5: #f472b6;
+  --intel-series-6: #34d399;
+
+  background-color: var(--intel-navy-900);
+  color: var(--intel-text-primary);
+  min-height: 100vh;
 }

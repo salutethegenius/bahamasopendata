@@ -9,11 +9,37 @@ from ingestion.intelligence.capture.registry import ScrapeStatus, mark_capture
 from ingestion.intelligence.cohort import get_cohort_entry, load_cohort_file
 from ingestion.intelligence.errors import CaptureError
 from ingestion.intelligence.logging_config import get_logger
-from ingestion.intelligence.social import wayback
+from ingestion.intelligence.social import (
+    facebook,
+    instagram,
+    socialblade,
+    tiktok,
+    twitter,
+    wayback,
+    youtube,
+)
 from ingestion.intelligence.types import CaptureResult, Platform
+from ingestion.intelligence.web import (
+    ahrefs_free,
+    pagespeed,
+    similarweb,
+    structured_data,
+)
 
+# bing_serp kept in web/ + tests but not registered: Bing Web Search API
+# discontinued for this imprint (Issue 01).
 SCRAPERS: dict[str, Callable[..., Awaitable[CaptureResult]]] = {
     "wayback": wayback.capture,
+    "youtube": youtube.capture,
+    "similarweb": similarweb.capture,
+    "instagram": instagram.capture,
+    "facebook": facebook.capture,
+    "tiktok": tiktok.capture,
+    "twitter": twitter.capture,
+    "socialblade": socialblade.capture,
+    "ahrefs_free": ahrefs_free.capture,
+    "pagespeed": pagespeed.capture,
+    "structured_data": structured_data.capture,
 }
 
 logger = get_logger(__name__)

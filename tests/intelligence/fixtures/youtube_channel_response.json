@@ -1,0 +1,27 @@
+{
+  "kind": "youtube#channelListResponse",
+  "etag": "fixture-etag",
+  "pageInfo": {
+    "totalResults": 1,
+    "resultsPerPage": 5
+  },
+  "items": [
+    {
+      "kind": "youtube#channel",
+      "etag": "fixture-item-etag",
+      "id": "UCfixtureChannelId000001",
+      "snippet": {
+        "title": "RBC",
+        "description": "Fixture channel",
+        "customUrl": "@RBC",
+        "publishedAt": "2006-01-01T00:00:00Z"
+      },
+      "statistics": {
+        "viewCount": "1234567",
+        "subscriberCount": "89000",
+        "hiddenSubscriberCount": false,
+        "videoCount": "420"
+      }
+    }
+  ]
+}
