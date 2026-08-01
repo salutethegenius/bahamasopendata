@@ -72,13 +72,23 @@ From 2026-09-14 we cross-check scraped values against Rival IQ (through 2026-09-
 ## How to reproduce a capture
 
 ```bash
-backend/.venv/bin/python ingestion/intelligence/run_capture.py \
+python -m ingestion.intelligence.run_capture \
   --date 2026-08-15 \
   --scrapers wayback --scrapers youtube --scrapers similarweb \
   --scrapers instagram --scrapers facebook --scrapers tiktok \
   --scrapers twitter --scrapers socialblade \
   --scrapers ahrefs_free --scrapers pagespeed --scrapers structured_data
 ```
+
+Or via the weekly wrapper (sets ``PYTHONPATH`` and uses ``-m``):
+
+```bash
+./scripts/run_intelligence_weekly_capture.sh 2026-08-01
+```
+
+Processed cohort JSON under ``data/intelligence/processed/`` is committed so
+``/intelligence`` can render without a fresh scrape. Raw HTML under
+``data/intelligence/raw/`` stays gitignored.
 
 Omit `--bank` for the full cohort. Omit `--scrapers` to run every registered scraper (`bing_serp` is not registered).
 

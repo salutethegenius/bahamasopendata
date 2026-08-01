@@ -27,5 +27,6 @@ fi
 mkdir -p "${ROOT_DIR}/data/intelligence/logs"
 
 echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Starting intelligence capture for ${CAPTURE_DATE}"
-"$PYTHON" ingestion/intelligence/run_capture.py --date "${CAPTURE_DATE}"
+PYTHONPATH="${ROOT_DIR}${PYTHONPATH:+:$PYTHONPATH}" \
+  "$PYTHON" -m ingestion.intelligence.run_capture --date "${CAPTURE_DATE}"
 echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Finished intelligence capture for ${CAPTURE_DATE}"

@@ -1129,6 +1129,146 @@
       "validation_status": "pending",
       "validated_at": null,
       "delta_variance_pct": null
+    },
+    {
+      "capture_id": "rbc_bahamas_2026-08-01",
+      "bank_id": "rbc_bahamas",
+      "capture_date": "2026-08-01",
+      "platforms_captured": [
+        "facebook",
+        "website"
+      ],
+      "platforms_failed": [
+        "instagram"
+      ],
+      "raw_artifact_paths": {
+        "facebook_profile": "data/intelligence/raw/2026-08-01/rbc_bahamas/facebook_profile.html",
+        "ahrefs_free": "data/intelligence/raw/2026-08-01/rbc_bahamas/ahrefs_free.html",
+        "ahrefs_free_backlinks": "data/intelligence/raw/2026-08-01/rbc_bahamas/ahrefs_free_backlinks.html",
+        "ahrefs_free_summary": "data/intelligence/raw/2026-08-01/rbc_bahamas/ahrefs_free.json",
+        "structured_data": "data/intelligence/raw/2026-08-01/rbc_bahamas/structured_data.html"
+      },
+      "processed_path": "data/intelligence/processed/2026-08-01/rbc_bahamas.json",
+      "scrape_status": "partial",
+      "validation_status": "pending",
+      "validated_at": null,
+      "delta_variance_pct": null
+    },
+    {
+      "capture_id": "scotiabank_bahamas_2026-08-01",
+      "bank_id": "scotiabank_bahamas",
+      "capture_date": "2026-08-01",
+      "platforms_captured": [
+        "facebook",
+        "website"
+      ],
+      "platforms_failed": [
+        "instagram"
+      ],
+      "raw_artifact_paths": {
+        "facebook_profile": "data/intelligence/raw/2026-08-01/scotiabank_bahamas/facebook_profile.html",
+        "ahrefs_free": "data/intelligence/raw/2026-08-01/scotiabank_bahamas/ahrefs_free.html",
+        "ahrefs_free_backlinks": "data/intelligence/raw/2026-08-01/scotiabank_bahamas/ahrefs_free_backlinks.html",
+        "ahrefs_free_summary": "data/intelligence/raw/2026-08-01/scotiabank_bahamas/ahrefs_free.json"
+      },
+      "processed_path": "data/intelligence/processed/2026-08-01/scotiabank_bahamas.json",
+      "scrape_status": "partial",
+      "validation_status": "pending",
+      "validated_at": null,
+      "delta_variance_pct": null
+    },
+    {
+      "capture_id": "commonwealth_bank_2026-08-01",
+      "bank_id": "commonwealth_bank",
+      "capture_date": "2026-08-01",
+      "platforms_captured": [
+        "facebook",
+        "website"
+      ],
+      "platforms_failed": [
+        "instagram"
+      ],
+      "raw_artifact_paths": {
+        "facebook_profile": "data/intelligence/raw/2026-08-01/commonwealth_bank/facebook_profile.html",
+        "ahrefs_free": "data/intelligence/raw/2026-08-01/commonwealth_bank/ahrefs_free.html",
+        "ahrefs_free_backlinks": "data/intelligence/raw/2026-08-01/commonwealth_bank/ahrefs_free_backlinks.html",
+        "ahrefs_free_summary": "data/intelligence/raw/2026-08-01/commonwealth_bank/ahrefs_free.json",
+        "structured_data": "data/intelligence/raw/2026-08-01/commonwealth_bank/structured_data.html"
+      },
+      "processed_path": "data/intelligence/processed/2026-08-01/commonwealth_bank.json",
+      "scrape_status": "partial",
+      "validation_status": "pending",
+      "validated_at": null,
+      "delta_variance_pct": null
+    },
+    {
+      "capture_id": "fidelity_bahamas_2026-08-01",
+      "bank_id": "fidelity_bahamas",
+      "capture_date": "2026-08-01",
+      "platforms_captured": [
+        "facebook"
+      ],
+      "platforms_failed": [
+        "instagram"
+      ],
+      "raw_artifact_paths": {
+        "facebook_profile": "data/intelligence/raw/2026-08-01/fidelity_bahamas/facebook_profile.html"
+      },
+      "processed_path": "data/intelligence/processed/2026-08-01/fidelity_bahamas.json",
+      "scrape_status": "partial",
+      "validation_status": "pending",
+      "validated_at": null,
+      "delta_variance_pct": null
+    },
+    {
+      "capture_id": "cibc_caribbean_2026-08-01",
+      "bank_id": "cibc_caribbean",
+      "capture_date": "2026-08-01",
+      "platforms_captured": [
+        "facebook",
+        "twitter",
+        "website"
+      ],
+      "platforms_failed": [
+        "instagram"
+      ],
+      "raw_artifact_paths": {
+        "facebook_profile": "data/intelligence/raw/2026-08-01/cibc_caribbean/facebook_profile.html",
+        "twitter_live": "data/intelligence/raw/2026-08-01/cibc_caribbean/twitter_live.html",
+        "ahrefs_free": "data/intelligence/raw/2026-08-01/cibc_caribbean/ahrefs_free.html",
+        "ahrefs_free_backlinks": "data/intelligence/raw/2026-08-01/cibc_caribbean/ahrefs_free_backlinks.html",
+        "ahrefs_free_summary": "data/intelligence/raw/2026-08-01/cibc_caribbean/ahrefs_free.json",
+        "structured_data": "data/intelligence/raw/2026-08-01/cibc_caribbean/structured_data.html"
+      },
+      "processed_path": "data/intelligence/processed/2026-08-01/cibc_caribbean.json",
+      "scrape_status": "partial",
+      "validation_status": "pending",
+      "validated_at": null,
+      "delta_variance_pct": null
+    },
+    {
+      "capture_id": "bank_of_bahamas_2026-08-01",
+      "bank_id": "bank_of_bahamas",
+      "capture_date": "2026-08-01",
+      "platforms_captured": [
+        "facebook",
+        "website"
+      ],
+      "platforms_failed": [
+        "instagram"
+      ],
+      "raw_artifact_paths": {
+        "facebook_profile": "data/intelligence/raw/2026-08-01/bank_of_bahamas/facebook_profile.html",
+        "ahrefs_free": "data/intelligence/raw/2026-08-01/bank_of_bahamas/ahrefs_free.html",
+        "ahrefs_free_backlinks": "data/intelligence/raw/2026-08-01/bank_of_bahamas/ahrefs_free_backlinks.html",
+        "ahrefs_free_summary": "data/intelligence/raw/2026-08-01/bank_of_bahamas/ahrefs_free.json",
+        "structured_data": "data/intelligence/raw/2026-08-01/bank_of_bahamas/structured_data.html"
+      },
+      "processed_path": "data/intelligence/processed/2026-08-01/bank_of_bahamas.json",
+      "scrape_status": "partial",
+      "validation_status": "pending",
+      "validated_at": null,
+      "delta_variance_pct": null
     }
   ]
 }

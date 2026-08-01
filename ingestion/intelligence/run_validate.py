@@ -11,12 +11,17 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
-ROOT_DIR = Path(__file__).resolve().parents[2]
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if sys.path and os.path.abspath(sys.path[0]) == _SCRIPT_DIR:
+    sys.path.pop(0)
+
+ROOT_DIR = os.path.dirname(os.path.dirname(_SCRIPT_DIR))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
 
 from ingestion.intelligence.capture.delta_validator import (  # noqa: E402
     load_trial_export,
