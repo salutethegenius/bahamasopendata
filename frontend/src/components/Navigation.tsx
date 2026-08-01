@@ -97,7 +97,10 @@ export default function Navigation() {
             {/* Nav Links */}
             <div className="flex items-center gap-1">
               {primaryNavItems.map((item) => {
-                const isActive = pathname === item.href;
+                const isActive =
+                  item.href === '/'
+                    ? pathname === '/'
+                    : pathname === item.href || pathname.startsWith(`${item.href}/`);
                 const Icon = item.icon;
                 return (
                   <Link
@@ -248,7 +251,10 @@ export default function Navigation() {
                 className="bg-white border-b border-gray-200 py-2"
               >
                 {primaryNavItems.map((item) => {
-                  const isActive = pathname === item.href;
+                  const isActive =
+                    item.href === '/'
+                      ? pathname === '/'
+                      : pathname === item.href || pathname.startsWith(`${item.href}/`);
                   const Icon = item.icon;
                   return (
                     <Link

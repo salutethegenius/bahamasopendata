@@ -549,13 +549,13 @@ function HomePageContent() {
           {/* Grand Bahama */}
           <DashboardSectionCard
             href="/grand-bahama"
-            title="Grand Bahama"
-            subtitle="Ministry portfolio, MPs, and local-government districts."
+            title="Grand Bahama Platform"
+            subtitle="Digital government infrastructure — Module 01 live."
             icon={Landmark}
-            primaryStatLabel="Local gov districts"
-            primaryStatValue={grandBahamaDataset.districts.length}
-            secondaryStatLabel="Parliamentary seats"
-            secondaryStatValue={`${grandBahamaDataset.mps.length} · ${grandBahamaDataset.mps.filter((m) => m.party === 'PLP').length} PLP / ${grandBahamaDataset.mps.filter((m) => m.party === 'FNM').length} FNM`}
+            primaryStatLabel="Live module"
+            primaryStatValue="Institutional Reference"
+            secondaryStatLabel="Districts · MPs"
+            secondaryStatValue={`${grandBahamaDataset.districts.length} districts · ${grandBahamaDataset.mps.length} seats`}
           />
 
           {/* Polls */}
