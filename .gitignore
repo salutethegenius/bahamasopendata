@@ -86,9 +86,8 @@ data/ingestion_status.json
 !data/processed/.gitkeep
 !data/embeddings/.gitkeep
 
-# Intelligence imprint data (keep structure, ignore captured content)
+# Intelligence imprint data (keep structure; commit processed snapshots for /intelligence)
 data/intelligence/raw/**
-data/intelligence/processed/**
 data/intelligence/exports/**
 data/intelligence/logs/*
 !data/intelligence/raw/.gitkeep

@@ -82,18 +82,19 @@ Pydantic contracts (`Platform`, `SourceProvenance`, `SocialMetric`, `PostMetric`
 
 ## How to run
 
-From repo root (`run_capture.py` / `run_validate.py` insert repo root on `sys.path`):
+From repo root (prefer ``python -m`` so ``ingestion.intelligence.types`` does not
+shadow the stdlib ``types`` module):
 
 ```bash
-backend/.venv/bin/python ingestion/intelligence/run_capture.py --date 2026-08-15
-backend/.venv/bin/python ingestion/intelligence/run_capture.py \
+backend/.venv/bin/python -m ingestion.intelligence.run_capture --date 2026-08-15
+backend/.venv/bin/python -m ingestion.intelligence.run_capture \
   --date 2026-08-15 --bank commonwealth_bank \
   --scrapers ahrefs_free --scrapers pagespeed --scrapers structured_data
 
-backend/.venv/bin/python ingestion/intelligence/run_validate.py \
+backend/.venv/bin/python -m ingestion.intelligence.run_validate \
   --trial data/intelligence/exports/example_trial.json --apply
 
-backend/.venv/bin/python ingestion/intelligence/run_wayback_backfill.py --dry-run
+backend/.venv/bin/python -m ingestion.intelligence.run_wayback_backfill --dry-run
 ./scripts/run_intelligence_weekly_capture.sh 2026-08-01
 
 # Live snapshot (API + UI)

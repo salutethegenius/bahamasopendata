@@ -1,0 +1,72 @@
+{
+  "bank_id": "scotiabank_bahamas",
+  "capture_date": "2026-08-01",
+  "social_metrics": [
+    {
+      "bank_id": "scotiabank_bahamas",
+      "platform": "facebook",
+      "capture_date": "2026-08-01",
+      "followers": 204243,
+      "posts_in_window": null,
+      "total_engagement": null,
+      "reactions": null,
+      "comments": null,
+      "shares": null,
+      "views": null,
+      "source": {
+        "url": "https://www.facebook.com/scotiacaribbean/",
+        "fetched_at": "2026-08-01T16:21:32.142846Z",
+        "http_status": 200,
+        "method": "scrape",
+        "archive_url": null
+      }
+    }
+  ],
+  "post_metrics": [],
+  "web_metrics": [
+    {
+      "bank_id": "scotiabank_bahamas",
+      "capture_date": "2026-08-01",
+      "organic_traffic_est": null,
+      "authority_score": null,
+      "backlinks": null,
+      "referring_domains": null,
+      "ranking_keywords": null,
+      "branded_search_share": null,
+      "non_branded_search_share": null,
+      "top_keywords": [],
+      "source": {
+        "url": "https://ahrefs.com/website-authority-checker/?input=bs.scotiabank.com",
+        "fetched_at": "2026-08-01T16:21:34.221673Z",
+        "http_status": 200,
+        "method": "scrape",
+        "archive_url": null
+      }
+    }
+  ],
+  "raw_artifacts": {
+    "facebook_profile": "data/intelligence/raw/2026-08-01/scotiabank_bahamas/facebook_profile.html",
+    "ahrefs_free": "data/intelligence/raw/2026-08-01/scotiabank_bahamas/ahrefs_free.html",
+    "ahrefs_free_backlinks": "data/intelligence/raw/2026-08-01/scotiabank_bahamas/ahrefs_free_backlinks.html",
+    "ahrefs_free_summary": "data/intelligence/raw/2026-08-01/scotiabank_bahamas/ahrefs_free.json"
+  },
+  "errors": [
+    "wayback: failed for https://www.facebook.com/scotiacaribbean: Expecting value: line 1 column 1 (char 0)",
+    "wayback: no snapshot within ±7 days of 2026-08-01 for https://www.instagram.com/scotiabankbah",
+    "facebook: using exact page likes (204243) as followers proxy",
+    "tiktok: no handle configured for this bank",
+    "twitter: no handle configured for this bank",
+    "ahrefs_free: no Domain Rating / backlinks / referring domains found in free-tool HTML (metrics may be client-rendered only)",
+    "YOUTUBE_API_KEY is not set",
+    "Similarweb free endpoint blocked or unavailable (403) for domain=bs.scotiabank.com",
+    "Instagram auth wall or blocked response (200) for @scotiabankbah",
+    "Social Blade auth wall or blocked response (403)",
+    "PAGESPEED_API_KEY (or YOUTUBE_API_KEY fallback) is not set",
+    "Homepage HTTP error for https://www.bs.scotiabank.com/: [Errno -2] Name or service not known"
+  ],
+  "attempted_platforms": [
+    "facebook",
+    "instagram",
+    "website"
+  ]
+}

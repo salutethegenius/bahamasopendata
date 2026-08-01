@@ -1,0 +1,92 @@
+{
+  "bank_id": "rbc_bahamas",
+  "capture_date": "2026-08-01",
+  "social_metrics": [
+    {
+      "bank_id": "rbc_bahamas",
+      "platform": "facebook",
+      "capture_date": "2026-08-01",
+      "followers": 622440,
+      "posts_in_window": null,
+      "total_engagement": null,
+      "reactions": null,
+      "comments": null,
+      "shares": null,
+      "views": null,
+      "source": {
+        "url": "https://www.facebook.com/RBCCaribbean/",
+        "fetched_at": "2026-08-01T16:20:33.224858Z",
+        "http_status": 200,
+        "method": "scrape",
+        "archive_url": null
+      }
+    }
+  ],
+  "post_metrics": [],
+  "web_metrics": [
+    {
+      "bank_id": "rbc_bahamas",
+      "capture_date": "2026-08-01",
+      "organic_traffic_est": null,
+      "authority_score": null,
+      "backlinks": null,
+      "referring_domains": null,
+      "ranking_keywords": null,
+      "branded_search_share": null,
+      "non_branded_search_share": null,
+      "top_keywords": [],
+      "source": {
+        "url": "https://ahrefs.com/website-authority-checker/?input=rbcroyalbank.com",
+        "fetched_at": "2026-08-01T16:20:34.218962Z",
+        "http_status": 200,
+        "method": "scrape",
+        "archive_url": null
+      }
+    },
+    {
+      "bank_id": "rbc_bahamas",
+      "capture_date": "2026-08-01",
+      "organic_traffic_est": null,
+      "authority_score": null,
+      "backlinks": null,
+      "referring_domains": null,
+      "ranking_keywords": 0,
+      "branded_search_share": null,
+      "non_branded_search_share": null,
+      "top_keywords": [],
+      "source": {
+        "url": "https://www.rbcroyalbank.com/",
+        "fetched_at": "2026-08-01T16:20:35.295575Z",
+        "http_status": 200,
+        "method": "scrape",
+        "archive_url": null
+      }
+    }
+  ],
+  "raw_artifacts": {
+    "facebook_profile": "data/intelligence/raw/2026-08-01/rbc_bahamas/facebook_profile.html",
+    "ahrefs_free": "data/intelligence/raw/2026-08-01/rbc_bahamas/ahrefs_free.html",
+    "ahrefs_free_backlinks": "data/intelligence/raw/2026-08-01/rbc_bahamas/ahrefs_free_backlinks.html",
+    "ahrefs_free_summary": "data/intelligence/raw/2026-08-01/rbc_bahamas/ahrefs_free.json",
+    "structured_data": "data/intelligence/raw/2026-08-01/rbc_bahamas/structured_data.html"
+  },
+  "errors": [
+    "wayback: no snapshot within ±7 days of 2026-08-01 for https://www.facebook.com/RBCCaribbean",
+    "wayback: no snapshot within ±7 days of 2026-08-01 for https://www.instagram.com/rbccaribbean",
+    "facebook: using exact page likes (622440) as followers proxy",
+    "tiktok: no handle configured for this bank",
+    "twitter: no handle configured for this bank",
+    "ahrefs_free: no Domain Rating / backlinks / referring domains found in free-tool HTML (metrics may be client-rendered only)",
+    "structured_data: no schema.org types detected on homepage (JSON-LD / microdata / RDFa)",
+    "YOUTUBE_API_KEY is not set",
+    "Similarweb free endpoint blocked or unavailable (403) for domain=rbcroyalbank.com",
+    "Instagram auth wall or blocked response (200) for @rbccaribbean",
+    "Social Blade auth wall or blocked response (403)",
+    "PAGESPEED_API_KEY (or YOUTUBE_API_KEY fallback) is not set"
+  ],
+  "attempted_platforms": [
+    "facebook",
+    "instagram",
+    "website"
+  ]
+}

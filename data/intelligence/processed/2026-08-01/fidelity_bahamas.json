@@ -1,0 +1,48 @@
+{
+  "bank_id": "fidelity_bahamas",
+  "capture_date": "2026-08-01",
+  "social_metrics": [
+    {
+      "bank_id": "fidelity_bahamas",
+      "platform": "facebook",
+      "capture_date": "2026-08-01",
+      "followers": 14625,
+      "posts_in_window": null,
+      "total_engagement": null,
+      "reactions": null,
+      "comments": null,
+      "shares": null,
+      "views": null,
+      "source": {
+        "url": "https://www.facebook.com/FidelityBankBahamas/",
+        "fetched_at": "2026-08-01T16:22:45.353704Z",
+        "http_status": 200,
+        "method": "scrape",
+        "archive_url": null
+      }
+    }
+  ],
+  "post_metrics": [],
+  "web_metrics": [],
+  "raw_artifacts": {
+    "facebook_profile": "data/intelligence/raw/2026-08-01/fidelity_bahamas/facebook_profile.html"
+  },
+  "errors": [
+    "wayback: no snapshot within ±7 days of 2026-08-01 for https://www.facebook.com/FidelityBankBahamas",
+    "wayback: no snapshot within ±7 days of 2026-08-01 for https://www.instagram.com/fidelity.bank",
+    "youtube: no handle configured for this bank",
+    "similarweb: no domain configured for this bank",
+    "facebook: using exact page likes (14625) as followers proxy",
+    "tiktok: no handle configured for this bank",
+    "twitter: no handle configured for this bank",
+    "socialblade: no youtube or tiktok handle configured",
+    "ahrefs_free: no domain configured for this bank",
+    "pagespeed: no domain configured for this bank",
+    "structured_data: no domain configured for this bank",
+    "Instagram rate-limited or unavailable (429) for @fidelity.bank"
+  ],
+  "attempted_platforms": [
+    "facebook",
+    "instagram"
+  ]
+}

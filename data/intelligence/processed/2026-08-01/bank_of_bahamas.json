@@ -1,0 +1,92 @@
+{
+  "bank_id": "bank_of_bahamas",
+  "capture_date": "2026-08-01",
+  "social_metrics": [
+    {
+      "bank_id": "bank_of_bahamas",
+      "platform": "facebook",
+      "capture_date": "2026-08-01",
+      "followers": 13009,
+      "posts_in_window": null,
+      "total_engagement": null,
+      "reactions": null,
+      "comments": null,
+      "shares": null,
+      "views": null,
+      "source": {
+        "url": "https://www.facebook.com/BOBBankofSolutions/",
+        "fetched_at": "2026-08-01T16:24:39.897420Z",
+        "http_status": 200,
+        "method": "scrape",
+        "archive_url": null
+      }
+    }
+  ],
+  "post_metrics": [],
+  "web_metrics": [
+    {
+      "bank_id": "bank_of_bahamas",
+      "capture_date": "2026-08-01",
+      "organic_traffic_est": null,
+      "authority_score": null,
+      "backlinks": null,
+      "referring_domains": null,
+      "ranking_keywords": null,
+      "branded_search_share": null,
+      "non_branded_search_share": null,
+      "top_keywords": [],
+      "source": {
+        "url": "https://ahrefs.com/website-authority-checker/?input=bankbahamas.com",
+        "fetched_at": "2026-08-01T16:24:40.484502Z",
+        "http_status": 200,
+        "method": "scrape",
+        "archive_url": null
+      }
+    },
+    {
+      "bank_id": "bank_of_bahamas",
+      "capture_date": "2026-08-01",
+      "organic_traffic_est": null,
+      "authority_score": null,
+      "backlinks": null,
+      "referring_domains": null,
+      "ranking_keywords": 0,
+      "branded_search_share": null,
+      "non_branded_search_share": null,
+      "top_keywords": [],
+      "source": {
+        "url": "https://www.bankbahamas.com/",
+        "fetched_at": "2026-08-01T16:24:41.332106Z",
+        "http_status": 200,
+        "method": "scrape",
+        "archive_url": null
+      }
+    }
+  ],
+  "raw_artifacts": {
+    "facebook_profile": "data/intelligence/raw/2026-08-01/bank_of_bahamas/facebook_profile.html",
+    "ahrefs_free": "data/intelligence/raw/2026-08-01/bank_of_bahamas/ahrefs_free.html",
+    "ahrefs_free_backlinks": "data/intelligence/raw/2026-08-01/bank_of_bahamas/ahrefs_free_backlinks.html",
+    "ahrefs_free_summary": "data/intelligence/raw/2026-08-01/bank_of_bahamas/ahrefs_free.json",
+    "structured_data": "data/intelligence/raw/2026-08-01/bank_of_bahamas/structured_data.html"
+  },
+  "errors": [
+    "wayback: no snapshot within ±7 days of 2026-08-01 for https://www.facebook.com/BOBBankofSolutions",
+    "wayback: no snapshot within ±7 days of 2026-08-01 for https://www.instagram.com/bankofthebahamaslimited",
+    "youtube: no handle configured for this bank",
+    "facebook: using exact page likes (13009) as followers proxy",
+    "tiktok: no handle configured for this bank",
+    "twitter: no handle configured for this bank",
+    "socialblade: no youtube or tiktok handle configured",
+    "ahrefs_free: no Domain Rating / backlinks / referring domains found in free-tool HTML (metrics may be client-rendered only)",
+    "structured_data: no schema.org types detected on homepage (JSON-LD / microdata / RDFa)",
+    "Similarweb free endpoint blocked or unavailable (403) for domain=bankbahamas.com",
+    "Instagram auth wall or blocked response (200) for @bankofthebahamaslimited",
+    "PAGESPEED_API_KEY (or YOUTUBE_API_KEY fallback) is not set"
+  ],
+  "attempted_platforms": [
+    "facebook",
+    "instagram",
+    "website"
+  ]
+}
