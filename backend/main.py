@@ -17,6 +17,7 @@ from app.api import (
     economic,
     export,
     future_updates,
+    grand_bahama,
     hot_topics,
     ingestion,
     islands,
@@ -180,6 +181,7 @@ app.include_router(islands.router, prefix=f"{settings.API_V1_PREFIX}/islands", t
 app.include_router(documents.router, prefix=f"{settings.API_V1_PREFIX}/documents", tags=["Documents"])
 app.include_router(ingestion.router, prefix=f"{settings.API_V1_PREFIX}/ingestion", tags=["Ingestion"])
 app.include_router(hot_topics.router, prefix=f"{settings.API_V1_PREFIX}/hot-topics", tags=["Hot Topics"])
+app.include_router(grand_bahama.router, prefix=f"{settings.API_V1_PREFIX}/grand-bahama", tags=["Grand Bahama"])
 app.include_router(polls.router, prefix=f"{settings.API_V1_PREFIX}/polls", tags=["Polls"])
 
 

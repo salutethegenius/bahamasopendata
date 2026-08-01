@@ -285,7 +285,86 @@ async def _island_rows(db: AsyncSession) -> list[dict[str, Any]]:
     return output
 
 
+def _grand_bahama_rows() -> list[dict[str, Any]]:
+    """Flatten curated GB institutional data into exportable tabular rows."""
+    from app.api.grand_bahama import _load_dataset
+
+    payload = _load_dataset()
+    ministry = payload.get("ministry") or {}
+    rows: list[dict[str, Any]] = []
+
+    for mp in payload.get("mps") or []:
+        rows.append(
+            {
+                "record_type": "mp",
+                "id": mp.get("constituency"),
+                "name": mp.get("name"),
+                "detail": mp.get("role"),
+                "party": mp.get("party"),
+                "side": mp.get("side"),
+                "schedule": None,
+                "chief_councillor": None,
+                "secretary": None,
+                "officers_status": None,
+                "source": mp.get("source"),
+                "source_url": mp.get("source_url"),
+                "as_of": mp.get("as_of"),
+            }
+        )
+
+    for district in payload.get("districts") or []:
+        rows.append(
+            {
+                "record_type": "district",
+                "id": district.get("id"),
+                "name": district.get("name"),
+                "detail": district.get("schedule_note"),
+                "party": None,
+                "side": None,
+                "schedule": district.get("schedule"),
+                "chief_councillor": district.get("chief_councillor"),
+                "secretary": district.get("secretary"),
+                "officers_status": district.get("officers_status"),
+                "source": district.get("source"),
+                "source_url": district.get("source_url"),
+                "as_of": district.get("as_of"),
+            }
+        )
+
+    for item in ministry.get("portfolio") or []:
+        rows.append(
+            {
+                "record_type": "ministry_portfolio",
+                "id": ministry.get("name"),
+                "name": ministry.get("minister"),
+                "detail": item,
+                "party": ministry.get("party"),
+                "side": None,
+                "schedule": None,
+                "chief_councillor": None,
+                "secretary": None,
+                "officers_status": None,
+                "source": ministry.get("source"),
+                "source_url": ministry.get("source_url"),
+                "as_of": ministry.get("as_of"),
+            }
+        )
+
+    return rows
+
+
 async def _dataset_payload(db: AsyncSession, dataset: str, fiscal_year: str | None) -> dict[str, Any]:
+    if dataset == "grand_bahama":
+        data = _grand_bahama_rows()
+        if not data:
+            raise HTTPException(status_code=404, detail="No published rows found for dataset 'grand_bahama'.")
+        return {
+            "dataset": dataset,
+            "fiscal_year": None,
+            "generated_at": date.today().isoformat(),
+            "data": data,
+        }
+
     current_year = fiscal_year or await _current_year(db)
     if not current_year:
         raise HTTPException(status_code=404, detail="No published data available yet.")
@@ -305,7 +384,7 @@ async def _dataset_payload(db: AsyncSession, dataset: str, fiscal_year: str | No
     if dataset not in dataset_builders:
         raise HTTPException(
             status_code=404,
-            detail=f"Dataset '{dataset}' not found. Available: {list(dataset_builders.keys())}",
+            detail=f"Dataset '{dataset}' not found. Available: {list(dataset_builders.keys()) + ['grand_bahama']}",
         )
 
     if dataset in {"historical", "news", "economic_indicators", "island_projects"}:
@@ -367,6 +446,10 @@ async def list_datasets(db: AsyncSession = Depends(get_db)):
         {"name": "news", "description": "Published public updates and announcement feed"},
         {"name": "economic_indicators", "description": "Published household economy and affordability indicators"},
         {"name": "island_projects", "description": "Published island allocations and project listings"},
+        {
+            "name": "grand_bahama",
+            "description": "Grand Bahama institutional reference: ministry portfolio, MPs, and local-government districts",
+        },
     ]
 
     availability = []

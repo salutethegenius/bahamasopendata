@@ -19,6 +19,7 @@ import {
   ChevronDown,
   Flame,
   History,
+  Landmark,
 } from 'lucide-react';
 import { useState, useRef } from 'react';
 
@@ -34,6 +35,7 @@ const primaryNavItems: NavItem[] = [
   { id: 'dashboard', href: '/', label: 'Dashboard', icon: LayoutDashboard, domain: 'overview' },
   { id: 'health', href: '/health', label: 'Health', icon: HeartPulse, domain: 'health' },
   { id: 'income', href: '/income', label: 'Income', icon: DollarSign, domain: 'income' },
+  { id: 'grand-bahama', href: '/grand-bahama', label: 'Grand Bahama', icon: Landmark, domain: 'grand-bahama' },
 ];
 
 const budgetNavItems: NavItem[] = [

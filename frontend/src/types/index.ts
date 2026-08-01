@@ -185,4 +185,98 @@ export interface Poll {
   options: PollOption[];
 }
 
+// Grand Bahama institutional reference
+export interface GrandBahamaRelatedHotTopic {
+  slug: string;
+  title: string;
+}
+
+export interface GrandBahamaRelatedAuthority {
+  name: string;
+  role: string;
+  note: string;
+  source: string;
+  source_url: string;
+}
+
+export interface GrandBahamaMeta {
+  title: string;
+  as_of: string;
+  methodology: string;
+  framing: string;
+  related_hot_topics: GrandBahamaRelatedHotTopic[];
+  related_authorities: GrandBahamaRelatedAuthority[];
+}
+
+export interface GrandBahamaMinistryOffice {
+  building: string;
+  street: string;
+  po_box: string;
+  city: string;
+  phone: string;
+}
+
+export interface GrandBahamaMinistry {
+  name: string;
+  minister: string;
+  constituency: string;
+  party: string;
+  in_office_since: string;
+  reappointed: string;
+  office: GrandBahamaMinistryOffice;
+  portfolio: string[];
+  notes: string[];
+  source: string;
+  source_url: string;
+  as_of: string;
+}
+
+export interface GrandBahamaMP {
+  constituency: string;
+  name: string;
+  party: string;
+  role: string;
+  side: 'government' | 'opposition' | string;
+  source: string;
+  source_url: string;
+  as_of: string;
+}
+
+export type GrandBahamaDistrictSchedule = 'second' | 'third' | string;
+export type GrandBahamaOfficersStatus = 'confirmed' | 'partial' | 'unconfirmed' | string;
+
+export interface GrandBahamaDistrict {
+  id: string;
+  name: string;
+  schedule: GrandBahamaDistrictSchedule;
+  schedule_note: string;
+  chief_councillor: string | null;
+  secretary: string | null;
+  officers_status: GrandBahamaOfficersStatus;
+  source: string;
+  source_url: string;
+  as_of: string;
+}
+
+export interface GrandBahamaLocalGovernmentContext {
+  governing_act: string;
+  act_in_force: string;
+  overseeing_department: string;
+  overseeing_ministry: string;
+  national_district_count: number;
+  last_election: string;
+  next_election_expected: string;
+  election_cycle_years: number;
+  source: string;
+  source_url: string;
+}
+
+export interface GrandBahamaDataset {
+  meta: GrandBahamaMeta;
+  ministry: GrandBahamaMinistry;
+  mps: GrandBahamaMP[];
+  districts: GrandBahamaDistrict[];
+  local_government_context: GrandBahamaLocalGovernmentContext;
+}
+
 
