@@ -81,7 +81,7 @@ const fallbackDatasets = [
   {
     id: 'grand_bahama',
     name: 'Grand Bahama Institutional',
-    description: 'Ministry portfolio, parliamentary delegation, and local-government districts',
+    description: 'Module 01 of the GB Digital Government Platform: ministry portfolio, MPs, and districts',
     size: '12 KB',
     records: 25,
   },
@@ -93,7 +93,7 @@ const apiEndpoints = [
   { method: 'GET', path: '/api/v1/ministries/{id}', description: 'Get ministry details' },
   { method: 'GET', path: '/api/v1/revenue', description: 'Get revenue breakdown' },
   { method: 'GET', path: '/api/v1/debt', description: 'Get debt summary' },
-  { method: 'GET', path: '/api/v1/grand-bahama', description: 'Grand Bahama institutional reference' },
+  { method: 'GET', path: '/api/v1/grand-bahama', description: 'Grand Bahama institutional reference (Module 01)' },
   { method: 'POST', path: '/api/v1/ask', description: 'Ask a question (RAG)' },
   { method: 'GET', path: '/api/v1/export/{dataset}', description: 'Export dataset' },
 ];

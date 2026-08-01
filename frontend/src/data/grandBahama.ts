@@ -11,7 +11,7 @@ export const grandBahamaDataset: GrandBahamaDataset = {
     methodology:
       'Curated from official gazettes, election results reporting, and Department of Local Government public materials. Officer names are included only when confirmed in public reporting; unconfirmed roles are left null.',
     framing:
-      'Invest Grand Bahama (GBPA) maps investment activity inside the Port Area. This dashboard covers government institutional structure for Grand Bahama — Ministry portfolio, parliamentary representation, and local-government districts — as a complementary public data layer, not a competing investment map.',
+      'Module 01 of the Grand Bahama Digital Government Platform. Invest Grand Bahama (GBPA) maps investment activity inside the Port Area. This module covers government institutional structure for Grand Bahama — Ministry portfolio, parliamentary representation, and local-government districts — as a complementary public data layer, not a competing investment map.',
     related_hot_topics: [
       {
         slug: 'gbpa-arbitration-award-2026',
