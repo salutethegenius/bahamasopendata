@@ -1,0 +1,222 @@
+{
+  "meta": {
+    "title": "Grand Bahama Institutional Reference",
+    "as_of": "2026-05-19",
+    "methodology": "Curated from official gazettes, election results reporting, and Department of Local Government public materials. Officer names are included only when confirmed in public reporting; unconfirmed roles are left null.",
+    "framing": "Invest Grand Bahama (GBPA) maps investment activity inside the Port Area. This dashboard covers government institutional structure for Grand Bahama — Ministry portfolio, parliamentary representation, and local-government districts — as a complementary public data layer, not a competing investment map.",
+    "related_hot_topics": [
+      {
+        "slug": "gbpa-arbitration-award-2026",
+        "title": "Government of The Bahamas v. GBPA – Partial Final Award (2026)"
+      },
+      {
+        "slug": "gbpa-award-guide-2026",
+        "title": "GBPA Award Guide (2026)"
+      }
+    ],
+    "related_authorities": [
+      {
+        "name": "Hon. Clay Glennford Sweeting, M.P.",
+        "role": "Minister of Works and Family Island Affairs",
+        "note": "Holds Relations with Local Government Authorities; Department of Local Government sits under this ministry.",
+        "source": "Official Gazette — Allocation of Portfolios, May 19, 2026",
+        "source_url": "https://opm.gov.bs/wp-content/uploads/2026/06/Allocation_of_Portfolio-Extraordinary_Gazette_19th_May_2026_Ministers_Amendments_Final.pdf"
+      },
+      {
+        "name": "Hon. Sebastian J. D. Bastian, M.P.",
+        "role": "Minister of Innovation and National Development",
+        "note": "National-tier portfolio for e-Government, BNSI, and digital infrastructure.",
+        "source": "Official Gazette — Allocation of Portfolios, May 19, 2026",
+        "source_url": "https://opm.gov.bs/wp-content/uploads/2026/06/Allocation_of_Portfolio-Extraordinary_Gazette_19th_May_2026_Ministers_Amendments_Final.pdf"
+      }
+    ]
+  },
+  "ministry": {
+    "name": "Ministry for Grand Bahama",
+    "minister": "The Hon. Ginger Maria Moxey, M.P.",
+    "constituency": "Pineridge",
+    "party": "PLP",
+    "in_office_since": "2021-10",
+    "reappointed": "2026-05",
+    "office": {
+      "building": "Harold De'Gregory Complex (4th Floor)",
+      "street": "East Mall Drive",
+      "po_box": "P.O. Box F-60137",
+      "city": "Freeport, Grand Bahama",
+      "phone": "(242) 352-8520"
+    },
+    "portfolio": [
+      "Coordination and Liaison with Ministries",
+      "Relations with the Grand Bahama Port Authority",
+      "Revitalization & Promotion of Grand Bahama as a Tourism and Industrial Centre",
+      "Promotion of Agricultural Development in Grand Bahama",
+      "Advancement of Health and Educational Infrastructure",
+      "Promotion of Employment and Entrepreneurial Opportunities in Grand Bahama",
+      "Beautiful Grand Bahama",
+      "Afro-Caribbean Marketplace and Logistics Centre",
+      "Community Relocation and Restoration in East and West Grand Bahama",
+      "Relations with Urban Renewal — Grand Bahama",
+      "Relations with Disaster and Risk Management Reconstruction Authority — Grand Bahama",
+      "Relations with Grand Lucayan Resorts Operations",
+      "Community Engagement and Empowerment — Grand Bahama"
+    ],
+    "notes": [
+      "No Minister of State or Parliamentary Secretary is currently attached to this ministry.",
+      "Development of the Freeport International Airport appeared in the 2021 portfolio but not in the 2026 gazette; Relations with Freeport Airport Development Company now sits under the Ministry of Energy, Utilities and Aviation.",
+      "The Ministry runs a stakeholder-coordination unit called Collab: Partnerships for Development."
+    ],
+    "source": "Official Gazette — Allocation of Portfolios, May 19, 2026",
+    "source_url": "https://opm.gov.bs/wp-content/uploads/2026/06/Allocation_of_Portfolio-Extraordinary_Gazette_19th_May_2026_Ministers_Amendments_Final.pdf",
+    "as_of": "2026-05-19"
+  },
+  "mps": [
+    {
+      "constituency": "Pineridge",
+      "name": "Ginger Maria Moxey",
+      "party": "PLP",
+      "role": "Minister for Grand Bahama",
+      "side": "government",
+      "source": "Official results of the 2026 May 12th general elections; Official Gazette portfolio allocation",
+      "source_url": "https://www.bahamaspress.com/official-results-of-the-2026-may-12th-general-elections-by-constituency/",
+      "as_of": "2026-05-12"
+    },
+    {
+      "constituency": "West Grand Bahama and Bimini",
+      "name": "Kingsley V. Smith",
+      "party": "PLP",
+      "role": "Government MP",
+      "side": "government",
+      "source": "Official results of the 2026 May 12th general elections",
+      "source_url": "https://www.bahamaspress.com/official-results-of-the-2026-may-12th-general-elections-by-constituency/",
+      "as_of": "2026-05-12"
+    },
+    {
+      "constituency": "Central Grand Bahama",
+      "name": "Frazette Gibson",
+      "party": "FNM",
+      "role": "Opposition MP",
+      "side": "opposition",
+      "source": "Official results of the 2026 May 12th general elections",
+      "source_url": "https://www.bahamaspress.com/official-results-of-the-2026-may-12th-general-elections-by-constituency/",
+      "as_of": "2026-05-12"
+    },
+    {
+      "constituency": "East Grand Bahama",
+      "name": "J. Kwasi Thompson",
+      "party": "FNM",
+      "role": "Opposition MP; FNM shadow finance",
+      "side": "opposition",
+      "source": "Official results of the 2026 May 12th general elections",
+      "source_url": "https://www.bahamaspress.com/official-results-of-the-2026-may-12th-general-elections-by-constituency/",
+      "as_of": "2026-05-12"
+    },
+    {
+      "constituency": "Marco City",
+      "name": "Michael Pintard",
+      "party": "FNM",
+      "role": "Opposition MP; FNM party leader",
+      "side": "opposition",
+      "source": "Official results of the 2026 May 12th general elections",
+      "source_url": "https://www.bahamaspress.com/official-results-of-the-2026-may-12th-general-elections-by-constituency/",
+      "as_of": "2026-05-12"
+    }
+  ],
+  "districts": [
+    {
+      "id": "sweetings-cay",
+      "name": "Sweeting's Cay",
+      "schedule": "second",
+      "schedule_note": "Second Schedule district (two-tier: town committees + district council)",
+      "chief_councillor": "Shervin Tate",
+      "secretary": null,
+      "officers_status": "partial",
+      "source": "Public reporting on Grand Bahama local government; 2025 local government election announcement",
+      "source_url": "https://www.bahamas.gov.bs/index.php/news-press-release/residents-vote-for-their-candidate-in-local-government-election-2025",
+      "as_of": "2025-01-23"
+    },
+    {
+      "id": "east-grand-bahama",
+      "name": "East Grand Bahama",
+      "schedule": "second",
+      "schedule_note": "Second Schedule district (two-tier: town committees + district council)",
+      "chief_councillor": null,
+      "secretary": null,
+      "officers_status": "unconfirmed",
+      "source": "2025 local government election announcement; DLG training coverage",
+      "source_url": "https://www.bahamas.gov.bs/index.php/news-press-release/residents-vote-for-their-candidate-in-local-government-election-2025",
+      "as_of": "2025-01-23"
+    },
+    {
+      "id": "central-grand-bahama",
+      "name": "Central Grand Bahama",
+      "schedule": "second",
+      "schedule_note": "Second Schedule district (two-tier: town committees + district council)",
+      "chief_councillor": null,
+      "secretary": null,
+      "officers_status": "unconfirmed",
+      "source": "2025 local government election announcement; DLG training coverage",
+      "source_url": "https://www.bahamas.gov.bs/index.php/news-press-release/residents-vote-for-their-candidate-in-local-government-election-2025",
+      "as_of": "2025-01-23"
+    },
+    {
+      "id": "pineridge",
+      "name": "Pineridge",
+      "schedule": "second",
+      "schedule_note": "Second Schedule district (two-tier: town committees + district council)",
+      "chief_councillor": null,
+      "secretary": null,
+      "officers_status": "unconfirmed",
+      "source": "2025 local government election announcement; DLG training coverage",
+      "source_url": "https://www.bahamas.gov.bs/index.php/news-press-release/residents-vote-for-their-candidate-in-local-government-election-2025",
+      "as_of": "2025-01-23"
+    },
+    {
+      "id": "marco-city",
+      "name": "Marco City",
+      "schedule": "second",
+      "schedule_note": "Second Schedule district (two-tier: town committees + district council)",
+      "chief_councillor": null,
+      "secretary": null,
+      "officers_status": "unconfirmed",
+      "source": "2025 local government election announcement; DLG training coverage",
+      "source_url": "https://www.bahamas.gov.bs/index.php/news-press-release/residents-vote-for-their-candidate-in-local-government-election-2025",
+      "as_of": "2025-01-23"
+    },
+    {
+      "id": "west-grand-bahama",
+      "name": "West Grand Bahama",
+      "schedule": "second",
+      "schedule_note": "Second Schedule district (two-tier: town committees + district council)",
+      "chief_councillor": null,
+      "secretary": "Mahalia Williams",
+      "officers_status": "partial",
+      "source": "Public reporting naming West Grand Bahama District Council secretary; 2025 election announcement",
+      "source_url": "https://znsbahamas.com/local-government-officials-receive-comprehensive-training-on-grand-bahama/",
+      "as_of": "2025-01-23"
+    },
+    {
+      "id": "city-of-freeport",
+      "name": "City of Freeport",
+      "schedule": "third",
+      "schedule_note": "Third Schedule district with expanded powers (combines council and town-committee functions)",
+      "chief_councillor": null,
+      "secretary": null,
+      "officers_status": "unconfirmed",
+      "source": "Local Government Act, 2024; Department of Local Government — Key Structures",
+      "source_url": "https://dlg.gov.bs/key-structures",
+      "as_of": "2025-01-23"
+    }
+  ],
+  "local_government_context": {
+    "governing_act": "Local Government Act, 2024",
+    "act_in_force": "2024-12",
+    "overseeing_department": "Department of Local Government",
+    "overseeing_ministry": "Ministry of Works and Family Island Affairs",
+    "national_district_count": 33,
+    "last_election": "2025-01-23",
+    "next_election_expected": "2028-01",
+    "election_cycle_years": 3,
+    "source": "Department of Local Government — Key Structures; Local Government Act, 2024",
+    "source_url": "https://dlg.gov.bs/key-structures"
+  }
+}
