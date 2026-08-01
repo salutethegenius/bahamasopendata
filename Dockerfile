@@ -19,6 +19,7 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 COPY backend /srv/backend
 COPY ingestion /srv/ingestion
+COPY data /srv/data
 
 RUN mkdir -p /srv/data/raw /srv/data/processed /srv/data/uploads /srv/data/embeddings
 
