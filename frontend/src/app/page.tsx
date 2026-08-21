@@ -20,9 +20,10 @@ import {
 } from '@/types';
 import { initialBudgetSummary, initialMinistries } from '@/data/budget';
 import { XAxis, YAxis, Tooltip, LineChart, Line, CartesianGrid } from 'recharts';
-import { TrendingUp, Calendar, FileText, AlertCircle, HeartPulse, DollarSign, BarChart3, Newspaper, Flame, Building2, Landmark } from 'lucide-react';
+import { TrendingUp, Calendar, FileText, AlertCircle, HeartPulse, DollarSign, BarChart3, Newspaper, Flame, Building2, Landmark, ClipboardCheck } from 'lucide-react';
 import { newsItems } from '@/data/news';
 import { grandBahamaDataset } from '@/data/grandBahama';
+import { currentScorecard } from '@/data/scorecards';
 
 type HotTopicSummary = {
   slug: string;
@@ -502,7 +503,7 @@ function HomePageContent() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-gray-900">Explore the data</h2>
           <p className="text-xs text-gray-500">
-            Jump into health, income, Grand Bahama, polls, news, hot topics, and ministries.
+            Jump into health, income, Grand Bahama, polls, news, hot topics, scorecards, and ministries.
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -616,6 +617,18 @@ function HomePageContent() {
             }
             secondaryStatLabel={firstHotTopic ? 'Featured report' : undefined}
             secondaryStatValue={firstHotTopic?.title}
+          />
+
+          {/* Scorecards */}
+          <DashboardSectionCard
+            href="/scorecards"
+            title="Government scorecards"
+            subtitle="Independent grades on delivery vs announcements."
+            icon={ClipboardCheck}
+            primaryStatLabel="Overall grade"
+            primaryStatValue={currentScorecard.overall.firstTerm}
+            secondaryStatLabel="Thesis"
+            secondaryStatValue={currentScorecard.thesis}
           />
 
           {/* Ministries */}

@@ -20,6 +20,7 @@ import {
   Flame,
   History,
   Landmark,
+  ClipboardCheck,
 } from 'lucide-react';
 import { useState, useRef } from 'react';
 
@@ -50,6 +51,7 @@ const tailNavItems: NavItem[] = [
   { id: 'polls', href: '/polls', label: 'Polls', icon: BarChart3, domain: 'polls' },
   { id: 'news', href: '/news', label: 'News', icon: Newspaper, domain: 'news' },
   { id: 'hot', href: '/hot', label: 'Hot topics', icon: Flame, domain: 'hot' },
+  { id: 'scorecards', href: '/scorecards', label: 'Scorecards', icon: ClipboardCheck, domain: 'scorecards' },
   {
     id: 'intelligence',
     href: '/intelligence',
