@@ -6,7 +6,6 @@ import StatCard from '@/components/StatCard';
 import FiscalYearSelector from '@/components/FiscalYearSelector';
 import { formatCurrency } from '@/lib/format';
 import { fiscalYearSearchParam, useFiscalYear, CURRENT_FISCAL_YEAR } from '@/lib/fiscal-year';
-import styles from '@/app/v2/v2.module.css';
 import { Creditor as DebtCreditor, DebtSummary as DebtSummaryType, RepaymentSchedule as RepaymentScheduleType } from '@/types';
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -168,7 +167,9 @@ function DebtPageContent() {
         className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between"
       >
         <div>
-          <div className={styles['section-eyebrow']}>Debt &amp; borrowing</div>
+          <p className="text-xs font-medium uppercase tracking-[0.15em] text-turquoise mb-2">
+            Debt &amp; borrowing
+          </p>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             National <span className="text-turquoise">Debt</span>
           </h1>

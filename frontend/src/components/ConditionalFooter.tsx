@@ -5,8 +5,8 @@ import { usePathname } from 'next/navigation';
 export default function ConditionalFooter() {
   const pathname = usePathname();
 
-  // V2 marketing page renders its own footer shell
-  if (pathname.startsWith('/v2') || pathname.startsWith('/admin')) {
+  // Marketing home and admin render their own footer shells
+  if (pathname === '/' || pathname.startsWith('/admin')) {
     return null;
   }
 

@@ -108,7 +108,7 @@ export default function IntelligencePage() {
               </span>
             </span>
             <Link
-              href="/"
+              href="/dashboard"
               className="text-[var(--intel-text-accent)] underline-offset-4 hover:underline"
             >
               ← Civic dashboard

@@ -6,9 +6,9 @@ import Navigation from './Navigation';
 export default function ConditionalNavigation() {
   const pathname = usePathname();
 
-  // Let imprint / admin shells render without the civic nav chrome
+  // Marketing home, admin, and intelligence use their own chrome
   if (
-    pathname.startsWith('/v2') ||
+    pathname === '/' ||
     pathname.startsWith('/admin') ||
     pathname.startsWith('/intelligence')
   ) {

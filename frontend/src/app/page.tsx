@@ -1,29 +1,27 @@
 'use client';
 
-import { useState, useEffect, useMemo, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import StatCard from '@/components/StatCard';
-import SectorPieChart from '@/components/SectorPieChart';
-import AskBar from '@/components/AskBar';
-import DashboardSectionCard from '@/components/DashboardSectionCard';
-import FiscalYearSelector from '@/components/FiscalYearSelector';
-import ResponsiveContainer from '@/components/SafeResponsiveContainer';
-import { formatCurrency, formatPercent } from '@/lib/format';
-import { fiscalYearSearchParam, useFiscalYear } from '@/lib/fiscal-year';
-import {
-  Ministry,
-  AskResponse,
-  IncomeComparison,
-  Poll,
-  NewsItem,
-} from '@/types';
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { formatCurrency } from '@/lib/format';
+import { CURRENT_FISCAL_YEAR } from '@/lib/fiscal-year';
+import type { IncomeComparison, Ministry, NewsItem, Poll } from '@/types';
 import { initialBudgetSummary, initialMinistries } from '@/data/budget';
-import { XAxis, YAxis, Tooltip, LineChart, Line, CartesianGrid } from 'recharts';
-import { TrendingUp, Calendar, FileText, AlertCircle, HeartPulse, DollarSign, BarChart3, Newspaper, Flame, Building2, Landmark, ClipboardCheck } from 'lucide-react';
 import { newsItems } from '@/data/news';
 import { grandBahamaDataset } from '@/data/grandBahama';
 import { currentScorecard } from '@/data/scorecards';
+import V2AskBudgetPanel from '@/components/v2/V2AskBudgetPanel';
+import styles from './home.module.css';
+
+type TickerItem = {
+  text: string;
+  source: string;
+  url?: string;
+};
+
+type SectorSlice = {
+  name: string;
+  value: number;
+};
 
 type HotTopicSummary = {
   slug: string;
@@ -31,82 +29,66 @@ type HotTopicSummary = {
   source: string;
   year: string;
   summary: string;
-  stat_count?: number;
-  chart_count?: number;
-  highlight_count?: number;
-};
-
-type DashboardNewsItem = {
-  id: number;
-  title: string;
-  source: string;
-  url: string;
-  summary: string;
-  category: string;
-  published_date: string;
 };
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
 
-// Sector breakdown fallback — API replaces once loaded
-const initialSectorData = [
-  { name: "Public Debt Service", value: 732_203_258, color: "#ef4444" },
-  { name: "Health", value: 400_228_827, color: "#FCD116" },
-  { name: "Education", value: 383_555_171, color: "#00CED1" },
-  { name: "Security", value: 247_645_168, color: "#3b82f6" },
-  { name: "Tourism", value: 98_089_530, color: "#8b5cf6" },
-  { name: "Social Services", value: 64_224_852, color: "#10b981" },
-  { name: "Other", value: 1_213_832_850, color: "#6b7280" },
+const POPULATION = 409_000;
+const FALLBACK_INCOME_MONTH = 10_200;
+
+const INITIAL_SECTORS: SectorSlice[] = [
+  { name: 'Public Debt Service', value: 732_203_258 },
+  { name: 'Health', value: 400_228_827 },
+  { name: 'Education', value: 383_555_171 },
+  { name: 'Security', value: 247_645_168 },
+  { name: 'Tourism', value: 98_089_530 },
+  { name: 'Social Services', value: 64_224_852 },
+  { name: 'Other', value: 1_213_832_850 },
 ];
 
-// Historical data from Fiscal Summary + FY2026/27 Draft Estimates
-const initialHistoricalData = [
-  { year: "2020/21", revenue: 1.91, expenditure: 3.24, debt: 9.93, debt_gdp: 88.7 },
-  { year: "2021/22", revenue: 2.61, expenditure: 3.33, debt: 10.79, debt_gdp: 83.2 },
-  { year: "2022/23", revenue: 2.85, expenditure: 3.39, debt: 11.26, debt_gdp: 77.2 },
-  { year: "2023/24", revenue: 3.07, expenditure: 3.26, debt: 11.31, debt_gdp: 72.7 },
-  { year: "2024/25", revenue: 3.54, expenditure: 3.61, debt: 11.46, debt_gdp: 71.4 },
-  { year: "2025/26", revenue: 3.89, expenditure: 3.82, debt: 11.39, debt_gdp: 68.9 },
-  { year: "2026/27", revenue: 4.36, expenditure: 4.14, debt: 11.10, debt_gdp: 59.9 },
-];
+const TIMELINE_YEARS = [1973, 1980, 1990, 2000, 2010, 2020, 2026] as const;
 
-// Real API ask function - lazy load to avoid SSR issues
-const createAskHandler = (fiscalYear: string) => async (question: string): Promise<AskResponse> => {
-  try {
-    const { askQuestion } = await import('@/lib/api');
-    return await askQuestion(question, fiscalYear);
-  } catch (error) {
-    console.error('Failed to get answer:', error);
-    return {
-      answer: error instanceof Error
-        ? error.message
-        : "I'm having trouble connecting to the answer service. Please check your connection and try again.",
-      numbers: null,
-      chart_data: null,
-      citations: [],
-      confidence: 0.0,
-    };
-  }
+const MINISTRY_INSIGHTS: Record<string, string> = {
+  health:
+    'Includes storm preparedness and public health resilience investments across Family Islands.',
+  finance:
+    'Elevated by debt service obligations — the largest structural cost in the national budget.',
+  education:
+    'Allocation up from the prior year, with primary school infrastructure a key driver.',
+  police:
+    'Supports national security and policing capacity across the archipelago.',
 };
 
-function HomePageContent() {
-  const router = useRouter();
-  const { fiscalYear, currentYear } = useFiscalYear();
-  const isLatestYear = fiscalYear === currentYear;
+const formatBillions = (value: number | null | undefined) => {
+  if (value == null || !Number.isFinite(value)) return '—';
+  const billions = value / 1_000_000_000;
+  return `$${billions.toFixed(1)}B`;
+};
 
+const formatMillionsWhole = (value: number | null | undefined) => {
+  if (value == null || !Number.isFinite(value)) return '—';
+  const millions = Math.round(value / 1_000_000);
+  return `$${millions}M`;
+};
+
+const perPerson = (value: number) => value / POPULATION;
+
+const findSector = (sectors: SectorSlice[], needle: string) =>
+  sectors.find((s) => s.name.toLowerCase().includes(needle.toLowerCase()));
+
+export default function MarketingHomePage() {
+  const [navScrolled, setNavScrolled] = useState(false);
+  const [shareExpanded, setShareExpanded] = useState(false);
   const [budgetSummary, setBudgetSummary] = useState(initialBudgetSummary);
   const [ministries, setMinistries] = useState<Ministry[]>(initialMinistries);
-  const [sectorData, setSectorData] = useState(initialSectorData);
-  const [historicalData, setHistoricalData] =
-    useState(initialHistoricalData);
-  const [yearUnavailable, setYearUnavailable] = useState(false);
+  const [sectors, setSectors] = useState<SectorSlice[]>(INITIAL_SECTORS);
   const [incomeComparisons, setIncomeComparisons] = useState<
     IncomeComparison[] | null
   >(null);
   const [activePoll, setActivePoll] = useState<Poll | null>(null);
-  const [hotTopics, setHotTopics] = useState<HotTopicSummary[] | null>(null);
-  const [latestNewsItems, setLatestNewsItems] = useState<DashboardNewsItem[]>(
+  const [hotTopics, setHotTopics] = useState<HotTopicSummary[]>([]);
+  const [latestNewsItems, setLatestNewsItems] = useState<NewsItem[]>(
     newsItems.map((item) => ({
       id: item.id,
       title: item.title,
@@ -118,567 +100,945 @@ function HomePageContent() {
     })),
   );
 
-  const isSurplus = budgetSummary.deficit_surplus >= 0;
-  const displayFiscalYear = budgetSummary.fiscal_year || fiscalYear;
+  useEffect(() => {
+    const onScroll = () => {
+      setNavScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
-      const fy = fiscalYearSearchParam(fiscalYear);
-      setYearUnavailable(false);
       try {
         const [
           budgetRes,
-          historicalRes,
-          sectorRes,
           ministriesRes,
-          revenueRes,
-          debtRes,
+          sectorRes,
           economicRes,
           pollsRes,
           hotTopicsRes,
           newsRes,
         ] = await Promise.allSettled([
-          fetch(`${API_BASE}/budget/summary${fy}`),
-          fetch(`${API_BASE}/budget/historical`),
-          fetch(`${API_BASE}/budget/sector-breakdown${fy}`),
-          fetch(`${API_BASE}/ministries${fy}`),
-          fetch(`${API_BASE}/revenue${fy}`),
-          fetch(`${API_BASE}/debt/overview${fy}`),
+          fetch(`${API_BASE}/budget/summary`),
+          fetch(`${API_BASE}/ministries`),
+          fetch(`${API_BASE}/budget/sector-breakdown`),
           fetch(`${API_BASE}/economic/comparison`),
           fetch(`${API_BASE}/polls/active`),
           fetch(`${API_BASE}/hot-topics/reports`),
           fetch(`${API_BASE}/news`),
         ]);
 
-        if (
-          budgetRes.status === 'fulfilled' &&
-          budgetRes.value.ok
-        ) {
+        if (budgetRes.status === 'fulfilled' && budgetRes.value.ok) {
           const json = await budgetRes.value.json();
           setBudgetSummary((prev) => ({
             ...prev,
             ...json,
           }));
-        } else {
-          // Do not keep the previous year's totals when this FY has no publish.
-          setYearUnavailable(true);
-          setBudgetSummary({
-            ...initialBudgetSummary,
-            fiscal_year: fiscalYear,
-            total_revenue: 0,
-            total_expenditure: 0,
-            recurrent_expenditure: 0,
-            capital_expenditure: 0,
-            deficit_surplus: 0,
-            national_debt: 0,
-            debt_to_gdp_ratio: 0,
-            gdp: 0,
-            source_document: '',
-            source_page: 0,
-          });
-          setMinistries([]);
-          setSectorData([]);
         }
 
-        if (
-          historicalRes.status === 'fulfilled' &&
-          historicalRes.value.ok
-        ) {
-          const json = await historicalRes.value.json();
-          if (Array.isArray(json.years)) {
-            type HistoricalYear = {
-              year: string;
-              revenue: number;
-              expenditure: number;
-              debt: number;
-              debt_gdp: number;
-            };
-
-            setHistoricalData(
-              (json.years as HistoricalYear[]).map((y) => ({
-                year: y.year,
-                revenue: y.revenue / 1_000_000_000,
-                expenditure: y.expenditure / 1_000_000_000,
-                debt: y.debt / 1_000_000_000,
-                debt_gdp: y.debt_gdp,
-              })),
-            );
-          }
-        }
-
-        if (
-          sectorRes.status === 'fulfilled' &&
-          sectorRes.value.ok
-        ) {
-          const json = await sectorRes.value.json();
-          if (Array.isArray(json.sectors)) {
-            type SectorApi = {
-              name: string;
-              amount: number;
-              color: string;
-            };
-
-            setSectorData(
-              (json.sectors as SectorApi[]).map((s) => ({
-                name: s.name,
-                value: s.amount,
-                color: s.color,
-              })),
-            );
-          }
-        } else if (sectorRes.status === 'fulfilled') {
-          setSectorData([]);
-        }
-
-        if (
-          ministriesRes.status === 'fulfilled' &&
-          ministriesRes.value.ok
-        ) {
+        if (ministriesRes.status === 'fulfilled' && ministriesRes.value.ok) {
           const json = await ministriesRes.value.json();
           if (Array.isArray(json)) {
             setMinistries(json);
           }
-        } else if (ministriesRes.status === 'fulfilled') {
-          setMinistries([]);
         }
 
-        if (revenueRes.status === 'fulfilled' && revenueRes.value.ok) {
-          await revenueRes.value.json();
+        if (sectorRes.status === 'fulfilled' && sectorRes.value.ok) {
+          const json = await sectorRes.value.json();
+          if (Array.isArray(json.sectors)) {
+            type SectorApi = { name: string; amount: number };
+            setSectors(
+              (json.sectors as SectorApi[]).map((s) => ({
+                name: s.name,
+                value: s.amount,
+              })),
+            );
+          }
         }
 
-        if (debtRes.status === 'fulfilled' && debtRes.value.ok) {
-          await debtRes.value.json();
-        }
-
-        if (
-          economicRes.status === 'fulfilled' &&
-          economicRes.value.ok
-        ) {
+        if (economicRes.status === 'fulfilled' && economicRes.value.ok) {
           const json = await economicRes.value.json();
           if (Array.isArray(json)) {
             setIncomeComparisons(json);
           }
         }
 
-        if (
-          pollsRes.status === 'fulfilled' &&
-          pollsRes.value.ok
-        ) {
+        if (pollsRes.status === 'fulfilled' && pollsRes.value.ok) {
           const json = await pollsRes.value.json();
           setActivePoll(json);
         }
 
-        if (
-          hotTopicsRes.status === 'fulfilled' &&
-          hotTopicsRes.value.ok
-        ) {
+        if (hotTopicsRes.status === 'fulfilled' && hotTopicsRes.value.ok) {
           const json = await hotTopicsRes.value.json();
           if (Array.isArray(json)) {
             setHotTopics(json);
           }
         }
 
-        if (
-          newsRes.status === 'fulfilled' &&
-          newsRes.value.ok
-        ) {
+        if (newsRes.status === 'fulfilled' && newsRes.value.ok) {
           const json = await newsRes.value.json();
           if (Array.isArray(json) && json.length > 0) {
             setLatestNewsItems(json as NewsItem[]);
           }
         }
       } catch (err) {
-        console.error('Failed to load dashboard data', err);
+        console.error('Failed to load marketing home data', err);
       }
     };
 
     fetchData();
-  }, [fiscalYear]);
+  }, []);
+
+  const fiscalYear = budgetSummary.fiscal_year || CURRENT_FISCAL_YEAR;
+  const isSurplus = budgetSummary.deficit_surplus >= 0;
+
+  const topMinistries = useMemo(
+    () =>
+      ministries
+        .slice()
+        .sort((a, b) => b.allocation - a.allocation)
+        .slice(0, 6),
+    [ministries],
+  );
+
+  const maxAllocation = topMinistries.reduce(
+    (max, m) => (m.allocation > max ? m.allocation : max),
+    0,
+  );
 
   const healthMinistry = useMemo(
     () =>
       ministries.find(
-        (m) => m.id === 'health' || m.sector.toLowerCase() === 'health',
+        (m) => m.id === 'health' || m.sector?.toLowerCase() === 'health',
       ),
     [ministries],
   );
 
-  const healthShare = useMemo(() => {
-    if (!sectorData || sectorData.length === 0) return null;
-    const total = sectorData.reduce((sum, s) => sum + s.value, 0);
-    if (!total) return null;
-    const healthSector = sectorData.find(
-      (s) => s.name.toLowerCase() === 'health',
-    );
-    if (!healthSector) return null;
-    return healthSector.value / total;
-  }, [sectorData]);
+  const incomeSnapshot =
+    incomeComparisons && incomeComparisons.length > 0
+      ? incomeComparisons[0]
+      : null;
 
-  const incomeSnapshot = useMemo(
-    () => (incomeComparisons && incomeComparisons.length > 0 ? incomeComparisons[0] : null),
-    [incomeComparisons],
-  );
+  const educationSector = findSector(sectors, 'education');
+  const healthSector = findSector(sectors, 'health');
+  const securitySector = findSector(sectors, 'security');
+  const debtSector = findSector(sectors, 'debt');
 
-  const latestNews = useMemo(
-    () => latestNewsItems.slice(0, 3),
-    [latestNewsItems],
-  );
+  const shareTotal = perPerson(budgetSummary.total_expenditure);
+  const shareEducation = perPerson(educationSector?.value ?? 0);
+  const shareHealth = perPerson(healthSector?.value ?? 0);
+  const shareSecurity = perPerson(securitySector?.value ?? 0);
+  const shareDebt = perPerson(debtSector?.value ?? 0);
+  const shareSurplus = perPerson(budgetSummary.deficit_surplus);
 
-  const firstHotTopic = hotTopics && hotTopics.length > 0 ? hotTopics[0] : null;
+  const getTrend = (m: Ministry): 'up' | 'down' | 'flat' => {
+    if (m.change_percent > 1) return 'up';
+    if (m.change_percent < -1) return 'down';
+    return 'flat';
+  };
+
+  const tickerItems: TickerItem[] = [
+    {
+      text: `FY${fiscalYear} draft estimates: ${formatBillions(budgetSummary.total_expenditure)} expenditure · ${formatBillions(budgetSummary.total_revenue)} revenue`,
+      source: `Budget FY${fiscalYear}`,
+    },
+    {
+      text: `Projected ${isSurplus ? 'surplus' : 'deficit'}: ${formatCurrency(budgetSummary.deficit_surplus, true)} on the current budget`,
+      source: `Budget FY${fiscalYear}`,
+    },
+    {
+      text: `National debt ${formatBillions(budgetSummary.national_debt)} · ${budgetSummary.debt_to_gdp_ratio ?? '—'}% of GDP`,
+      source: `Budget FY${fiscalYear}`,
+    },
+    {
+      text: 'Historic first: Bahamas recorded a budget surplus in FY2025/26 — first since independence in 1973',
+      source: 'Budget FY2025/26',
+    },
+    {
+      text: 'Govt $357M claim against GBPA dismissed in full by Arbitration Tribunal',
+      url: 'https://www.tribune242.com/news/2026/mar/03/govts-357m-claim-against-gbpa-dismissed-in-full/',
+      source: 'Tribune242',
+    },
+    {
+      text: `Health allocation: ${formatCurrency(healthMinistry?.allocation ?? healthSector?.value ?? 0, true)} · Education sector: ${formatCurrency(educationSector?.value ?? 0, true)}`,
+      source: 'Estimates of Expenditure',
+    },
+  ];
+
+  const exploreCards = [
+    {
+      icon: '🏥',
+      label: 'Health Data',
+      title: 'Health & Wellness',
+      desc: 'Hospital allocations, clinic funding, public health spending, and health outcomes data across the islands.',
+      stat: healthMinistry
+        ? formatCurrency(healthMinistry.allocation, true)
+        : '—',
+      statLabel: `Health allocation FY${fiscalYear}`,
+      href: '/health',
+    },
+    {
+      icon: '💰',
+      label: 'Income Data',
+      title: 'Income & Cost of Living',
+      desc: 'Middle class income benchmarks, cost of living indices, and economic pressure indicators for Bahamian households.',
+      stat: formatCurrency(
+        incomeSnapshot?.middle_class?.month_amount ?? FALLBACK_INCOME_MONTH,
+      ),
+      statLabel: 'Middle class monthly income',
+      href: '/income',
+    },
+    {
+      icon: '🏛️',
+      label: 'Grand Bahama',
+      title: 'Grand Bahama Platform',
+      desc: 'Digital government infrastructure for Grand Bahama — institutional reference, districts, and parliamentary seats.',
+      stat: `${grandBahamaDataset.districts.length}`,
+      statLabel: `Districts · ${grandBahamaDataset.mps.length} parliamentary seats`,
+      href: '/grand-bahama',
+    },
+    {
+      icon: '📊',
+      label: 'Public Polls',
+      title: 'What Bahamians Think',
+      desc: 'Real-time polling on national priorities, policy opinions, and public satisfaction with government services.',
+      stat: activePoll ? 'Active' : 'None',
+      statLabel: activePoll
+        ? activePoll.question
+        : 'No active poll at the moment',
+      href: '/polls',
+    },
+    {
+      icon: '🗞️',
+      label: 'News',
+      title: 'Budget & Economic News',
+      desc: 'Official budget updates, economic announcements, and government financial decisions — sourced and tracked.',
+      stat: `${latestNewsItems.length}`,
+      statLabel:
+        latestNewsItems.length > 0
+          ? latestNewsItems[0].title
+          : 'No news yet',
+      href: '/news',
+    },
+    {
+      icon: '🔥',
+      label: 'Hot Topics',
+      title: 'Accountability Reports',
+      desc: 'Deep-dive reports on specific issues in Bahamian public finance — GBPA, national debt, surplus trajectory.',
+      stat: `${hotTopics.length}`,
+      statLabel: `${hotTopics.length} report${hotTopics.length === 1 ? '' : 's'} available`,
+      href: '/hot',
+    },
+    {
+      icon: '📋',
+      label: 'Scorecards',
+      title: 'Government Scorecards',
+      desc: 'Independent grades on delivery versus announcements across the Davis administration.',
+      stat: currentScorecard.overall.firstTerm,
+      statLabel: currentScorecard.thesis,
+      href: '/scorecards',
+    },
+    {
+      icon: '🏛️',
+      label: 'Ministries',
+      title: 'Ministry Overview',
+      desc: 'See which ministries receive the most funding, track year-on-year changes, and understand allocation logic.',
+      stat: `${ministries.length}`,
+      statLabel:
+        ministries.length > 0
+          ? `Top: ${ministries.slice().sort((a, b) => b.allocation - a.allocation)[0].name}`
+          : 'Ministries tracked',
+      href: '/ministries',
+    },
+  ];
+
+  const stories = [
+    {
+      tag: 'History · The Surplus',
+      title: `The first surplus since 1973 — and what FY${fiscalYear} continues`,
+      desc: `FY2025/26 broke 52 years of deficits with a $75.5M surplus. The current draft estimates project ${formatCurrency(budgetSummary.deficit_surplus, true)} — the follow-through year. Here's what changed, and what still has to hold.`,
+      source: 'Budget Communication 2025/26 & Draft Estimates 2026/27',
+      href: '/hot',
+    },
+    {
+      tag: 'Analysis · National Debt',
+      title: `Understanding the ${formatBillions(budgetSummary.national_debt)} debt — and why the ratio is falling`,
+      desc: `Debt is still large. Debt-to-GDP at ${budgetSummary.debt_to_gdp_ratio ?? '—'}% is the number to watch. What drove the accumulation, and what the current path out looks like.`,
+      source: 'Debt Management Report · Dashboard debt overview',
+      href: '/debt',
+    },
+    {
+      tag: 'Civic · Your Money',
+      title: 'Which ministry gets the most — and whether allocations moved',
+      desc:
+        topMinistries.length > 0
+          ? `${topMinistries[0].name} leads this year's allocations. Education sector ${formatCurrency(educationSector?.value ?? 0, true)}. Health ${formatCurrency(healthMinistry?.allocation ?? 0, true)}. Debt service remains the largest structural cost.`
+          : 'A plain-language breakdown of who gets what, why allocations changed, and what you should be watching.',
+      source: `Estimates of Expenditure ${fiscalYear}`,
+      href: '/ministries',
+    },
+  ];
+
+  const shareBreakdownNote = [
+    ...sectors.map(
+      (s) => `${s.name} ${formatCurrency(perPerson(s.value))}`,
+    ),
+    `${isSurplus ? 'Surplus' : 'Deficit'} ${formatCurrency(shareSurplus)}`,
+    `Total ${formatCurrency(shareTotal)} per person`,
+  ].join(' · ');
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-2">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Calendar className="w-4 h-4" />
-            <span>Fiscal Year {displayFiscalYear}</span>
-            <span className="mx-2">•</span>
-            <FileText className="w-4 h-4" />
-            <span>Source: {budgetSummary.source_document || '—'}</span>
-          </div>
-          <FiscalYearSelector />
+    <div className={styles.pageRoot}>
+      <div className={styles['ticker-bar']}>
+        <div className={styles['ticker-label']}>Bahamas</div>
+        <div className={styles['ticker-scroll']}>
+          {[...Array(2)].map((_, loopIndex) =>
+            tickerItems.map((item, idx) => (
+              <span
+                key={`${loopIndex}-${idx}`}
+                className={styles['ticker-item']}
+              >
+                <span className={styles['t-dot']} />
+                {item.url ? (
+                  <a href={item.url} target="_blank" rel="noopener noreferrer">
+                    {item.text}
+                  </a>
+                ) : (
+                  <span>{item.text}</span>
+                )}
+                <span
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 8,
+                    color: 'rgba(255,255,255,0.18)',
+                    letterSpacing: '0.1em',
+                    marginLeft: -8,
+                  }}
+                >
+                  {item.source}
+                </span>
+              </span>
+            )),
+          )}
         </div>
-        <h1 className="text-3xl md:text-4xl font-bold text-[var(--ocean)] mb-2">
-          <span className="font-bold text-[var(--ocean)]">
+      </div>
+
+      <nav
+        className={`${styles.nav} ${navScrolled ? styles.navScrolled : ''}`}
+      >
+        <Link href="/" className={styles['nav-logo']}>
+          <span className={styles['nav-mark']}>
             Bahamas
-          </span>{' '}
-          <span className="font-light text-[var(--teal)]">
-            Open
-          </span>{' '}
-          <span className="font-semibold text-[var(--ocean)]">
-            Data
+            <em>OpenData</em>
           </span>
-        </h1>
-        <p className="text-gray-600 max-w-2xl">
-          Real-time insights into the Bahamas national budget. See where your money goes, 
-          track trends, and ask questions about government spending.
-        </p>
-        {/* Budget availability banner */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
-          className="mt-4 bg-gradient-to-r from-turquoise/10 to-yellow/10 border border-turquoise/20 rounded-lg p-4"
-        >
-          <div className="flex items-center gap-3">
-            <FileText className="w-6 h-6 text-turquoise shrink-0" />
-            <div>
-              {yearUnavailable ? (
-                <>
-                  <p className="font-semibold text-gray-900">
-                    FY {fiscalYear} is not published yet
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Switch to a published fiscal year above, or check back after this budget is published.
-                  </p>
-                </>
-              ) : isLatestYear ? (
-                <>
-                  <p className="font-semibold text-gray-900">
-                    FY {displayFiscalYear} budget is now live
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Dive in — explore ministries, revenue, debt, and ask questions about the draft estimates.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="font-semibold text-gray-900">
-                    Viewing FY {displayFiscalYear}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Browse published estimates for this fiscal year, or switch to the latest budget above.
-                  </p>
-                </>
-              )}
+        </Link>
+        <div className={styles['nav-right']}>
+          <ul className={styles['nav-links']}>
+            <li>
+              <a href="#ministries" className={styles['nav-link']}>
+                Budget
+              </a>
+            </li>
+            <li>
+              <Link href="/health" className={styles['nav-link']}>
+                Health
+              </Link>
+            </li>
+            <li>
+              <Link href="/income" className={styles['nav-link']}>
+                Income
+              </Link>
+            </li>
+            <li>
+              <Link href="/polls" className={styles['nav-link']}>
+                Polls
+              </Link>
+            </li>
+            <li>
+              <div className={styles['source-pill']}>
+                <div className={styles['source-pulse']} />
+                <span>Draft estimates · FY{fiscalYear}</span>
+              </div>
+            </li>
+            <li>
+              <Link href="/export" className={styles['nav-link']}>
+                Export
+              </Link>
+            </li>
+          </ul>
+          <Link href="/dashboard" className={styles['btn-export']}>
+            Open dashboard
+          </Link>
+        </div>
+      </nav>
+
+      <section className={styles.hero}>
+        <div className={styles['hero-inner']}>
+          <div className={styles['hero-eyebrow']}>
+            Fiscal Year {fiscalYear} · Official Budget Documents
+          </div>
+          <h1 className={styles['hero-headline']}>
+            Your government plans to spend
+            <br />
+            <em>{formatBillions(budgetSummary.total_expenditure)}</em> this year.
+          </h1>
+          <p className={styles['hero-sub']}>
+            Real-time insights into the Bahamas national budget — sourced from
+            official Parliament documents, processed by RAG, verified against
+            primary records. Every number traceable.
+          </p>
+          <div className={styles['hero-cta-row']}>
+            <Link href="/dashboard" className={styles['btn-dashboard']}>
+              Open dashboard
+            </Link>
+            <a href="#explore" className={styles['btn-dashboard-ghost']}>
+              Explore the data
+            </a>
+          </div>
+
+          <div className={styles['hero-stats']}>
+            <div className={styles['stat-card']}>
+              <div className={styles['stat-label']}>Total Budget</div>
+              <div className={styles['stat-value']}>
+                {formatBillions(budgetSummary.total_expenditure)}
+              </div>
+              <div className={styles['stat-sub']}>Fiscal Year {fiscalYear}</div>
+              <div className={styles['stat-source']}>
+                {budgetSummary.source_document || 'Draft Estimates'}
+              </div>
+            </div>
+            <div className={styles['stat-card']}>
+              <div className={styles['stat-label']}>Revenue</div>
+              <div className={styles['stat-value']}>
+                {formatBillions(budgetSummary.total_revenue)}
+              </div>
+              <div className={styles['stat-sub']}>Projected FY{fiscalYear}</div>
+              <div className={styles['stat-source']}>
+                {budgetSummary.source_document || 'Draft Estimates'}
+              </div>
+            </div>
+            <div className={styles['stat-card']}>
+              <div className={styles['stat-label']}>National Debt</div>
+              <div className={styles['stat-value']}>
+                {formatBillions(budgetSummary.national_debt)}
+              </div>
+              <div className={styles['stat-sub']}>
+                {budgetSummary.debt_to_gdp_ratio ?? '—'}% of GDP
+              </div>
+              <div className={styles['stat-source']}>Debt overview</div>
+            </div>
+            <div
+              className={`${styles['stat-card']} ${styles['stat-card-surplus']}`}
+            >
+              <div className={styles['stat-label']}>
+                {isSurplus ? 'Budget Surplus' : 'Budget Deficit'}
+              </div>
+              <div
+                className={`${styles['stat-value']} ${styles['stat-value-surplus']}`}
+              >
+                {formatCurrency(budgetSummary.deficit_surplus, true)}
+              </div>
+              <div className={styles['stat-sub']}>
+                Draft estimates FY{fiscalYear}
+              </div>
+              <div className={styles['stat-source']}>
+                {budgetSummary.source_document || 'Draft Estimates'}
+              </div>
             </div>
           </div>
-        </motion.div>
-      </motion.div>
 
-      {/* Key Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard
-          title="Total Budget"
-          value={budgetSummary.total_expenditure}
-          subtitle={`Fiscal Year ${displayFiscalYear}`}
-          sourceDocument={budgetSummary.source_document}
-          sourcePage={budgetSummary.source_page}
-          onClick={() => router.push('/ministries')}
-        />
-        <StatCard
-          title="Revenue"
-          value={budgetSummary.total_revenue}
-          subtitle={`Projected for FY${displayFiscalYear}`}
-          sourceDocument={budgetSummary.source_document}
-          onClick={() => router.push('/revenue')}
-        />
-        <StatCard
-          title="National Debt"
-          value={budgetSummary.national_debt}
-          subtitle={`${budgetSummary.debt_to_gdp_ratio}% of GDP`}
-          sourceDocument={budgetSummary.source_document}
-          onClick={() => router.push('/debt')}
-        />
-        <StatCard
-          title={isSurplus ? 'Budget Surplus' : 'Budget Deficit'}
-          value={Math.abs(budgetSummary.deficit_surplus)}
-          subtitle={
-            isLatestYear
-              ? 'From draft estimates'
-              : `FY ${displayFiscalYear} estimate`
-          }
-          sourceDocument={budgetSummary.source_document}
-          onClick={() => router.push('/revenue')}
-        />
-      </div>
+          <div className={styles['share-calc']}>
+            <div className={styles['share-calc-header']}>
+              <div>
+                <div className={styles['share-calc-title']}>
+                  Your Share of the National Budget
+                </div>
+                <div className={styles['share-calc-headline']}>
+                  {POPULATION.toLocaleString()} Bahamians. Your share:{' '}
+                  <em>{formatCurrency(shareTotal)}</em>
+                </div>
+                <div className={styles['share-calc-sub']}>
+                  Based on FY{fiscalYear} expenditure divided by population.
+                  Sector shares use the same breakdown as the dashboard.
+                </div>
+              </div>
+            </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Sector Breakdown */}
-        <SectorPieChart data={sectorData} title="Where the Money Goes" />
+            <div className={styles['share-grid']}>
+              <div className={styles['share-item']}>
+                <div className={styles['si-label']}>Education</div>
+                <div
+                  className={`${styles['si-value']} ${styles['si-value-teal']}`}
+                >
+                  {formatCurrency(shareEducation)}
+                </div>
+                <div className={styles['si-sub']}>of your annual share</div>
+              </div>
+              <div className={styles['share-item']}>
+                <div className={styles['si-label']}>Health</div>
+                <div
+                  className={`${styles['si-value']} ${styles['si-value-teal']}`}
+                >
+                  {formatCurrency(shareHealth)}
+                </div>
+                <div className={styles['si-sub']}>of your annual share</div>
+              </div>
+              <div className={styles['share-item']}>
+                <div className={styles['si-label']}>Security</div>
+                <div
+                  className={`${styles['si-value']} ${styles['si-value-teal']}`}
+                >
+                  {formatCurrency(shareSecurity)}
+                </div>
+                <div className={styles['si-sub']}>of your annual share</div>
+              </div>
+              <div className={styles['share-item']}>
+                <div className={styles['si-label']}>
+                  {isSurplus ? 'Budget surplus' : 'Budget deficit'}
+                </div>
+                <div
+                  className={`${styles['si-value']} ${styles['si-value-teal']}`}
+                >
+                  {isSurplus ? '+' : ''}
+                  {formatCurrency(shareSurplus)}
+                </div>
+                <div className={styles['si-sub']}>
+                  your share of the {isSurplus ? 'surplus' : 'deficit'}
+                </div>
+              </div>
+            </div>
 
-        {/* Trend Chart */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-xl border border-gray-200 p-6"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Budget Trends</h3>
-            <div className="flex items-center gap-4 text-sm">
-              <span className="flex items-center gap-1">
-                <span className="w-3 h-3 rounded-full bg-turquoise"></span>
-                Revenue
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="w-3 h-3 rounded-full bg-yellow"></span>
-                Expenditure
-              </span>
+            <button
+              type="button"
+              className={styles['share-expand-btn']}
+              onClick={() => setShareExpanded((v) => !v)}
+            >
+              {shareExpanded
+                ? 'Hide debt service & full breakdown'
+                : 'Show debt service & full breakdown'}
+            </button>
+
+            <div
+              className={`${styles['share-expanded']} ${
+                shareExpanded ? styles['share-expanded-show'] : ''
+              }`}
+            >
+              <div className={styles['debt-warning']}>
+                <div className={styles['dw-text']}>
+                  <strong>
+                    Debt service is the largest single line item
+                  </strong>{' '}
+                  in the Bahamian budget. Every year, a significant portion of
+                  government revenue goes not to services — but to servicing the{' '}
+                  {formatBillions(budgetSummary.national_debt)} national debt.
+                  The surplus path is a turning point. The debt load remains.
+                </div>
+                <div>
+                  <div className={styles['dw-label']}>
+                    Your debt service share
+                  </div>
+                  <div className={styles['dw-num']}>
+                    {formatCurrency(shareDebt)}
+                  </div>
+                </div>
+              </div>
+              <div className={styles['share-note']}>
+                Full breakdown: {shareBreakdownNote}. Figures based on FY
+                {fiscalYear} estimates divided by {POPULATION.toLocaleString()}{' '}
+                population.
+              </div>
             </div>
           </div>
-          <div className="h-[260px] min-h-[200px] w-full min-w-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={historicalData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="year" tick={{ fontSize: 12 }} />
-                <YAxis 
-                  tick={{ fontSize: 12 }} 
-                  tickFormatter={(v) => `$${v}B`}
-                />
-                <Tooltip 
-                  formatter={(value: number) => [`$${value}B`, '']}
-                  contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="revenue" 
-                  stroke="#00CED1" 
-                  strokeWidth={2}
-                  dot={{ fill: '#00CED1' }}
-                  name="Revenue"
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="expenditure" 
-                  stroke="#FCD116" 
-                  strokeWidth={2}
-                  dot={{ fill: '#FCD116' }}
-                  name="Expenditure"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+        </div>
+      </section>
+
+      <section className={styles.monument}>
+        <div className={styles['monument-intro']}>
+          <div className={styles['monument-eyebrow']}>The historic moment</div>
+          <h2 className={styles['monument-headline']}>
+            52 years of deficits.
+            <br />
+            <em>One balanced budget.</em>
+          </h2>
+          <p className={styles['monument-sub']}>
+            Every year since Bahamian independence in 1973, the government
+            spent more than it earned — until FY2025/26. The current year
+            continues that surplus path. The bars below are the historical
+            record, not this year&apos;s dashboard totals.
+          </p>
+        </div>
+
+        <div className={styles['timeline-section']}>
+          <div className={styles['timeline-legend']}>
+            <div className={styles['legend-item']}>
+              <span
+                className={`${styles['legend-dot']} ${styles['legend-dot-deficit']}`}
+              />
+              Deficit year
+            </div>
+            <div className={styles['legend-item']}>
+              <span
+                className={`${styles['legend-dot']} ${styles['legend-dot-surplus']}`}
+              />
+              First surplus — FY2025/26
+            </div>
           </div>
-        </motion.div>
+
+          <div className={styles['timeline-labels']}>
+            <span>1973 — Independence</span>
+            <span>1990</span>
+            <span>2000</span>
+            <span>2010</span>
+            <span>2020</span>
+            <span>2025/26 ★</span>
+          </div>
+
+          <div className={styles['timeline-bars']}>
+            {Array.from({ length: 20 }).map((_, i) => (
+              <div
+                key={`def-${i}`}
+                className={`${styles['t-bar']} ${styles['t-bar-deficit']}`}
+                style={{ height: `${40 + (i % 10) * 3}%` }}
+              >
+                <div className={styles['t-bar-tooltip']}>Deficit year</div>
+              </div>
+            ))}
+            <div
+              className={`${styles['t-bar']} ${styles['t-bar-surplus']}`}
+              style={{ height: '85%' }}
+            >
+              <div className={styles['t-bar-tooltip']}>
+                2025/26
+                <br />
+                ✓ Surplus: $75.5M
+              </div>
+            </div>
+          </div>
+
+          <div className={styles['timeline-axis']} />
+
+          <div className={styles['timeline-year-labels']}>
+            {TIMELINE_YEARS.map((year) => (
+              <span key={year}>
+                {year === 2026 ? '2025/26 ★' : year}
+              </span>
+            ))}
+          </div>
+
+          <div className={styles['timeline-callout']}>
+            <div className={styles['tc-text']}>
+              <strong>
+                2025/26 — The Bahamas records its first budget surplus since
+                independence.
+              </strong>{' '}
+              A $75.5M surplus on a $3.8B budget. That year is the turning
+              point this platform exists to keep on the public record. FY
+              {fiscalYear} figures above are the live dashboard totals — not
+              this historical bar.
+            </div>
+            <div className={styles['tc-num']}>
+              <div className={styles['tc-num-val']}>$75.5M</div>
+              <div className={styles['tc-num-label']}>
+                First surplus · 52 years
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <V2AskBudgetPanel />
+
+      <section className={styles.ministries} id="ministries">
+        <div className={styles['section-eyebrow']}>Where the money goes</div>
+        <h2 className={styles['section-title']}>
+          Ministry <em>Breakdown</em>
+        </h2>
+        <div className={styles['ministry-grid']}>
+          {topMinistries.map((m) => {
+            const trend = getTrend(m);
+            const badgeClass =
+              trend === 'up'
+                ? styles['mc-badge-over']
+                : trend === 'down'
+                ? styles['mc-badge-under']
+                : styles['mc-badge-on'];
+            const barClass =
+              trend === 'down'
+                ? styles['mc-bar-fill-coral']
+                : styles['mc-bar-fill-teal'];
+            const widthPct =
+              maxAllocation > 0 ? (m.allocation / maxAllocation) * 100 : 0;
+            const insight =
+              MINISTRY_INSIGHTS[m.id] ??
+              `Allocation drawn from the official Estimates of Expenditure ${fiscalYear}.`;
+            return (
+              <Link
+                key={m.id}
+                href="/ministries"
+                className={styles['ministry-card']}
+              >
+                <div className={styles['mc-header']}>
+                  <div className={styles['mc-name']}>{m.name}</div>
+                  <div className={`${styles['mc-badge']} ${badgeClass}`}>
+                    {trend === 'up'
+                      ? `Up ${m.change_percent.toFixed(1)}% YoY`
+                      : trend === 'down'
+                      ? `Down ${Math.abs(m.change_percent).toFixed(1)}% YoY`
+                      : 'Flat YoY'}
+                  </div>
+                </div>
+                <div className={styles['mc-amount']}>
+                  {formatMillionsWhole(m.allocation)}
+                </div>
+                <div className={styles['mc-sub']}>FY{fiscalYear} Allocation</div>
+                <div className={styles['mc-bar-track']}>
+                  <div
+                    className={`${styles['mc-bar-fill']} ${barClass}`}
+                    style={{ width: `${widthPct}%` }}
+                  />
+                </div>
+                <div className={styles['mc-insight']}>{insight}</div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className={styles.explore} id="explore">
+        <div className={styles['section-eyebrow']}>Explore the data</div>
+        <h2 className={styles['section-title']}>
+          Beyond the <em>budget</em>
+        </h2>
+        <div className={styles['explore-grid']}>
+          {exploreCards.map((c) => (
+            <Link
+              key={c.title}
+              href={c.href}
+              className={styles['explore-card']}
+            >
+              <div className={styles['ec-icon']}>{c.icon}</div>
+              <div className={styles['ec-label']}>{c.label}</div>
+              <div className={styles['ec-title']}>{c.title}</div>
+              <div className={styles['ec-desc']}>{c.desc}</div>
+              <div className={styles['ec-stat']}>{c.stat}</div>
+              <div className={styles['ec-stat-label']}>{c.statLabel}</div>
+              <div className={styles['ec-link']}>Explore details →</div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.stories}>
+        <div
+          className={styles['section-eyebrow']}
+          style={{ color: 'var(--teal-l)' }}
+        >
+          Data stories
+        </div>
+        <h2 className={styles['section-title']} style={{ color: 'white' }}>
+          What the numbers
+          <br />
+          <em>mean for you</em>
+        </h2>
+        <div className={styles['stories-grid']}>
+          {stories.map((s) => (
+            <Link key={s.tag} href={s.href} className={styles['story-card']}>
+              <div className={styles['sc-tag']}>{s.tag}</div>
+              <div className={styles['sc-title']}>{s.title}</div>
+              <p className={styles['sc-desc']}>{s.desc}</p>
+              <div className={styles['sc-source']}>{s.source}</div>
+              <div className={styles['sc-link']}>Open in the dashboard →</div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <div className={styles['pro-strip']} id="pro">
+        <div className={styles['pro-strip-inner']}>
+          <div>
+            <div className={styles['pro-eyebrow']}>
+              For Analysts &amp; Journalists
+            </div>
+            <div className={styles['pro-title']}>Download the raw data.</div>
+            <p className={styles['pro-desc']}>
+              Every dataset on this platform is available for export. CSV,
+              Excel, JSON. Source documents linked. Methodology documented. Cite
+              with confidence.
+            </p>
+          </div>
+          <div className={styles['pro-actions']}>
+            <Link href="/export" className={styles['pro-btn']}>
+              <span className={styles['pro-btn-icon']}>📊</span>
+              Download CSV
+            </Link>
+            <Link href="/export" className={styles['pro-btn']}>
+              <span className={styles['pro-btn-icon']}>📄</span>
+              Source Documents
+            </Link>
+            <Link href="/export" className={styles['pro-btn']}>
+              <span className={styles['pro-btn-icon']}>⚙️</span>
+              API Access
+            </Link>
+            <Link href="/dashboard" className={styles['pro-btn']}>
+              <span className={styles['pro-btn-icon']}>📋</span>
+              Open dashboard
+            </Link>
+          </div>
+        </div>
       </div>
 
-      {/* Explore the Data */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-900">Explore the data</h2>
-          <p className="text-xs text-gray-500">
-            Jump into health, income, Grand Bahama, polls, news, hot topics, scorecards, and ministries.
+      <footer className={styles.footer}>
+        <div className={styles['footer-grid']}>
+          <div>
+            <div className={styles['footer-brand-name']}>
+              Bahamas<em>OpenData</em>
+            </div>
+            <p className={styles['footer-text']}>
+              Making Bahamian public finance clear and accessible. All data
+              sourced from official government documents published by Parliament
+              of The Bahamas.
+            </p>
+            <div className={styles['footer-legal']}>
+              Data sourced from Official Bahamas Publications. © 2026
+              Registered. Development by Kemis Group of Companies Inc.
+            </div>
+          </div>
+          <div>
+            <div className={styles['footer-col-title']}>Budget</div>
+            <ul className={styles['footer-links']}>
+              <li>
+                <Link href="/dashboard" className={styles['footer-link']}>
+                  Dashboard
+                </Link>
+              </li>
+              <li>
+                <Link href="/ministries" className={styles['footer-link']}>
+                  National Budget
+                </Link>
+              </li>
+              <li>
+                <Link href="/ministries" className={styles['footer-link']}>
+                  Ministry Breakdown
+                </Link>
+              </li>
+              <li>
+                <Link href="/debt" className={styles['footer-link']}>
+                  Debt &amp; Revenue
+                </Link>
+              </li>
+              <li>
+                <Link href="/revenue" className={styles['footer-link']}>
+                  Historical Data
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <div className={styles['footer-col-title']}>Data</div>
+            <ul className={styles['footer-links']}>
+              <li>
+                <Link href="/health" className={styles['footer-link']}>
+                  Health
+                </Link>
+              </li>
+              <li>
+                <Link href="/income" className={styles['footer-link']}>
+                  Income &amp; Cost of Living
+                </Link>
+              </li>
+              <li>
+                <Link href="/grand-bahama" className={styles['footer-link']}>
+                  Grand Bahama
+                </Link>
+              </li>
+              <li>
+                <Link href="/polls" className={styles['footer-link']}>
+                  Public Polls
+                </Link>
+              </li>
+              <li>
+                <Link href="/hot" className={styles['footer-link']}>
+                  Hot Topics
+                </Link>
+              </li>
+              <li>
+                <Link href="/scorecards" className={styles['footer-link']}>
+                  Scorecards
+                </Link>
+              </li>
+              <li>
+                <Link href="/news" className={styles['footer-link']}>
+                  News &amp; Updates
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <div className={styles['footer-col-title']}>Sources</div>
+            <ul className={styles['footer-links']}>
+              <li>
+                <a
+                  href="https://laws.bahamas.gov.bs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles['footer-link']}
+                >
+                  laws.bahamas.gov.bs
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://courts.bs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles['footer-link']}
+                >
+                  courts.bs
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://tribune242.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles['footer-link']}
+                >
+                  Tribune242
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://thenassauguardian.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles['footer-link']}
+                >
+                  Nassau Guardian
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://kemisdigital.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles['footer-link']}
+                  style={{ color: 'var(--teal-l)' }}
+                >
+                  KemisDigital
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div className={styles['footer-bottom']}>
+          <p className={styles['footer-bottom-text']}>
+            © 2026 BahamasOpenData · Nassau, The Bahamas · All figures from
+            official Parliament documents
           </p>
+          <p className={styles['footer-bottom-domain']}>bahamasopendata.com</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Health */}
-          <DashboardSectionCard
-            href="/health"
-            title="Health & wellness"
-            subtitle="Hospitals, clinics, and public health."
-            icon={HeartPulse}
-            primaryStatLabel={`Allocation ${displayFiscalYear}`}
-            primaryStatValue={
-              healthMinistry
-                ? formatCurrency(healthMinistry.allocation)
-                : '—'
-            }
-            secondaryStatLabel={healthShare ? 'Share of national budget' : undefined}
-            secondaryStatValue={
-              healthShare ? formatPercent(healthShare) : undefined
-            }
-          />
-
-          {/* Income */}
-          <DashboardSectionCard
-            href="/income"
-            title="Income & cost of living"
-            subtitle="What households need to get by."
-            icon={DollarSign}
-            primaryStatLabel="Middle class monthly income"
-            primaryStatValue={
-              incomeSnapshot
-                ? formatCurrency(incomeSnapshot.middle_class.month_amount)
-                : '—'
-            }
-            secondaryStatLabel={
-              incomeSnapshot ? 'Gap vs working class' : undefined
-            }
-            secondaryStatValue={
-              incomeSnapshot
-                ? `${formatCurrency(incomeSnapshot.difference_amount)} · ${incomeSnapshot.difference_percent.toFixed(1)}% higher`
-                : undefined
-            }
-          />
-
-          {/* Grand Bahama */}
-          <DashboardSectionCard
-            href="/grand-bahama"
-            title="Grand Bahama Platform"
-            subtitle="Digital government infrastructure — Module 01 live."
-            icon={Landmark}
-            primaryStatLabel="Live module"
-            primaryStatValue="Institutional Reference"
-            secondaryStatLabel="Districts · MPs"
-            secondaryStatValue={`${grandBahamaDataset.districts.length} districts · ${grandBahamaDataset.mps.length} seats`}
-          />
-
-          {/* Polls */}
-          <DashboardSectionCard
-            href="/polls"
-            title="Public polls"
-            subtitle="What Bahamians are saying right now."
-            icon={BarChart3}
-            primaryStatLabel="Current question"
-            primaryStatValue={
-              activePoll?.question
-                ? activePoll.question
-                : 'No active poll at the moment.'
-            }
-            secondaryStatLabel={
-              activePoll && typeof activePoll.total_votes === 'number'
-                ? 'Responses so far'
-                : undefined
-            }
-            secondaryStatValue={
-              activePoll && typeof activePoll.total_votes === 'number'
-                ? `${activePoll.total_votes.toLocaleString()} responses`
-                : undefined
-            }
-          />
-
-          {/* News */}
-          <DashboardSectionCard
-            href="/news"
-            title="News & updates"
-            subtitle="Official budget and economic announcements."
-            icon={Newspaper}
-            primaryStatLabel="Latest headline"
-            primaryStatValue={
-              latestNews.length > 0 ? latestNews[0].title : 'No news yet.'
-            }
-            secondaryStatLabel={
-              latestNews.length > 1 ? 'More updates available' : undefined
-            }
-            secondaryStatValue={
-              latestNews.length > 1
-                ? `${latestNews.length} featured updates`
-                : undefined
-            }
-          />
-
-          {/* Hot topics */}
-          <DashboardSectionCard
-            href="/hot"
-            title="Hot topics"
-            subtitle="High-impact reports on accountability and governance."
-            icon={Flame}
-            primaryStatLabel="Reports available"
-            primaryStatValue={
-              hotTopics
-                ? `${hotTopics.length} report${hotTopics.length === 1 ? '' : 's'}`
-                : 'Loading…'
-            }
-            secondaryStatLabel={firstHotTopic ? 'Featured report' : undefined}
-            secondaryStatValue={firstHotTopic?.title}
-          />
-
-          {/* Scorecards */}
-          <DashboardSectionCard
-            href="/scorecards"
-            title="Government scorecards"
-            subtitle="Independent grades on delivery vs announcements."
-            icon={ClipboardCheck}
-            primaryStatLabel="Overall grade"
-            primaryStatValue={currentScorecard.overall.firstTerm}
-            secondaryStatLabel="Thesis"
-            secondaryStatValue={currentScorecard.thesis}
-          />
-
-          {/* Ministries */}
-          <DashboardSectionCard
-            href="/ministries"
-            title="Ministries overview"
-            subtitle="See which ministries receive the most funding."
-            icon={Building2}
-            primaryStatLabel="Number of ministries"
-            primaryStatValue={ministries.length}
-            secondaryStatLabel="Top ministry"
-            secondaryStatValue={
-              ministries.length > 0
-                ? ministries
-                    .slice()
-                    .sort((a, b) => b.allocation - a.allocation)[0].name
-                : undefined
-            }
-          />
-        </div>
-      </div>
-
-      {/* Info Banner */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        className="bg-turquoise/10 rounded-xl p-6 flex items-start gap-4"
-      >
-        <AlertCircle className="w-6 h-6 text-turquoise flex-shrink-0 mt-0.5" />
-        <div>
-          <h3 className="font-semibold text-gray-900 mb-1">About this data</h3>
-          <p className="text-sm text-gray-600">
-            All figures are sourced from the official <strong>Bahamas Budget {displayFiscalYear}</strong> documents
-            published by the Ministry of Finance. Data includes draft estimates and budget communications where available.
-            Ask questions below to explore more — answers are scoped to the selected fiscal year.
-          </p>
-        </div>
-      </motion.div>
-
-      {/* Ask Bar */}
-      <AskBar onAsk={createAskHandler(fiscalYear)} />
+      </footer>
     </div>
-  );
-}
-
-export default function Home() {
-  return (
-    <Suspense fallback={<div className="max-w-7xl mx-auto px-4 py-8">Loading dashboard…</div>}>
-      <HomePageContent />
-    </Suspense>
   );
 }
