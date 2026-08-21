@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import styles from '@/app/v2/v2.module.css';
+import styles from '@/app/home.module.css';
 import { askQuestion } from '@/lib/api';
+import { CURRENT_FISCAL_YEAR } from '@/lib/fiscal-year';
 import type { AskResponse } from '@/types';
 
 type ChatMessage = {
@@ -15,9 +16,9 @@ const INTRO_MESSAGE =
 
 const EXAMPLE_QUESTIONS = [
   'Where does the education budget actually go?',
-  'Why is the national debt $11.4 billion?',
-  'Which ministry is most over budget?',
-  "What does the surplus mean for next year's spending?",
+  'Why is the national debt about $11.1 billion?',
+  'Which ministry allocation grew the most this year?',
+  "What does the surplus mean for this year's spending?",
 ];
 
 const PRO_QUESTIONS = [
@@ -55,7 +56,7 @@ export default function V2AskBudgetPanel() {
     setLoading(true);
 
     try {
-      const res: AskResponse = await askQuestion(trimmed);
+      const res: AskResponse = await askQuestion(trimmed, CURRENT_FISCAL_YEAR);
       const answer = res.answer ?? 'No answer returned.';
       setMessages((prev) => [
         ...prev,
@@ -150,7 +151,7 @@ export default function V2AskBudgetPanel() {
         <div className={styles['chat-header']}>
           <div className={styles['chat-h-left']}>
             <span className={styles['chat-h-eyebrow']}>
-              Budget AI · FY2025/26
+              Budget AI · FY{CURRENT_FISCAL_YEAR}
             </span>
             <span className={styles['chat-h-name']}>
               Ask the national budget
@@ -210,8 +211,8 @@ export default function V2AskBudgetPanel() {
           </button>
         </form>
         <div className={styles['chat-disclaimer']}>
-          All figures sourced from official Bahamas Budget 2025/26 documents
-          presented to Parliament.
+          All figures sourced from official Bahamas Budget {CURRENT_FISCAL_YEAR}{' '}
+          documents presented to Parliament.
         </div>
       </div>
     </section>

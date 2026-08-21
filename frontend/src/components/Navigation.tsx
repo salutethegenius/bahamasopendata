@@ -33,7 +33,7 @@ type NavItem = {
 };
 
 const primaryNavItems: NavItem[] = [
-  { id: 'dashboard', href: '/', label: 'Dashboard', icon: LayoutDashboard, domain: 'overview' },
+  { id: 'dashboard', href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, domain: 'overview' },
   { id: 'health', href: '/health', label: 'Health', icon: HeartPulse, domain: 'health' },
   { id: 'income', href: '/income', label: 'Income', icon: DollarSign, domain: 'income' },
   { id: 'grand-bahama', href: '/grand-bahama', label: 'Grand Bahama', icon: Landmark, domain: 'grand-bahama' },
@@ -100,9 +100,7 @@ export default function Navigation() {
             <div className="flex items-center gap-1">
               {primaryNavItems.map((item) => {
                 const isActive =
-                  item.href === '/'
-                    ? pathname === '/'
-                    : pathname === item.href || pathname.startsWith(`${item.href}/`);
+                  pathname === item.href || pathname.startsWith(`${item.href}/`);
                 const Icon = item.icon;
                 return (
                   <Link
@@ -254,9 +252,7 @@ export default function Navigation() {
               >
                 {primaryNavItems.map((item) => {
                   const isActive =
-                    item.href === '/'
-                      ? pathname === '/'
-                      : pathname === item.href || pathname.startsWith(`${item.href}/`);
+                    pathname === item.href || pathname.startsWith(`${item.href}/`);
                   const Icon = item.icon;
                   return (
                     <Link

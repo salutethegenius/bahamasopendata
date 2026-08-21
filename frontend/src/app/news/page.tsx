@@ -14,7 +14,6 @@ import {
   Building2,
 } from 'lucide-react';
 import { newsItems } from '@/data/news';
-import styles from '@/app/v2/v2.module.css';
 import type { NewsItem } from '@/types';
 
 const API_BASE =
@@ -96,7 +95,9 @@ export default function NewsPage() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <div className={styles['section-eyebrow']}>Budget &amp; economic news</div>
+        <p className="text-xs font-medium uppercase tracking-[0.15em] text-turquoise mb-2">
+          Budget &amp; economic news
+        </p>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           News & <span className="text-turquoise">Updates</span>
         </h1>
